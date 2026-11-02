@@ -43,6 +43,8 @@ import 'skin/fake_skin_api.dart';
 import 'search/search_history_store.dart';
 import 'settings/follow_font.dart';
 import 'settings/font_store.dart';
+import 'settings/appearance_store.dart';
+import 'shared/app_theme.dart';
 import 'space/fake_space_api.dart';
 import 'shared/image_disk_cache.dart';
 import 'shared/theme.dart';
@@ -72,6 +74,7 @@ Future<void> main(List<String> args) async {
   final AppEnvironment environment;
   final RecentStore recents;
   final FontStore fonts;
+  final AppearanceStore appearance;
   final SearchHistoryStore searchHistory;
   final DanmakuSettingsStore danmakuSettings;
   final CodecMemory codecMemory;
@@ -85,6 +88,7 @@ Future<void> main(List<String> args) async {
     recents = await RecentStore.load(supportFilePath('recents.json'));
     PlayerPrefs.shared = await PlayerPrefs.load(supportFilePath('player_prefs.json'));
     fonts = await FontStore.load(supportFilePath('font.json'));
+    appearance = await AppearanceStore.load(supportFilePath('appearance.json'));
     searchHistory = await SearchHistoryStore.load(supportFilePath('search_history.json'));
     danmakuSettings = await DanmakuSettingsStore.load(supportFilePath('danmaku_settings.json'));
     RecentEmotes.shared = await RecentEmotes.load(supportFilePath('emotes_recent.json'));
@@ -149,6 +153,7 @@ Future<void> main(List<String> args) async {
     recents: recents,
     device: device,
     fonts: fonts,
+    appearance: appearance,
     pageApi: fakeAccount ? FakePageApi.demo() : null,
     searchApi: fakeAccount ? FakeSearchApi.demo() : null,
     spaceApi: fakeAccount ? FakeSpaceApi.demo() : null,
@@ -254,8 +259,7 @@ class LaunchFailedApp extends StatelessWidget {
 String? _argument(List<String> args, String prefix) =>
     args.where((arg) => arg.startsWith(prefix)).map((arg) => arg.substring(prefix.length)).firstOrNull;
 
-/// Dark status bar icons under any page that asks for none: the engine keeps the last style it found, so a light
-/// page's stayed on over the next (设置 over a dressed 我的 drew white on white). A page's own region still wins.
+/// A fallback for pages without their own status style. Artwork and video regions can override it.
 class DefaultStatusBar extends StatelessWidget {
   const DefaultStatusBar({super.key, required this.child});
 
@@ -263,7 +267,10 @@ class DefaultStatusBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      AnnotatedRegion<SystemUiOverlayStyle>(value: SystemUiOverlayStyle.dark, child: child);
+      AnnotatedRegion<SystemUiOverlayStyle>(
+        value: Theme.of(context).brightness == Brightness.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+        child: child,
+      );
 }
 
 class BiliFastApp extends StatelessWidget {
@@ -276,21 +283,18 @@ class BiliFastApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return FollowFont(
       fonts: services.fonts,
-      builder: (context) => MaterialApp(
+      builder: (context) => ListenableBuilder(
+        listenable: services.appearance,
+        builder: (context, _) => MaterialApp(
         title: 'BiliFast',
         debugShowCheckedModeBanner: false,
         locale: BiliFonts.locale,
         supportedLocales: const [BiliFonts.locale],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        theme: ThemeData(
-          fontFamily: BiliFonts.family,
-          fontFamilyFallback: BiliFonts.fallback,
-          textTheme: BiliFonts.untracked,
-          colorScheme: ColorScheme.fromSeed(seedColor: BiliColors.pink, primary: BiliColors.pink),
-          scaffoldBackgroundColor: BiliColors.pageGrey,
-          // iOS has no ripples; rows show their own press highlight.
-          splashFactory: NoSplash.splashFactory,
-        ),
+        theme: biliTheme(Brightness.light),
+        darkTheme: biliTheme(Brightness.dark),
+        themeMode: services.appearance.mode,
+        themeAnimationDuration: Duration.zero,
         navigatorKey: services.navigator,
         navigatorObservers: [pageRoutes],
         // The official app keeps its sizes whatever iOS Text Size says, and every size here is measured off it.
@@ -311,6 +315,7 @@ class BiliFastApp extends StatelessWidget {
                     speedTestHooks: appSpeedTestHooksOn(services.playback.engine),
                     appAuth: services.appAuth,
                   ),
+        ),
         ),
       ),
     );

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart' show TextTheme;
 import 'package:flutter/widgets.dart';
 
+import 'bili_palette.dart';
+export 'bili_palette.dart';
+
 /// Colours and sizes sampled from the official app's screenshots (BiliNative `Shared/Theme.swift`), so widgets
 /// never carry literals.
 abstract final class BiliColors {
+  static BiliColorsColors colorsOf(BuildContext context) => BiliColorsColors(BiliPalette.of(context));
+
   static const pink = Color(0xFFFF6699);
   static const pinkTint = Color(0x1FFF6699);
   static const text = Color(0xFF18191C);
@@ -875,6 +880,8 @@ abstract final class BiliMetrics {
 
 /// The tab row under the player (简介 / 评论 N, the 弹 toggle and 点我发弹幕) and the 简介 page's spacing (03, 18).
 abstract final class PageTheme {
+  static PageThemeColors colorsOf(BuildContext context) => PageThemeColors(BiliPalette.of(context));
+
   /// 40 pt from the player's bottom to the hairline's, which the underline covers.
   static const tabRowHeight = 40.0;
   static const hairline = 0.5;
@@ -923,6 +930,8 @@ abstract final class PageTheme {
 /// The uploader row and the title block, measured on the official app's 03, 18 and 26 at 3 px per point. Each part
 /// owns the gap above it and its gutters.
 abstract final class IntroTheme {
+  static IntroThemeColors colorsOf(BuildContext context) => IntroThemeColors(BiliPalette.of(context));
+
   /// The avatar starts this far below the tab row's hairline.
   static const uploaderTop = 12.0;
   static const avatar = 30.0;
@@ -1056,6 +1065,8 @@ abstract final class IntroTheme {
 
 /// 合集, the part strip, the topic and BGM chips and the related rows (03, 18).
 abstract final class IntroListTheme {
+  static IntroListThemeColors colorsOf(BuildContext context) => IntroListThemeColors(BiliPalette.of(context));
+
   /// 03 and 18 put the 合集 card, the chips and the related list's first hairline 18 apart, so each section owns
   /// [sectionTop] above it and [sectionBottom] below.
   static const sectionTop = 46 / 3;
@@ -1176,6 +1187,8 @@ abstract final class IntroListTheme {
 
 /// The action row under the title, the 三连 rings and the coin dialog (03, 15).
 abstract final class ActionTheme {
+  static ActionThemeColors colorsOf(BuildContext context) => ActionThemeColors(BiliPalette.of(context));
+
   /// The solid glyphs' cut-out lines (投币's 币): 4.5 px on font-check 02, as landscape's outlines.
   static const cutStroke = 1.5;
 
@@ -1258,6 +1271,8 @@ abstract final class ActionTheme {
 
 /// The favourites sheet and panel, and the unfollow confirm.
 abstract final class FavouriteTheme {
+  static FavouriteThemeColors colorsOf(BuildContext context) => FavouriteThemeColors(BiliPalette.of(context));
+
   /// Over the whole page, player included (BiliNative `Theme.Favourites.dim`).
   static const dim = Color(0x66000000);
   static const rowHeight = 56.0;
@@ -1606,6 +1621,8 @@ abstract final class VerticalActionTheme {
 /// A comment row and its badges (10, 12, 13), measured at 3× on KaiC's phone. Heights count down from the row's top,
 /// which is the hairline above it.
 abstract final class CommentRowTheme {
+  static CommentRowThemeColors colorsOf(BuildContext context) => CommentRowThemeColors(BiliPalette.of(context));
+
   static const gutter = BiliMetrics.gutter;
 
   /// The name and the text start here; the avatar sits in the gutter before it.
@@ -1856,6 +1873,8 @@ abstract final class CommentRowTheme {
 /// 评论's list, its sort header, footers and 发条评论 bar, and 评论详情's header and band (10-13), measured at 3 px per
 /// pt.
 abstract final class CommentListTheme {
+  static CommentListThemeColors colorsOf(BuildContext context) => CommentListThemeColors(BiliPalette.of(context));
+
   static const gutter = BiliMetrics.gutter;
 
   /// Always white, as the official page.
@@ -1954,6 +1973,8 @@ abstract final class CommentListTheme {
 
 /// A comment's rich text and the picture viewer.
 abstract final class CommentTextTheme {
+  static CommentTextThemeColors colorsOf(BuildContext context) => CommentTextThemeColors(BiliPalette.of(context));
+
   /// The only blue the official comments show (12's 共N条回复) is the app's link blue.
   static const link = BiliColors.link;
 
@@ -2038,6 +2059,8 @@ abstract final class SeekPreviewTheme {
 
 /// The composer and its emote panel (14), measured at 3 px per pt.
 abstract final class ComposerTheme {
+  static ComposerThemeColors colorsOf(BuildContext context) => ComposerThemeColors(BiliPalette.of(context));
+
   static const gutter = BiliMetrics.gutter;
 
   /// 14's page shows through at 80%: its white reads #CCCCCC.
@@ -2135,6 +2158,8 @@ abstract final class ComposerTheme {
 
 /// The comment overlays: the rising thread and the delete confirm.
 abstract final class CommentOverlayTheme {
+  static CommentOverlayThemeColors colorsOf(BuildContext context) => CommentOverlayThemeColors(BiliPalette.of(context));
+
   static const threadRise = Duration(milliseconds: 300);
 
   /// ✕, back or a released swipe slide 评论详情 off the bottom; part of the way takes its share of this.
@@ -2217,6 +2242,8 @@ abstract final class CollapseTheme {
 
 /// The composer's @ picker and attached pictures.
 abstract final class MentionTheme {
+  static MentionThemeColors colorsOf(BuildContext context) => MentionThemeColors(BiliPalette.of(context));
+
   static const gutter = BiliMetrics.gutter;
 
   /// How long typing must rest before the picker searches.
@@ -2272,6 +2299,8 @@ abstract final class MentionTheme {
 /// The avatar's page (49), measured from the safe area's top: the bar, the four shortcuts, then the white card of
 /// 最近在看的视频 whose rows are [rowExtent] apart with the cover [rowCoverTop] into each.
 abstract final class AvatarPageTheme {
+  static AvatarPageThemeColors colorsOf(BuildContext context) => AvatarPageThemeColors(BiliPalette.of(context));
+
   static const background = BiliColors.softGrey;
   static const barHeight = 44.0;
   static const barIcon = Color(0xFF61666D);
@@ -2344,6 +2373,8 @@ abstract final class AvatarPageTheme {
 /// 我的 (87, 106, 107). The fixed part (the top icons, the header, the counts and the 会员 card) is measured from the
 /// safe area's top; the list that scrolls under the card from the card's bottom, its viewport's top.
 abstract final class MeTheme {
+  static MeThemeColors colorsOf(BuildContext context) => MeThemeColors(BiliPalette.of(context));
+
   static const background = BiliColors.card;
 
   /// The top row: four glyphs 40.67 apart, the last centred 24.67 from the right edge, all 22 below the safe area.
@@ -2594,6 +2625,8 @@ abstract final class RotationTheme {
 /// 弹幕设置 (07, 08, 24, 29, 33, 40, 41). Landscape is a hard-edged dark strip at the right, portrait the light
 /// sheet; both lay out the same, measured from the top of the scrolling content and the left of the cards.
 abstract final class DanmakuPanelTheme {
+  static DanmakuPanelThemeColors colorsOf(BuildContext context) => DanmakuPanelThemeColors(BiliPalette.of(context));
+
   /// The strip's share of the screen's width (382 of 956 pt) and the portrait sheet's height when it isn't hung
   /// from the small player (497 of 956).
   static const width = 382 / 956;
@@ -2737,6 +2770,8 @@ abstract final class DanmakuPanelTheme {
 /// 添加屏蔽词 (30). Across, sizes count from the safe area's left edge (62 pt on the Pro Max); the top row ends at its
 /// right edge.
 abstract final class BlockWordsTheme {
+  static BlockWordsThemeColors colorsOf(BuildContext context) => BlockWordsThemeColors(BiliPalette.of(context));
+
   /// 30's white slide comes out at about 40 of 255.
   static const dim = Color(0xD6000000);
 
@@ -2812,6 +2847,8 @@ abstract final class BlockWordsTheme {
 
 /// The send bar and the style panel (22, 23, 36-39).
 abstract final class DanmakuSendTheme {
+  static DanmakuSendThemeColors colorsOf(BuildContext context) => DanmakuSendThemeColors(BiliPalette.of(context));
+
   /// Landscape's dark bar over its darker area (22, 23); portrait's white bar with a hairline over a grey panel (36-39).
   static const darkBar = Color(0xFF242627);
   static const darkArea = Color(0xFF1A1B1C);
@@ -2979,6 +3016,8 @@ abstract final class DanmakuSendTheme {
 /// 当前弹幕列表 (31, 32). Positions across the row count from the panel's content edge, [BiliMetrics.panelTrailing]
 /// before the safe area.
 abstract final class DanmakuListTheme {
+  static DanmakuListThemeColors colorsOf(BuildContext context) => DanmakuListThemeColors(BiliPalette.of(context));
+
   /// A one-line row is 49 tall; longer text grows it by whole lines, the same 16.3 above and below.
   static const rowPadY = 49 / 3;
   static const rowMinHeight = 49.0;
@@ -3075,6 +3114,8 @@ abstract final class DevToolsTheme {
 
 /// 历史记录 (28).
 abstract final class HistoryTheme {
+  static HistoryThemeColors colorsOf(BuildContext context) => HistoryThemeColors(BiliPalette.of(context));
+
   /// The title bar under the status bar, measured on 45 at 3 px per pt: ‹ is #484C52, 7 × 15 with 1.5 strokes, its
   /// tip 26.7 in; 历史记录 is bold and centred. The 🔍, ⋮ and the tab row are left out, so the hairline that ends the
   /// tab row ends the bar.
@@ -3245,6 +3286,8 @@ abstract final class HistoryTheme {
 
 /// The login page and its bar.
 abstract final class LoginTheme {
+  static LoginThemeColors colorsOf(BuildContext context) => LoginThemeColors(BiliPalette.of(context));
+
   /// No official screenshot shows this frame: it keeps 设置's white bar, and Bilibili's own page fills the rest.
   static const bar = BiliColors.card;
   static const page = BiliColors.card;
@@ -3289,6 +3332,8 @@ abstract final class LoginTheme {
 
 /// 设置's sections beyond 字体, and its confirms: 50 and 51, measured at 3 px per pt.
 abstract final class SettingsTheme {
+  static SettingsThemeColors colorsOf(BuildContext context) => SettingsThemeColors(BiliPalette.of(context));
+
   /// The white bar under the status bar, its bold title and the ‹ whose ink starts 79 px in.
   static const bar = BiliColors.card;
   static const barHeight = 44.0;
@@ -3384,6 +3429,8 @@ abstract final class SettingsTheme {
 
 /// 首页's bottom bar (01, 02): its height over the home indicator, the hairline above it, the labels.
 abstract final class HomeTabBarTheme {
+  static HomeTabBarThemeColors colorsOf(BuildContext context) => HomeTabBarThemeColors(BiliPalette.of(context));
+
   static const bar = BiliColors.card;
 
   /// 49 pt from the hairline's top to the home indicator's safe area, in five slots of a fifth of the width each.
@@ -3457,6 +3504,8 @@ abstract final class HomeTabBarTheme {
 /// A 推荐 cover still loading (14): the official grey with its faint 小电视, centred on the cover. The asset is cut to
 /// its ink, 117 × 109 px at 3× (the clip's is 117 × 110 px of #CDCDCD); it is drawn white and tinted.
 abstract final class CoverPlaceholderTheme {
+  static CoverPlaceholderThemeColors colorsOf(BuildContext context) => CoverPlaceholderThemeColors(BiliPalette.of(context));
+
   static const fill = Color(0xFFDEDFE1);
   static const ink = Color(0xFFCDCDCD);
   static const width = 117 / 3;
@@ -3465,6 +3514,8 @@ abstract final class CoverPlaceholderTheme {
 
 /// The bottom bar's glyphs (01, 02): their size, strokes and colours, and the + on its pink rounded square.
 abstract final class TabIconTheme {
+  static TabIconThemeColors colorsOf(BuildContext context) => TabIconThemeColors(BiliPalette.of(context));
+
   /// The square each line glyph is drawn in. On 01 and 02 every glyph's ink is centred on its column (88 pt wide) at
   /// y 891 pt; the widest, 关注 and 我的, are 21.33 pt.
   static const size = 22.0;
@@ -3492,6 +3543,8 @@ abstract final class TabIconTheme {
 
 /// 搜索's page (52-55): the field row, the empty page's 热搜, 搜索历史 and 搜索发现, and the suggestions.
 abstract final class SearchTheme {
+  static SearchThemeColors colorsOf(BuildContext context) => SearchThemeColors(BiliPalette.of(context));
+
   static const page = BiliColors.card;
 
   /// Measured on 52-55 at 3 px per pt. Every word on the page is #18191C; the field's grey word, ‹ and 反馈 are
@@ -3630,6 +3683,8 @@ abstract final class SearchTheme {
 
 /// 搜索's results (56, 57, 59-61): the tab row, the video and uploader rows, the ⋮ sheet.
 abstract final class SearchResultTheme {
+  static SearchResultThemeColors colorsOf(BuildContext context) => SearchResultThemeColors(BiliPalette.of(context));
+
   static const page = BiliColors.card;
 
   /// The tab row: 40 under the field row (which ends 106 down, where 55's suggestions start), then a hairline across
@@ -3825,6 +3880,8 @@ abstract final class SearchResultTheme {
 
 /// 筛选 (58): its chip rows and the dimmed list under it.
 abstract final class SearchFilterTheme {
+  static SearchFilterThemeColors colorsOf(BuildContext context) => SearchFilterThemeColors(BiliPalette.of(context));
+
   static const panel = BiliColors.card;
 
   /// 58's rhythm: the first title's middle 20 below the panel's top, each title's middle 18.67 above its chips and
@@ -3886,6 +3943,8 @@ abstract final class SearchGlyphTheme {
 
 /// The official app's loading TV (14, 64, 67).
 abstract final class LoadingTvTheme {
+  static LoadingTvThemeColors colorsOf(BuildContext context) => LoadingTvThemeColors(BiliPalette.of(context));
+
   static const size = 60.0;
   static const frame = Duration(milliseconds: 133);
 
@@ -3922,6 +3981,8 @@ abstract final class PlayerLoadingTheme {
 /// The uploader sheet over the video page's body (62, 68, 76), measured on 68 and 76 at 3 px per pt from the sheet's
 /// top, which meets the player box's bottom.
 abstract final class UploaderSheetTheme {
+  static UploaderSheetThemeColors colorsOf(BuildContext context) => UploaderSheetThemeColors(BiliPalette.of(context));
+
   static const fill = BiliColors.card;
   static const radius = 12.0;
   static const grabberTop = 8.0;
@@ -4064,6 +4125,8 @@ abstract final class UploaderSheetTheme {
 /// UP主空间's header, its collapsed bar and its tab row (63, 69-73, 75, 77-79), measured in px / 3 from the screen's
 /// top with the header unscrolled.
 abstract final class SpaceTheme {
+  static SpaceThemeColors colorsOf(BuildContext context) => SpaceThemeColors(BiliPalette.of(context));
+
   static const page = BiliColors.card;
 
   /// The banner runs under the status bar to 187.67; a space without one draws this light fill in its place.
@@ -4324,6 +4387,8 @@ abstract final class SpaceTheme {
 /// 投稿's chips, 播放全部, sort and rows, and a row's ⋮ menu (63, 69, 70, 74). Measured in px / 3 from the tab row's
 /// hairline, where the list starts.
 abstract final class SpaceVideosTheme {
+  static SpaceVideosThemeColors colorsOf(BuildContext context) => SpaceVideosThemeColors(BiliPalette.of(context));
+
   static const gutter = BiliMetrics.gutter;
 
   /// The chips (69, 70): 28 tall, 6.33 under the hairline and 12 apart, in a 42 band; 14 pt words about 8 in from each
@@ -4493,6 +4558,8 @@ abstract final class SpaceVideosTheme {
 
 /// 推荐's ⋮ sheet, the card after 不感兴趣 and the reasons sheet (90, 91, 92).
 abstract final class FeedDislikeTheme {
+  static FeedDislikeThemeColors colorsOf(BuildContext context) => FeedDislikeThemeColors(BiliPalette.of(context));
+
   /// Both sheets (90, 92): the page dimmed by half, the soft-grey sheet with a 12 corner and its grabber 8 down,
   /// white cards 16 in with an 8 corner, 16 between groups and below the last one.
   static const dim = Color(0x80000000);
@@ -4586,6 +4653,8 @@ abstract final class FeedDislikeTheme {
 
 /// 我的收藏: the folders, a folder, all videos, a row's ⋮ (80-84), measured at 3 px per pt from the screen's top.
 abstract final class FavouritesTheme {
+  static FavouritesThemeColors colorsOf(BuildContext context) => FavouritesThemeColors(BiliPalette.of(context));
+
   static const textWeight = FontWeight.w400;
 
   /// The bar under the status bar (80, 81, 83): ‹ as 历史记录's, 44 tall.
@@ -4953,6 +5022,8 @@ abstract final class FavouritesTheme {
 
 /// 稍后再看: the list and its empty page (85, 86).
 abstract final class WatchLaterTheme {
+  static WatchLaterThemeColors colorsOf(BuildContext context) => WatchLaterThemeColors(BiliPalette.of(context));
+
   static const gutter = 12.0;
   static const ink = BiliColors.text;
   static const grey = Color(0xFF61666D);
@@ -5178,6 +5249,8 @@ abstract final class WatchLaterTheme {
 
 /// The app token's confirm and 开发者's 官方接口 card.
 abstract final class AppAuthTheme {
+  static AppAuthThemeColors colorsOf(BuildContext context) => AppAuthThemeColors(BiliPalette.of(context));
+
   /// The confirm is 设置's alert (51), coming and going as it does there.
   static const promptIn = SettingsTheme.confirmIn;
   static const promptOut = SettingsTheme.confirmOut;
@@ -5190,6 +5263,8 @@ abstract final class AppAuthTheme {
 /// The account's own space (108, 115): the tall banner, 编辑资料, the name line's pills, the level's exp bar and the
 /// bar scrolled.
 abstract final class OwnSpaceTheme {
+  static OwnSpaceThemeColors colorsOf(BuildContext context) => OwnSpaceThemeColors(BiliPalette.of(context));
+
   /// The banner's bottom edge, measured on 108. The face, the counts and 编辑资料 sit where others' spaces have them
   /// (SpaceTheme), [drop] lower.
   static const bannerHeight = 887 / 3;
@@ -5302,6 +5377,8 @@ abstract final class OwnSpaceTheme {
 /// The own space's tabs: 主页's sections (114, 115), 收藏 (116), 追番 (117) and 投稿's empty page (108), measured in
 /// px / 3 from the tab row's lower hairline, where a tab's body starts.
 abstract final class OwnSpaceTabsTheme {
+  static OwnSpaceTabsThemeColors colorsOf(BuildContext context) => OwnSpaceTabsThemeColors(BiliPalette.of(context));
+
   static const gutter = SpaceTheme.gutter;
 
   /// 主页 and 追番 lie on the page's grey, 收藏 and 投稿 on white; either runs on to the screen's bottom.
@@ -5542,6 +5619,8 @@ abstract final class SkinLoadingTheme {
 
 /// 首页's header folding its top row away as 推荐 scrolls (121, measured in px / 3).
 abstract final class HomeHeaderTheme {
+  static HomeHeaderThemeColors colorsOf(BuildContext context) => HomeHeaderThemeColors(BiliPalette.of(context));
+
   /// The top row (avatar and search) folds away by its own height: the header ends at 142 pt open, 98 pt folded.
   /// All of it moves up by the fold, the 装扮's pictures with it (folded, the screen's top 20 pt show what 44-64 pt
   /// showed open), so the tab row lands under the status bar and the top row fades as it slides under it.
@@ -5571,6 +5650,8 @@ abstract final class HomeHeaderTheme {
 /// 推荐's refreshes kept as batches: each refresh's page on top, then 刚刚看到这里，点击刷新, then the cards before it
 /// (122, measured in px / 3).
 abstract final class FeedBatchTheme {
+  static FeedBatchThemeColors colorsOf(BuildContext context) => FeedBatchThemeColors(BiliPalette.of(context));
+
   /// From the bottom of the cards above to the top of the cards below.
   static const dividerGap = 44.0;
 
@@ -5594,6 +5675,8 @@ abstract final class FeedBatchTheme {
 /// 推荐's big card: the official feed's `large_cover_v9`, full width and playing inline (122; KaiC's screenshot of it
 /// playing, measured in px / 3).
 abstract final class FeedBigCardTheme {
+  static FeedBigCardThemeColors colorsOf(BuildContext context) => FeedBigCardThemeColors(BiliPalette.of(context));
+
   /// The card spans both columns, inside the feed's side spacing.
   static const spacing = BiliMetrics.feedSpacing;
   static const radius = BiliMetrics.cardRadius;
@@ -5684,6 +5767,8 @@ abstract final class FeedBigCardTheme {
 /// A 动态 card's sizes and colours (127, 128, 135-137, 139), measured in px / 3 from the card's top, which meets the
 /// band above it.
 abstract final class DynamicCardTheme {
+  static DynamicCardThemeColors colorsOf(BuildContext context) => DynamicCardThemeColors(BiliPalette.of(context));
+
   static const fill = BiliColors.card;
   static const gutter = 12.0;
 
@@ -5990,6 +6075,8 @@ abstract final class DynamicCardTheme {
 
 /// The 关注 tab: header, 全部 / 视频, 最常访问, 我的追番 · 追剧 and the face sheet (127, 128, 139), measured in px / 3.
 abstract final class DynamicFeedTheme {
+  static DynamicFeedThemeColors colorsOf(BuildContext context) => DynamicFeedThemeColors(BiliPalette.of(context));
+
   /// The header ends 88 pt down on the 62 pt status bar: its 44 pt row lies 18 pt up into the status bar, as the
   /// official app lays it under a 44 pt one. 关注 is centred on the row (17 pt, ink 15.33 tall); the APK's `dy_ic_write`
   /// (its ink 18.67 pt square) centred 22.17 pt in from the right. Over a 装扮 both take its colour, the pen at 88% (127
@@ -6144,6 +6231,8 @@ abstract final class DynamicFeedTheme {
 
 /// A post on its own page (131-134, 140), measured in px / 3 from the status bar's 62 pt down.
 abstract final class DynamicPostTheme {
+  static DynamicPostThemeColors colorsOf(BuildContext context) => DynamicPostThemeColors(BiliPalette.of(context));
+
   static const page = BiliColors.card;
 
   /// The bar: 48 under the status bar; ‹, ↗ and ⋮ in #61666D centred 24 down. Once the author block is under it, the
@@ -6274,6 +6363,8 @@ abstract final class DynamicPostTheme {
 /// 我的关注 (129, 130). Measured in px / 3; the shots' colours are Display P3, so the pink reads #ED7098 and the badges'
 /// yellow #F7CE45 there.
 abstract final class FollowingListTheme {
+  static FollowingListThemeColors colorsOf(BuildContext context) => FollowingListThemeColors(BiliPalette.of(context));
+
   /// The bar under the status bar, 54 tall: the skin's `colorSecondPage` with its text colour (KaiC's green, 129), else
   /// white with the page's text (a guess). A 2/3 hairline ends it.
   static const barRow = 54.0;
@@ -6423,6 +6514,8 @@ abstract final class FollowingListTheme {
 
 /// The iPad's 首页 (ipad/01, 02), measured at 2× (pt = px / 2).
 abstract final class PadHomeTheme {
+  static PadHomeThemeColors colorsOf(BuildContext context) => PadHomeThemeColors(BiliPalette.of(context));
+
   /// 推荐's grid: 375 pt cards sideways and 255 upright, 22 pt from the edges and 12 apart; the first row starts as
   /// far under the hairline as 01's banner does (the banner is left out).
   static const columns = 3;
@@ -6538,6 +6631,8 @@ abstract final class PadHomeTheme {
 /// The iPad's video page frame: the two columns sideways (ipad/03, 05), one upright (06), the player's shrink to the
 /// pink 立即播放 bar (05, 20).
 abstract final class PadPageTheme {
+  static PadPageThemeColors colorsOf(BuildContext context) => PadPageThemeColors(BiliPalette.of(context));
+
   /// 03, 05 and 06 keep the page 32 pt below the screen's top, black above it, past the 24 pt status bar inset.
   static const statusBand = 32.0;
 
@@ -6643,6 +6738,8 @@ abstract final class PadPageTheme {
 
 /// The iPad's page body: 简介's sections and the related column (ipad/03, 04, 06).
 abstract final class PadBodyTheme {
+  static PadBodyThemeColors colorsOf(BuildContext context) => PadBodyThemeColors(BiliPalette.of(context));
+
   /// Everything in 简介's head starts 20 in, the action cells too (03).
   static const gutter = 20.0;
 
@@ -7222,6 +7319,8 @@ abstract final class PadDanmakuTheme {
 
 /// 缓存's sheet (141-144, 153, 154) and the portrait ⋮ sheet it opens from (42, 43, differences/22).
 abstract final class DownloadSheetTheme {
+  static DownloadSheetThemeColors colorsOf(BuildContext context) => DownloadSheetThemeColors(BiliPalette.of(context));
+
   /// Both sheets are light grey with white cards; in 竖屏 they stand 573.67 pt tall (43), in the small player they run
   /// from the player's bottom.
   static const sheet = BiliColors.softGrey;
@@ -7352,6 +7451,8 @@ abstract final class DownloadSheetTheme {
 
 /// 离线缓存, 正在缓存, a 合集's page and their search and edit modes (143, 145-151, 155-157), measured at 3 px per pt.
 abstract final class OfflineListTheme {
+  static OfflineListThemeColors colorsOf(BuildContext context) => OfflineListThemeColors(BiliPalette.of(context));
+
   static const page = BiliColors.card;
   static const ink = BiliColors.text;
   static const grey = Color(0xFF61666D);
@@ -7621,6 +7722,8 @@ abstract final class OfflineListTheme {
 
 /// A cached video's page under the player (158-161), measured at 3 px per pt.
 abstract final class OfflinePageTheme {
+  static OfflinePageThemeColors colorsOf(BuildContext context) => OfflinePageThemeColors(BiliPalette.of(context));
+
   /// 离线缓存 (N个视频) and 点我发弹幕 in a 42 pt band under the player with no hairline, the capsule 30 tall, border
   /// to border, its border one crisp pixel. Its top is 316.67 on 158, 7 under the phone's player, which ends on the
   /// pixel at 309.67; ours ends at 309.5, so the extra sixth keeps the border on a pixel.
@@ -7729,4 +7832,923 @@ abstract final class OfflinePageTheme {
   static const sheetLabelLift = 4 / 3;
   static const sheetCancelLift = 1.0;
   static const sheetInk = BiliColors.text;
+}
+
+// Context-resolved color views. The static constants above remain the measured light values.
+
+@immutable
+class BiliColorsColors {
+  const BiliColorsColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get pink => _palette.choose(BiliColors.pink, _palette.accent);
+  Color get pinkTint => _palette.choose(BiliColors.pinkTint, _palette.accentTint);
+  Color get text => _palette.choose(BiliColors.text, _palette.text);
+  Color get secondaryText => _palette.choose(BiliColors.secondaryText, _palette.secondary);
+  Color get pageGrey => _palette.choose(BiliColors.pageGrey, _palette.page);
+  Color get softGrey => _palette.choose(BiliColors.softGrey, _palette.raised);
+  Color get divider => _palette.choose(BiliColors.divider, _palette.divider);
+  Color get link => _palette.choose(BiliColors.link, _palette.link);
+  Color get card => _palette.choose(BiliColors.card, _palette.surface);
+  Color get reasonTint => _palette.choose(BiliColors.reasonTint, const Color(0xFF38251F));
+  Color get sheetGrabber => _palette.choose(BiliColors.sheetGrabber, _palette.disabled);
+  Color get sheetCloseGlyph => _palette.choose(BiliColors.sheetCloseGlyph, _palette.icon);
+  Color get sheetHint => _palette.choose(BiliColors.sheetHint, _palette.disabled);
+  Color get shimmerBase => _palette.choose(BiliColors.shimmerBase, _palette.shimmerBase);
+  Color get shimmerHighlight => _palette.choose(BiliColors.shimmerHighlight, _palette.shimmerHighlight);
+  Color get glassFill => _palette.choose(BiliColors.glassFill, _palette.glass);
+  Color get glassBorder => _palette.choose(BiliColors.glassBorder, _palette.glassBorder);
+  Color get pressedFill => _palette.choose(BiliColors.pressedFill, _palette.pressed);
+}
+
+@immutable
+class PageThemeColors {
+  const PageThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get tabText => _palette.choose(PageTheme.tabText, _palette.icon);
+}
+
+@immutable
+class IntroThemeColors {
+  const IntroThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get name => _palette.choose(IntroTheme.name, _palette.icon);
+  Color get followedFill => _palette.choose(IntroTheme.followedFill, _palette.page);
+  Color get followedText => _palette.choose(IntroTheme.followedText, _palette.secondary);
+  Color get tagInk => _palette.choose(IntroTheme.tagInk, _palette.icon);
+}
+
+@immutable
+class IntroListThemeColors {
+  const IntroListThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get chipTextColor => _palette.choose(IntroListTheme.chipTextColor, _palette.icon);
+  Color get chipGlyphColor => _palette.choose(IntroListTheme.chipGlyphColor, _palette.icon);
+}
+
+@immutable
+class ActionThemeColors {
+  const ActionThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get icon => _palette.choose(ActionTheme.icon, _palette.icon);
+  Color get count => _palette.choose(ActionTheme.count, _palette.secondary);
+}
+
+@immutable
+class FavouriteThemeColors {
+  const FavouriteThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get ringLight => _palette.choose(FavouriteTheme.ringLight, _palette.disabled);
+  Color get switchOffLight => _palette.choose(FavouriteTheme.switchOffLight, _palette.raised);
+}
+
+@immutable
+class CommentRowThemeColors {
+  const CommentRowThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get vipMarkFill => _palette.choose(CommentRowTheme.vipMarkFill, _palette.accent);
+  Color get name => _palette.choose(CommentRowTheme.name, _palette.secondary);
+  Color get upFill => _palette.choose(CommentRowTheme.upFill, _palette.accent);
+  Color get pinnedInk => _palette.choose(CommentRowTheme.pinnedInk, _palette.accent);
+  Color get text => _palette.choose(CommentRowTheme.text, _palette.text);
+  Color get picturePlaceholder => _palette.choose(CommentRowTheme.picturePlaceholder, _palette.page);
+  Color get meta => _palette.choose(CommentRowTheme.meta, _palette.disabled);
+  Color get action => _palette.choose(CommentRowTheme.action, _palette.icon);
+  Color get liked => _palette.choose(CommentRowTheme.liked, _palette.accent);
+  Color get upLiked => _palette.choose(CommentRowTheme.upLiked, _palette.secondary);
+  Color get upChipFill => _palette.choose(CommentRowTheme.upChipFill, _palette.raised);
+  Color get upChipInk => _palette.choose(CommentRowTheme.upChipInk, _palette.icon);
+  Color get box => _palette.choose(CommentRowTheme.box, _palette.raised);
+  Color get preview => _palette.choose(CommentRowTheme.preview, _palette.text);
+  Color get previewName => _palette.choose(CommentRowTheme.previewName, _palette.secondary);
+  Color get moreLink => _palette.choose(CommentRowTheme.moreLink, _palette.link);
+  Color get dividerColour => _palette.choose(CommentRowTheme.dividerColour, _palette.divider);
+}
+
+@immutable
+class CommentListThemeColors {
+  const CommentListThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get background => _palette.choose(CommentListTheme.background, _palette.surface);
+  Color get rule => _palette.choose(CommentListTheme.rule, _palette.divider);
+  Color get sortInk => _palette.choose(CommentListTheme.sortInk, _palette.secondary);
+  Color get footerInk => _palette.choose(CommentListTheme.footerInk, _palette.disabled);
+  Color get retryInk => _palette.choose(CommentListTheme.retryInk, _palette.secondary);
+  Color get retryAction => _palette.choose(CommentListTheme.retryAction, _palette.link);
+  Color get closedInk => _palette.choose(CommentListTheme.closedInk, _palette.secondary);
+  Color get fieldFill => _palette.choose(CommentListTheme.fieldFill, _palette.page);
+  Color get fieldInk => _palette.choose(CommentListTheme.fieldInk, _palette.secondary);
+  Color get faceInk => _palette.choose(CommentListTheme.faceInk, _palette.secondary);
+  Color get threadTitleInk => _palette.choose(CommentListTheme.threadTitleInk, _palette.text);
+  Color get closeInk => _palette.choose(CommentListTheme.closeInk, _palette.secondary);
+  Color get band => _palette.choose(CommentListTheme.band, _palette.page);
+}
+
+@immutable
+class CommentTextThemeColors {
+  const CommentTextThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get link => _palette.choose(CommentTextTheme.link, _palette.link);
+  Color get replyTarget => _palette.choose(CommentTextTheme.replyTarget, _palette.secondary);
+}
+
+@immutable
+class ComposerThemeColors {
+  const ComposerThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get sheet => _palette.choose(ComposerTheme.sheet, _palette.surface);
+  Color get text => _palette.choose(ComposerTheme.text, _palette.text);
+  Color get placeholder => _palette.choose(ComposerTheme.placeholder, _palette.disabled);
+  Color get tool => _palette.choose(ComposerTheme.tool, _palette.secondary);
+  Color get syncText => _palette.choose(ComposerTheme.syncText, _palette.icon);
+  Color get syncRing => _palette.choose(ComposerTheme.syncRing, _palette.disabled);
+  Color get panel => _palette.choose(ComposerTheme.panel, _palette.page);
+  Color get tabBar => _palette.choose(ComposerTheme.tabBar, _palette.surface);
+  Color get tabSelected => _palette.choose(ComposerTheme.tabSelected, _palette.page);
+  Color get sectionTitle => _palette.choose(ComposerTheme.sectionTitle, _palette.icon);
+  Color get kaomoji => _palette.choose(ComposerTheme.kaomoji, _palette.text);
+  Color get kaomojiTab => _palette.choose(ComposerTheme.kaomojiTab, _palette.secondary);
+}
+
+@immutable
+class CommentOverlayThemeColors {
+  const CommentOverlayThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get threadFill => _palette.choose(CommentOverlayTheme.threadFill, _palette.surface);
+  Color get alertTitle => _palette.choose(CommentOverlayTheme.alertTitle, _palette.text);
+  Color get alertMessage => _palette.choose(CommentOverlayTheme.alertMessage, _palette.secondary);
+  Color get alertCancel => _palette.choose(CommentOverlayTheme.alertCancel, _palette.secondary);
+  Color get alertDelete => _palette.choose(CommentOverlayTheme.alertDelete, _palette.accent);
+}
+
+@immutable
+class MentionThemeColors {
+  const MentionThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get fieldFill => _palette.choose(MentionTheme.fieldFill, _palette.page);
+  Color get clearFill => _palette.choose(MentionTheme.clearFill, _palette.disabled);
+  Color get clearGlyphColor => _palette.choose(MentionTheme.clearGlyphColor, _palette.surface);
+  Color get sectionColour => _palette.choose(MentionTheme.sectionColour, _palette.icon);
+  Color get match => _palette.choose(MentionTheme.match, _palette.accent);
+}
+
+@immutable
+class AvatarPageThemeColors {
+  const AvatarPageThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get background => _palette.choose(AvatarPageTheme.background, _palette.raised);
+  Color get barIcon => _palette.choose(AvatarPageTheme.barIcon, _palette.icon);
+  Color get remove => _palette.choose(AvatarPageTheme.remove, _palette.disabled);
+}
+
+@immutable
+class MeThemeColors {
+  const MeThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get background => _palette.choose(MeTheme.background, _palette.surface);
+  Color get topGlyph => _palette.choose(MeTheme.topGlyph, _palette.icon);
+  Color get vipDiscFill => _palette.choose(MeTheme.vipDiscFill, _palette.accent);
+  Color get name => _palette.choose(MeTheme.name, _palette.text);
+  Color get vipName => _palette.choose(MeTheme.vipName, _palette.accent);
+  Color get pencil => _palette.choose(MeTheme.pencil, _palette.secondary);
+  Color get coins => _palette.choose(MeTheme.coins, _palette.secondary);
+  Color get space => _palette.choose(MeTheme.space, _palette.secondary);
+  Color get count => _palette.choose(MeTheme.count, _palette.text);
+  Color get countLabel => _palette.choose(MeTheme.countLabel, _palette.secondary);
+  Color get countRule => _palette.choose(MeTheme.countRule, _palette.divider);
+  Color get cardTitle => _palette.choose(MeTheme.cardTitle, _palette.text);
+  Color get cardButtonFill => _palette.choose(MeTheme.cardButtonFill, _palette.accent);
+  Color get shortcutLabel => _palette.choose(MeTheme.shortcutLabel, _palette.text);
+  Color get servicesTitle => _palette.choose(MeTheme.servicesTitle, _palette.text);
+  Color get serviceLabel => _palette.choose(MeTheme.serviceLabel, _palette.text);
+  Color get serviceChevron => _palette.choose(MeTheme.serviceChevron, _palette.secondary);
+  Color get card => _palette.choose(MeTheme.card, _palette.raised);
+  Color get cardMore => _palette.choose(MeTheme.cardMore, _palette.secondary);
+  List<Color> get skinFadeColors => _palette.isDark
+      ? MeTheme.skinFadeColors.map((color) => _palette.surface.withValues(alpha: color.a)).toList()
+      : MeTheme.skinFadeColors;
+}
+
+@immutable
+class DanmakuPanelThemeColors {
+  const DanmakuPanelThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get lightBackground => _palette.choose(DanmakuPanelTheme.lightBackground, _palette.raised);
+  Color get lightCard => _palette.choose(DanmakuPanelTheme.lightCard, _palette.surface);
+  Color get lightSquare => _palette.choose(DanmakuPanelTheme.lightSquare, _palette.divider);
+  Color get lightTrack => _palette.choose(DanmakuPanelTheme.lightTrack, _palette.divider);
+  Color get lightHairline => _palette.choose(DanmakuPanelTheme.lightHairline, _palette.divider);
+  Color get lightText => _palette.choose(DanmakuPanelTheme.lightText, _palette.text);
+  Color get lightSecondary => _palette.choose(DanmakuPanelTheme.lightSecondary, _palette.secondary);
+  Color get lightReset => _palette.choose(DanmakuPanelTheme.lightReset, _palette.icon);
+  Color get lightSwitchOff => _palette.choose(DanmakuPanelTheme.lightSwitchOff, _palette.raised);
+}
+
+@immutable
+class BlockWordsThemeColors {
+  const BlockWordsThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get grey => _palette.choose(BlockWordsTheme.grey, _palette.secondary);
+  Color get fieldFill => _palette.choose(BlockWordsTheme.fieldFill, _palette.surface);
+  Color get fieldInk => _palette.choose(BlockWordsTheme.fieldInk, _palette.text);
+}
+
+@immutable
+class DanmakuSendThemeColors {
+  const DanmakuSendThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get lightBar => _palette.choose(DanmakuSendTheme.lightBar, _palette.surface);
+  Color get lightArea => _palette.choose(DanmakuSendTheme.lightArea, _palette.page);
+  Color get lightAccent => _palette.choose(DanmakuSendTheme.lightAccent, _palette.accent);
+  Color get lightGlyph => _palette.choose(DanmakuSendTheme.lightGlyph, _palette.icon);
+  Color get lightField => _palette.choose(DanmakuSendTheme.lightField, _palette.page);
+  Color get lightSecondary => _palette.choose(DanmakuSendTheme.lightSecondary, _palette.secondary);
+}
+
+@immutable
+class DanmakuListThemeColors {
+  const DanmakuListThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get liked => _palette.choose(DanmakuListTheme.liked, _palette.accent);
+  Color get divider => _palette.choose(DanmakuListTheme.divider, _palette.text);
+  Color get emptyColor => _palette.choose(DanmakuListTheme.emptyColor, _palette.secondary);
+}
+
+@immutable
+class HistoryThemeColors {
+  const HistoryThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get back => _palette.choose(HistoryTheme.back, _palette.icon);
+  Color get divider => _palette.choose(HistoryTheme.divider, _palette.divider);
+  Color get rowTitle => _palette.choose(HistoryTheme.rowTitle, _palette.text);
+  Color get meta => _palette.choose(HistoryTheme.meta, _palette.secondary);
+  Color get more => _palette.choose(HistoryTheme.more, _palette.disabled);
+  Color get stateInk => _palette.choose(HistoryTheme.stateInk, _palette.secondary);
+  Color get footerInk => _palette.choose(HistoryTheme.footerInk, _palette.disabled);
+  Color get sheetFill => _palette.choose(HistoryTheme.sheetFill, _palette.surface);
+  Color get sheetHeaderInk => _palette.choose(HistoryTheme.sheetHeaderInk, _palette.icon);
+  Color get sheetCircleFill => _palette.choose(HistoryTheme.sheetCircleFill, _palette.accent);
+  Color get sheetLabelInk => _palette.choose(HistoryTheme.sheetLabelInk, _palette.secondary);
+  Color get sheetDividerInk => _palette.choose(HistoryTheme.sheetDividerInk, _palette.divider);
+  Color get sheetDeleteInk => _palette.choose(HistoryTheme.sheetDeleteInk, _palette.icon);
+  Color get sheetBandFill => _palette.choose(HistoryTheme.sheetBandFill, _palette.raised);
+  Color get sheetCancelInk => _palette.choose(HistoryTheme.sheetCancelInk, _palette.icon);
+}
+
+@immutable
+class LoginThemeColors {
+  const LoginThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get bar => _palette.choose(LoginTheme.bar, _palette.surface);
+  Color get page => _palette.choose(LoginTheme.page, _palette.surface);
+  Color get title => _palette.choose(LoginTheme.title, _palette.text);
+  Color get close => _palette.choose(LoginTheme.close, _palette.text);
+  Color get message => _palette.choose(LoginTheme.message, _palette.secondary);
+  Color get retry => _palette.choose(LoginTheme.retry, _palette.accent);
+  Color get qrModule => _palette.choose(LoginTheme.qrModule, _palette.text);
+  Color get qrBackground => _palette.choose(LoginTheme.qrBackground, _palette.surface);
+}
+
+@immutable
+class SettingsThemeColors {
+  const SettingsThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get bar => _palette.choose(SettingsTheme.bar, _palette.surface);
+  Color get barTitle => _palette.choose(SettingsTheme.barTitle, _palette.text);
+  Color get backGlyph => _palette.choose(SettingsTheme.backGlyph, _palette.icon);
+  Color get page => _palette.choose(SettingsTheme.page, _palette.page);
+  Color get row => _palette.choose(SettingsTheme.row, _palette.surface);
+  Color get rowTitle => _palette.choose(SettingsTheme.rowTitle, _palette.text);
+  Color get rowDisabled => _palette.choose(SettingsTheme.rowDisabled, _palette.secondary);
+  Color get value => _palette.choose(SettingsTheme.value, _palette.secondary);
+  Color get hairlineColor => _palette.choose(SettingsTheme.hairlineColor, _palette.divider);
+  Color get chevron => _palette.choose(SettingsTheme.chevron, _palette.secondary);
+  Color get switchOn => _palette.choose(SettingsTheme.switchOn, _palette.accent);
+  Color get switchOff => _palette.choose(SettingsTheme.switchOff, _palette.raised);
+  Color get footer => _palette.choose(SettingsTheme.footer, _palette.secondary);
+  Color get confirm => _palette.choose(SettingsTheme.confirm, _palette.surface);
+  Color get confirmTitle => _palette.choose(SettingsTheme.confirmTitle, _palette.text);
+  Color get confirmMessage => _palette.choose(SettingsTheme.confirmMessage, _palette.secondary);
+  Color get confirmRuleColor => _palette.choose(SettingsTheme.confirmRuleColor, _palette.divider);
+  Color get confirmCancel => _palette.choose(SettingsTheme.confirmCancel, _palette.text);
+  Color get confirmAction => _palette.choose(SettingsTheme.confirmAction, _palette.accent);
+  Color get confirmPressed => _palette.choose(SettingsTheme.confirmPressed, _palette.pressed);
+  Color get vipName => _palette.choose(SettingsTheme.vipName, _palette.accent);
+  Color get vipBadge => _palette.choose(SettingsTheme.vipBadge, _palette.accent);
+}
+
+@immutable
+class HomeTabBarThemeColors {
+  const HomeTabBarThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get bar => _palette.choose(HomeTabBarTheme.bar, _palette.surface);
+  Color get hairline => _palette.choose(HomeTabBarTheme.hairline, _palette.divider);
+  Color get label => _palette.choose(HomeTabBarTheme.label, _palette.icon);
+  Color get selected => _palette.choose(HomeTabBarTheme.selected, _palette.accent);
+  Color get fieldInk => _palette.choose(HomeTabBarTheme.fieldInk, _palette.icon);
+  Color get headDivider => _palette.choose(HomeTabBarTheme.headDivider, _palette.page);
+  Color get headField => _palette.choose(HomeTabBarTheme.headField, _palette.surface);
+}
+
+@immutable
+class CoverPlaceholderThemeColors {
+  const CoverPlaceholderThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get fill => _palette.choose(CoverPlaceholderTheme.fill, _palette.raised);
+  Color get ink => _palette.choose(CoverPlaceholderTheme.ink, _palette.disabled);
+}
+
+@immutable
+class TabIconThemeColors {
+  const TabIconThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get ink => _palette.choose(TabIconTheme.ink, _palette.icon);
+  Color get selectedInk => _palette.choose(TabIconTheme.selectedInk, _palette.accent);
+}
+
+@immutable
+class SearchThemeColors {
+  const SearchThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get page => _palette.choose(SearchTheme.page, _palette.surface);
+  Color get text => _palette.choose(SearchTheme.text, _palette.text);
+  Color get grey => _palette.choose(SearchTheme.grey, _palette.secondary);
+  Color get highlight => _palette.choose(SearchTheme.highlight, _palette.accent);
+  Color get fieldRimColor => _palette.choose(SearchTheme.fieldRimColor, _palette.secondary);
+  Color get caret => _palette.choose(SearchTheme.caret, _palette.accent);
+  Color get clearColor => _palette.choose(SearchTheme.clearColor, _palette.disabled);
+  Color get submit => _palette.choose(SearchTheme.submit, _palette.accent);
+  Color get rule => _palette.choose(SearchTheme.rule, _palette.disabled);
+  Color get chipFill => _palette.choose(SearchTheme.chipFill, _palette.raised);
+  Color get cellFill => _palette.choose(SearchTheme.cellFill, _palette.raised);
+  Color get suffix => _palette.choose(SearchTheme.suffix, _palette.secondary);
+  Color get suggestionHairlineColor => _palette.choose(SearchTheme.suggestionHairlineColor, _palette.disabled);
+}
+
+@immutable
+class SearchResultThemeColors {
+  const SearchResultThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get page => _palette.choose(SearchResultTheme.page, _palette.surface);
+  Color get hairlineInk => _palette.choose(SearchResultTheme.hairlineInk, _palette.divider);
+  Color get rowHairlineInk => _palette.choose(SearchResultTheme.rowHairlineInk, _palette.disabled);
+  Color get tabInk => _palette.choose(SearchResultTheme.tabInk, _palette.icon);
+  Color get tabSelected => _palette.choose(SearchResultTheme.tabSelected, _palette.accent);
+  Color get funnelInk => _palette.choose(SearchResultTheme.funnelInk, _palette.icon);
+  Color get funnelOpen => _palette.choose(SearchResultTheme.funnelOpen, _palette.accent);
+  Color get sortInk => _palette.choose(SearchResultTheme.sortInk, _palette.icon);
+  Color get coverPlaceholder => _palette.choose(SearchResultTheme.coverPlaceholder, _palette.page);
+  Color get titleInk => _palette.choose(SearchResultTheme.titleInk, _palette.text);
+  Color get highlight => _palette.choose(SearchResultTheme.highlight, _palette.accent);
+  Color get metaInk => _palette.choose(SearchResultTheme.metaInk, _palette.secondary);
+  Color get nameInk => _palette.choose(SearchResultTheme.nameInk, _palette.text);
+  Color get countsInk => _palette.choose(SearchResultTheme.countsInk, _palette.secondary);
+  Color get followFill => _palette.choose(SearchResultTheme.followFill, _palette.accent);
+  Color get followedFill => _palette.choose(SearchResultTheme.followedFill, _palette.page);
+  Color get followedInk => _palette.choose(SearchResultTheme.followedInk, _palette.secondary);
+  Color get stateInk => _palette.choose(SearchResultTheme.stateInk, _palette.secondary);
+  Color get sheetFill => _palette.choose(SearchResultTheme.sheetFill, _palette.raised);
+  Color get grabberInk => _palette.choose(SearchResultTheme.grabberInk, _palette.disabled);
+  Color get sheetCardFill => _palette.choose(SearchResultTheme.sheetCardFill, _palette.surface);
+  Color get sheetInk => _palette.choose(SearchResultTheme.sheetInk, _palette.text);
+}
+
+@immutable
+class SearchFilterThemeColors {
+  const SearchFilterThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get panel => _palette.choose(SearchFilterTheme.panel, _palette.surface);
+  Color get title => _palette.choose(SearchFilterTheme.title, _palette.text);
+  Color get chip => _palette.choose(SearchFilterTheme.chip, _palette.raised);
+  Color get chipLabel => _palette.choose(SearchFilterTheme.chipLabel, _palette.icon);
+}
+
+@immutable
+class LoadingTvThemeColors {
+  const LoadingTvThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get stateInk => _palette.choose(LoadingTvTheme.stateInk, _palette.secondary);
+}
+
+@immutable
+class UploaderSheetThemeColors {
+  const UploaderSheetThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get fill => _palette.choose(UploaderSheetTheme.fill, _palette.surface);
+  Color get grabber => _palette.choose(UploaderSheetTheme.grabber, _palette.disabled);
+  Color get nameInk => _palette.choose(UploaderSheetTheme.nameInk, _palette.text);
+  Color get countsInk => _palette.choose(UploaderSheetTheme.countsInk, _palette.secondary);
+  Color get enterInk => _palette.choose(UploaderSheetTheme.enterInk, _palette.icon);
+  Color get chevronInk => _palette.choose(UploaderSheetTheme.chevronInk, _palette.secondary);
+  Color get followedFill => _palette.choose(UploaderSheetTheme.followedFill, _palette.page);
+  Color get followedInk => _palette.choose(UploaderSheetTheme.followedInk, _palette.secondary);
+  Color get titleInk => _palette.choose(UploaderSheetTheme.titleInk, _palette.text);
+  Color get playingInk => _palette.choose(UploaderSheetTheme.playingInk, _palette.accent);
+  Color get endInk => _palette.choose(UploaderSheetTheme.endInk, _palette.icon);
+  Color get stateInk => _palette.choose(UploaderSheetTheme.stateInk, _palette.secondary);
+}
+
+@immutable
+class SpaceThemeColors {
+  const SpaceThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get page => _palette.choose(SpaceTheme.page, _palette.surface);
+  Color get bannerDefault => _palette.choose(SpaceTheme.bannerDefault, _palette.divider);
+  Color get barInk => _palette.choose(SpaceTheme.barInk, _palette.icon);
+  Color get bar => _palette.choose(SpaceTheme.bar, _palette.surface);
+  Color get pillInk => _palette.choose(SpaceTheme.pillInk, _palette.accent);
+  Color get pillFollowedFill => _palette.choose(SpaceTheme.pillFollowedFill, _palette.raised);
+  Color get pillFollowedInk => _palette.choose(SpaceTheme.pillFollowedInk, _palette.secondary);
+  Color get countInk => _palette.choose(SpaceTheme.countInk, _palette.text);
+  Color get labelInk => _palette.choose(SpaceTheme.labelInk, _palette.secondary);
+  Color get statsRuleInk => _palette.choose(SpaceTheme.statsRuleInk, _palette.divider);
+  Color get followFill => _palette.choose(SpaceTheme.followFill, _palette.accent);
+  Color get followedFill => _palette.choose(SpaceTheme.followedFill, _palette.divider);
+  Color get followedInk => _palette.choose(SpaceTheme.followedInk, _palette.secondary);
+  Color get chargeInk => _palette.choose(SpaceTheme.chargeInk, _palette.accent);
+  Color get nameInk => _palette.choose(SpaceTheme.nameInk, _palette.text);
+  Color get nameVipInk => _palette.choose(SpaceTheme.nameVipInk, _palette.accent);
+  Color get officialFill => _palette.choose(SpaceTheme.officialFill, _palette.page);
+  Color get officialInk => _palette.choose(SpaceTheme.officialInk, _palette.icon);
+  Color get bioInk => _palette.choose(SpaceTheme.bioInk, _palette.secondary);
+  Color get detailInk => _palette.choose(SpaceTheme.detailInk, _palette.link);
+  Color get tagInk => _palette.choose(SpaceTheme.tagInk, _palette.icon);
+  Color get entryFill => _palette.choose(SpaceTheme.entryFill, _palette.raised);
+  Color get entryInk => _palette.choose(SpaceTheme.entryInk, _palette.text);
+  Color get entryNoteInk => _palette.choose(SpaceTheme.entryNoteInk, _palette.icon);
+  Color get tabsHairlineInk => _palette.choose(SpaceTheme.tabsHairlineInk, _palette.divider);
+  Color get tabInk => _palette.choose(SpaceTheme.tabInk, _palette.icon);
+  Color get tabSelected => _palette.choose(SpaceTheme.tabSelected, _palette.accent);
+  Color get sheetFill => _palette.choose(SpaceTheme.sheetFill, _palette.surface);
+  Color get sheetRuleInk => _palette.choose(SpaceTheme.sheetRuleInk, _palette.secondary);
+  Color get sheetInk => _palette.choose(SpaceTheme.sheetInk, _palette.text);
+  Color get sheetGapFill => _palette.choose(SpaceTheme.sheetGapFill, _palette.divider);
+  Color get retryInk => _palette.choose(SpaceTheme.retryInk, _palette.secondary);
+  Color get retryAction => _palette.choose(SpaceTheme.retryAction, _palette.link);
+}
+
+@immutable
+class SpaceVideosThemeColors {
+  const SpaceVideosThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get chipInk => _palette.choose(SpaceVideosTheme.chipInk, _palette.icon);
+  Color get chipChosenInk => _palette.choose(SpaceVideosTheme.chipChosenInk, _palette.accent);
+  Color get chipRim => _palette.choose(SpaceVideosTheme.chipRim, _palette.divider);
+  Color get playAllGlyphInk => _palette.choose(SpaceVideosTheme.playAllGlyphInk, _palette.accent);
+  Color get playAllInk => _palette.choose(SpaceVideosTheme.playAllInk, _palette.text);
+  Color get sortGlyphInk => _palette.choose(SpaceVideosTheme.sortGlyphInk, _palette.secondary);
+  Color get sortInk => _palette.choose(SpaceVideosTheme.sortInk, _palette.secondary);
+  Color get hairlineInk => _palette.choose(SpaceVideosTheme.hairlineInk, _palette.divider);
+  Color get coverPlaceholder => _palette.choose(SpaceVideosTheme.coverPlaceholder, _palette.page);
+  Color get titleInk => _palette.choose(SpaceVideosTheme.titleInk, _palette.text);
+  Color get metaInk => _palette.choose(SpaceVideosTheme.metaInk, _palette.secondary);
+  Color get moreInk => _palette.choose(SpaceVideosTheme.moreInk, _palette.secondary);
+  Color get badgeFill => _palette.choose(SpaceVideosTheme.badgeFill, _palette.accent);
+  Color get endInk => _palette.choose(SpaceVideosTheme.endInk, _palette.icon);
+  Color get stateInk => _palette.choose(SpaceVideosTheme.stateInk, _palette.secondary);
+  Color get menuFill => _palette.choose(SpaceVideosTheme.menuFill, _palette.surface);
+  Color get menuInk => _palette.choose(SpaceVideosTheme.menuInk, _palette.text);
+  Color get menuIconInk => _palette.choose(SpaceVideosTheme.menuIconInk, _palette.accent);
+}
+
+@immutable
+class FeedDislikeThemeColors {
+  const FeedDislikeThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get sheetFill => _palette.choose(FeedDislikeTheme.sheetFill, _palette.raised);
+  Color get grabberInk => _palette.choose(FeedDislikeTheme.grabberInk, _palette.disabled);
+  Color get cardFill => _palette.choose(FeedDislikeTheme.cardFill, _palette.surface);
+  Color get ink => _palette.choose(FeedDislikeTheme.ink, _palette.text);
+  Color get hairlineInk => _palette.choose(FeedDislikeTheme.hairlineInk, _palette.divider);
+  Color get tileLabelInk => _palette.choose(FeedDislikeTheme.tileLabelInk, _palette.icon);
+}
+
+@immutable
+class FavouritesThemeColors {
+  const FavouritesThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get tabInk => _palette.choose(FavouritesTheme.tabInk, _palette.text);
+  Color get tabChosenInk => _palette.choose(FavouritesTheme.tabChosenInk, _palette.accent);
+  Color get chipInk => _palette.choose(FavouritesTheme.chipInk, _palette.icon);
+  Color get chipChosenInk => _palette.choose(FavouritesTheme.chipChosenInk, _palette.accent);
+  Color get headerHairlineInk => _palette.choose(FavouritesTheme.headerHairlineInk, _palette.page);
+  Color get toolInk => _palette.choose(FavouritesTheme.toolInk, _palette.icon);
+  Color get page => _palette.choose(FavouritesTheme.page, _palette.raised);
+  Color get cardFill => _palette.choose(FavouritesTheme.cardFill, _palette.surface);
+  Color get cardTitleInk => _palette.choose(FavouritesTheme.cardTitleInk, _palette.text);
+  Color get cardCountInk => _palette.choose(FavouritesTheme.cardCountInk, _palette.secondary);
+  Color get chevronInk => _palette.choose(FavouritesTheme.chevronInk, _palette.disabled);
+  Color get tileEmpty => _palette.choose(FavouritesTheme.tileEmpty, _palette.page);
+  Color get tileTitleInk => _palette.choose(FavouritesTheme.tileTitleInk, _palette.text);
+  Color get newRimInk => _palette.choose(FavouritesTheme.newRimInk, _palette.divider);
+  Color get newInk => _palette.choose(FavouritesTheme.newInk, _palette.secondary);
+  Color get folderBarInk => _palette.choose(FavouritesTheme.folderBarInk, _palette.icon);
+  Color get folderMetaInk => _palette.choose(FavouritesTheme.folderMetaInk, _palette.secondary);
+  Color get folderActionInk => _palette.choose(FavouritesTheme.folderActionInk, _palette.secondary);
+  Color get folderActionFaint => _palette.choose(FavouritesTheme.folderActionFaint, _palette.secondary);
+  Color get folderActionLabelInk => _palette.choose(FavouritesTheme.folderActionLabelInk, _palette.secondary);
+  Color get coverEmpty => _palette.choose(FavouritesTheme.coverEmpty, _palette.page);
+  Color get divider => _palette.choose(FavouritesTheme.divider, _palette.divider);
+  Color get rowTitleInk => _palette.choose(FavouritesTheme.rowTitleInk, _palette.text);
+  Color get metaInk => _palette.choose(FavouritesTheme.metaInk, _palette.secondary);
+  Color get endInk => _palette.choose(FavouritesTheme.endInk, _palette.disabled);
+  Color get footerInk => _palette.choose(FavouritesTheme.footerInk, _palette.disabled);
+  Color get stateInk => _palette.choose(FavouritesTheme.stateInk, _palette.secondary);
+  Color get sheetFill => _palette.choose(FavouritesTheme.sheetFill, _palette.surface);
+  Color get sheetRemoveInk => _palette.choose(FavouritesTheme.sheetRemoveInk, _palette.icon);
+  Color get sheetBandFill => _palette.choose(FavouritesTheme.sheetBandFill, _palette.raised);
+  Color get sheetCancelInk => _palette.choose(FavouritesTheme.sheetCancelInk, _palette.icon);
+  Color get playFill => _palette.choose(FavouritesTheme.playFill, _palette.raised);
+  Color get playInk => _palette.choose(FavouritesTheme.playInk, _palette.icon);
+  Color get playInkOff => _palette.choose(FavouritesTheme.playInkOff, _palette.secondary);
+  Color get playGlyphOff => _palette.choose(FavouritesTheme.playGlyphOff, _palette.disabled);
+  Color get newDoneOffInk => _palette.choose(FavouritesTheme.newDoneOffInk, _palette.icon);
+  Color get newDoneInk => _palette.choose(FavouritesTheme.newDoneInk, _palette.accent);
+  Color get newPage => _palette.choose(FavouritesTheme.newPage, _palette.page);
+  Color get newGroupFill => _palette.choose(FavouritesTheme.newGroupFill, _palette.surface);
+  Color get formInk => _palette.choose(FavouritesTheme.formInk, _palette.text);
+  Color get newHintInk => _palette.choose(FavouritesTheme.newHintInk, _palette.secondary);
+  Color get newChevronInk => _palette.choose(FavouritesTheme.newChevronInk, _palette.secondary);
+  Color get coverSheetFill => _palette.choose(FavouritesTheme.coverSheetFill, _palette.raised);
+  Color get coverSheetCancelFill => _palette.choose(FavouritesTheme.coverSheetCancelFill, _palette.surface);
+  Color get coverSheetHairlineInk => _palette.choose(FavouritesTheme.coverSheetHairlineInk, _palette.secondary);
+}
+
+@immutable
+class WatchLaterThemeColors {
+  const WatchLaterThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get ink => _palette.choose(WatchLaterTheme.ink, _palette.text);
+  Color get grey => _palette.choose(WatchLaterTheme.grey, _palette.icon);
+  Color get greyOff => _palette.choose(WatchLaterTheme.greyOff, _palette.disabled);
+  Color get hairlineInk => _palette.choose(WatchLaterTheme.hairlineInk, _palette.divider);
+  Color get coverPlaceholder => _palette.choose(WatchLaterTheme.coverPlaceholder, _palette.page);
+  Color get metaInk => _palette.choose(WatchLaterTheme.metaInk, _palette.secondary);
+  Color get moreInk => _palette.choose(WatchLaterTheme.moreInk, _palette.disabled);
+  Color get circleInk => _palette.choose(WatchLaterTheme.circleInk, _palette.disabled);
+  Color get circleChosen => _palette.choose(WatchLaterTheme.circleChosen, _palette.accent);
+  Color get noteInk => _palette.choose(WatchLaterTheme.noteInk, _palette.disabled);
+  Color get emptyInk => _palette.choose(WatchLaterTheme.emptyInk, _palette.secondary);
+  Color get artBody => _palette.choose(WatchLaterTheme.artBody, _palette.divider);
+  Color get stateInk => _palette.choose(WatchLaterTheme.stateInk, _palette.secondary);
+  Color get sheetFill => _palette.choose(WatchLaterTheme.sheetFill, _palette.raised);
+  Color get grabberInk => _palette.choose(WatchLaterTheme.grabberInk, _palette.disabled);
+  Color get groupFill => _palette.choose(WatchLaterTheme.groupFill, _palette.surface);
+  Color get actionHairlineInk => _palette.choose(WatchLaterTheme.actionHairlineInk, _palette.page);
+  Color get folderSheetFill => _palette.choose(WatchLaterTheme.folderSheetFill, _palette.surface);
+  Color get folderGrabberInk => _palette.choose(WatchLaterTheme.folderGrabberInk, _palette.disabled);
+  Color get editActionOff => _palette.choose(WatchLaterTheme.editActionOff, _palette.disabled);
+}
+
+@immutable
+class AppAuthThemeColors {
+  const AppAuthThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get status => _palette.choose(AppAuthTheme.status, _palette.secondary);
+}
+
+@immutable
+class OwnSpaceThemeColors {
+  const OwnSpaceThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get editInk => _palette.choose(OwnSpaceTheme.editInk, _palette.accent);
+  Color get editFill => _palette.choose(OwnSpaceTheme.editFill, _palette.surface);
+  Color get pillRim => _palette.choose(OwnSpaceTheme.pillRim, _palette.disabled);
+  Color get pillInk => _palette.choose(OwnSpaceTheme.pillInk, _palette.secondary);
+  Color get expInk => _palette.choose(OwnSpaceTheme.expInk, _palette.secondary);
+  Color get expTrack => _palette.choose(OwnSpaceTheme.expTrack, _palette.divider);
+  Color get bar => _palette.choose(OwnSpaceTheme.bar, _palette.surface);
+  Color get barInk => _palette.choose(OwnSpaceTheme.barInk, _palette.icon);
+}
+
+@immutable
+class OwnSpaceTabsThemeColors {
+  const OwnSpaceTabsThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get greyPage => _palette.choose(OwnSpaceTabsTheme.greyPage, _palette.raised);
+  Color get whitePage => _palette.choose(OwnSpaceTabsTheme.whitePage, _palette.surface);
+  Color get titleInk => _palette.choose(OwnSpaceTabsTheme.titleInk, _palette.text);
+  Color get countInk => _palette.choose(OwnSpaceTabsTheme.countInk, _palette.secondary);
+  Color get eyeInk => _palette.choose(OwnSpaceTabsTheme.eyeInk, _palette.secondary);
+  Color get moreInk => _palette.choose(OwnSpaceTabsTheme.moreInk, _palette.secondary);
+  Color get cardFill => _palette.choose(OwnSpaceTabsTheme.cardFill, _palette.surface);
+  Color get coverEmpty => _palette.choose(OwnSpaceTabsTheme.coverEmpty, _palette.page);
+  Color get cardTitleInk => _palette.choose(OwnSpaceTabsTheme.cardTitleInk, _palette.text);
+  Color get folderCountInk => _palette.choose(OwnSpaceTabsTheme.folderCountInk, _palette.secondary);
+  Color get tvInk => _palette.choose(OwnSpaceTabsTheme.tvInk, _palette.divider);
+  Color get posterEmpty => _palette.choose(OwnSpaceTabsTheme.posterEmpty, _palette.page);
+  Color get folderChevronInk => _palette.choose(OwnSpaceTabsTheme.folderChevronInk, _palette.secondary);
+  Color get folderBandInk => _palette.choose(OwnSpaceTabsTheme.folderBandInk, _palette.raised);
+  Color get rowTvInk => _palette.choose(OwnSpaceTabsTheme.rowTvInk, _palette.disabled);
+  Color get endInk => _palette.choose(OwnSpaceTabsTheme.endInk, _palette.secondary);
+  Color get emptyDiscFill => _palette.choose(OwnSpaceTabsTheme.emptyDiscFill, _palette.raised);
+  Color get uploadInk => _palette.choose(OwnSpaceTabsTheme.uploadInk, _palette.icon);
+  Color get emptyInk => _palette.choose(OwnSpaceTabsTheme.emptyInk, _palette.secondary);
+  Color get uploadPillInk => _palette.choose(OwnSpaceTabsTheme.uploadPillInk, _palette.accent);
+  Color get rewardInk => _palette.choose(OwnSpaceTabsTheme.rewardInk, _palette.link);
+  Color get footerInk => _palette.choose(OwnSpaceTabsTheme.footerInk, _palette.disabled);
+  Color get footerRetryInk => _palette.choose(OwnSpaceTabsTheme.footerRetryInk, _palette.link);
+}
+
+@immutable
+class HomeHeaderThemeColors {
+  const HomeHeaderThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get searchInk => _palette.choose(HomeHeaderTheme.searchInk, _palette.icon);
+}
+
+@immutable
+class FeedBatchThemeColors {
+  const FeedBatchThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get ink => _palette.choose(FeedBatchTheme.ink, _palette.accent);
+}
+
+@immutable
+class FeedBigCardThemeColors {
+  const FeedBigCardThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get title => _palette.choose(FeedBigCardTheme.title, _palette.text);
+  Color get like => _palette.choose(FeedBigCardTheme.like, _palette.icon);
+  Color get liked => _palette.choose(FeedBigCardTheme.liked, _palette.accent);
+  Color get count => _palette.choose(FeedBigCardTheme.count, _palette.secondary);
+  Color get progressInk => _palette.choose(FeedBigCardTheme.progressInk, _palette.accent);
+}
+
+@immutable
+class DynamicCardThemeColors {
+  const DynamicCardThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get fill => _palette.choose(DynamicCardTheme.fill, _palette.surface);
+  Color get bandInk => _palette.choose(DynamicCardTheme.bandInk, _palette.page);
+  Color get spaceBandInk => _palette.choose(DynamicCardTheme.spaceBandInk, _palette.raised);
+  Color get nameInk => _palette.choose(DynamicCardTheme.nameInk, _palette.text);
+  Color get nameVipInk => _palette.choose(DynamicCardTheme.nameVipInk, _palette.accent);
+  Color get timeInk => _palette.choose(DynamicCardTheme.timeInk, _palette.secondary);
+  Color get moreInk => _palette.choose(DynamicCardTheme.moreInk, _palette.secondary);
+  Color get textInk => _palette.choose(DynamicCardTheme.textInk, _palette.text);
+  Color get linkInk => _palette.choose(DynamicCardTheme.linkInk, _palette.link);
+  Color get pictureFill => _palette.choose(DynamicCardTheme.pictureFill, _palette.page);
+  Color get progressInk => _palette.choose(DynamicCardTheme.progressInk, _palette.accent);
+  Color get titleInk => _palette.choose(DynamicCardTheme.titleInk, _palette.text);
+  Color get repostFill => _palette.choose(DynamicCardTheme.repostFill, _palette.page);
+  Color get repostTextInk => _palette.choose(DynamicCardTheme.repostTextInk, _palette.icon);
+  Color get repostFollowInk => _palette.choose(DynamicCardTheme.repostFollowInk, _palette.accent);
+  Color get goodsHeadInk => _palette.choose(DynamicCardTheme.goodsHeadInk, _palette.secondary);
+  Color get goodsFill => _palette.choose(DynamicCardTheme.goodsFill, _palette.raised);
+  Color get goodsNameInk => _palette.choose(DynamicCardTheme.goodsNameInk, _palette.text);
+  Color get goodsBriefInk => _palette.choose(DynamicCardTheme.goodsBriefInk, _palette.secondary);
+  Color get goodsButtonFill => _palette.choose(DynamicCardTheme.goodsButtonFill, _palette.accent);
+  Color get footerInk => _palette.choose(DynamicCardTheme.footerInk, _palette.icon);
+  Color get footerLiked => _palette.choose(DynamicCardTheme.footerLiked, _palette.accent);
+  Color get sheetFill => _palette.choose(DynamicCardTheme.sheetFill, _palette.raised);
+  Color get sheetHairlineInk => _palette.choose(DynamicCardTheme.sheetHairlineInk, _palette.divider);
+  Color get sheetIconInk => _palette.choose(DynamicCardTheme.sheetIconInk, _palette.accent);
+  Color get sheetInk => _palette.choose(DynamicCardTheme.sheetInk, _palette.text);
+  Color get sheetGapFill => _palette.choose(DynamicCardTheme.sheetGapFill, _palette.page);
+  Color get sheetCancelInk => _palette.choose(DynamicCardTheme.sheetCancelInk, _palette.icon);
+}
+
+@immutable
+class DynamicFeedThemeColors {
+  const DynamicFeedThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get bar => _palette.choose(DynamicFeedTheme.bar, _palette.surface);
+  Color get titleInk => _palette.choose(DynamicFeedTheme.titleInk, _palette.text);
+  Color get switchFill => _palette.choose(DynamicFeedTheme.switchFill, _palette.raised);
+  Color get switchOn => _palette.choose(DynamicFeedTheme.switchOn, _palette.accent);
+  Color get switchOff => _palette.choose(DynamicFeedTheme.switchOff, _palette.icon);
+  Color get sectionInk => _palette.choose(DynamicFeedTheme.sectionInk, _palette.text);
+  Color get moreInk => _palette.choose(DynamicFeedTheme.moreInk, _palette.secondary);
+  Color get allInk => _palette.choose(DynamicFeedTheme.allInk, _palette.icon);
+  Color get chevronInk => _palette.choose(DynamicFeedTheme.chevronInk, _palette.secondary);
+  Color get faceRingInk => _palette.choose(DynamicFeedTheme.faceRingInk, _palette.page);
+  Color get nameInk => _palette.choose(DynamicFeedTheme.nameInk, _palette.icon);
+  Color get dotInk => _palette.choose(DynamicFeedTheme.dotInk, _palette.accent);
+  Color get bandFill => _palette.choose(DynamicFeedTheme.bandFill, _palette.page);
+  Color get posterTitleInk => _palette.choose(DynamicFeedTheme.posterTitleInk, _palette.text);
+  Color get stateInk => _palette.choose(DynamicFeedTheme.stateInk, _palette.secondary);
+  Color get footerInk => _palette.choose(DynamicFeedTheme.footerInk, _palette.disabled);
+  Color get sheetFrost => _palette.choose(DynamicFeedTheme.sheetFrost, _palette.divider);
+  Color get sheetFill => _palette.choose(DynamicFeedTheme.sheetFill, _palette.surface);
+  Color get sheetTitleInk => _palette.choose(DynamicFeedTheme.sheetTitleInk, _palette.text);
+  Color get closeInk => _palette.choose(DynamicFeedTheme.closeInk, _palette.icon);
+  Color get sheetRuleInk => _palette.choose(DynamicFeedTheme.sheetRuleInk, _palette.divider);
+}
+
+@immutable
+class DynamicPostThemeColors {
+  const DynamicPostThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get page => _palette.choose(DynamicPostTheme.page, _palette.surface);
+  Color get barInk => _palette.choose(DynamicPostTheme.barInk, _palette.icon);
+  Color get barRule => _palette.choose(DynamicPostTheme.barRule, _palette.divider);
+  Color get titleInk => _palette.choose(DynamicPostTheme.titleInk, _palette.text);
+  Color get name => _palette.choose(DynamicPostTheme.name, _palette.text);
+  Color get meta => _palette.choose(DynamicPostTheme.meta, _palette.secondary);
+  Color get textInk => _palette.choose(DynamicPostTheme.textInk, _palette.text);
+  Color get tabChosen => _palette.choose(DynamicPostTheme.tabChosen, _palette.accent);
+  Color get tabInk => _palette.choose(DynamicPostTheme.tabInk, _palette.secondary);
+  Color get tabRule => _palette.choose(DynamicPostTheme.tabRule, _palette.divider);
+  Color get bottomRule => _palette.choose(DynamicPostTheme.bottomRule, _palette.divider);
+  Color get bottomRuleSoft => _palette.choose(DynamicPostTheme.bottomRuleSoft, _palette.page);
+  Color get pillFill => _palette.choose(DynamicPostTheme.pillFill, _palette.page);
+  Color get pillInk => _palette.choose(DynamicPostTheme.pillInk, _palette.secondary);
+  Color get actionInk => _palette.choose(DynamicPostTheme.actionInk, _palette.icon);
+  Color get actionCountInk => _palette.choose(DynamicPostTheme.actionCountInk, _palette.secondary);
+  Color get actionLiked => _palette.choose(DynamicPostTheme.actionLiked, _palette.accent);
+  Color get stateInk => _palette.choose(DynamicPostTheme.stateInk, _palette.secondary);
+  Color get retryInk => _palette.choose(DynamicPostTheme.retryInk, _palette.accent);
+}
+
+@immutable
+class FollowingListThemeColors {
+  const FollowingListThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get bar => _palette.choose(FollowingListTheme.bar, _palette.surface);
+  Color get barInk => _palette.choose(FollowingListTheme.barInk, _palette.text);
+  Color get hairline => _palette.choose(FollowingListTheme.hairline, _palette.divider);
+  Color get backInk => _palette.choose(FollowingListTheme.backInk, _palette.text);
+  Color get field => _palette.choose(FollowingListTheme.field, _palette.page);
+  Color get fieldInk => _palette.choose(FollowingListTheme.fieldInk, _palette.text);
+  Color get placeholder => _palette.choose(FollowingListTheme.placeholder, _palette.secondary);
+  Color get caret => _palette.choose(FollowingListTheme.caret, _palette.accent);
+  Color get magnifierInk => _palette.choose(FollowingListTheme.magnifierInk, _palette.secondary);
+  Color get clearColor => _palette.choose(FollowingListTheme.clearColor, _palette.disabled);
+  Color get sortLabel => _palette.choose(FollowingListTheme.sortLabel, _palette.secondary);
+  Color get sortValue => _palette.choose(FollowingListTheme.sortValue, _palette.icon);
+  Color get sortChevron => _palette.choose(FollowingListTheme.sortChevron, _palette.icon);
+  Color get menuInk => _palette.choose(FollowingListTheme.menuInk, _palette.icon);
+  Color get menuChosen => _palette.choose(FollowingListTheme.menuChosen, _palette.accent);
+  Color get menuFill => _palette.choose(FollowingListTheme.menuFill, _palette.surface);
+  Color get name => _palette.choose(FollowingListTheme.name, _palette.text);
+  Color get vipName => _palette.choose(FollowingListTheme.vipName, _palette.accent);
+  Color get dotInk => _palette.choose(FollowingListTheme.dotInk, _palette.accent);
+  Color get page => _palette.choose(FollowingListTheme.page, _palette.surface);
+  Color get stateInk => _palette.choose(FollowingListTheme.stateInk, _palette.secondary);
+  Color get footerInk => _palette.choose(FollowingListTheme.footerInk, _palette.secondary);
+}
+
+@immutable
+class PadHomeThemeColors {
+  const PadHomeThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get page => _palette.choose(PadHomeTheme.page, _palette.surface);
+  Color get fieldFill => _palette.choose(PadHomeTheme.fieldFill, _palette.page);
+  Color get fieldGlyphInk => _palette.choose(PadHomeTheme.fieldGlyphInk, _palette.secondary);
+  Color get fieldInk => _palette.choose(PadHomeTheme.fieldInk, _palette.secondary);
+  Color get tabInk => _palette.choose(PadHomeTheme.tabInk, _palette.secondary);
+  Color get iconInk => _palette.choose(PadHomeTheme.iconInk, _palette.icon);
+  Color get barIconInk => _palette.choose(PadHomeTheme.barIconInk, _palette.icon);
+  Color get barLabelInk => _palette.choose(PadHomeTheme.barLabelInk, _palette.secondary);
+  Color get subInk => _palette.choose(PadHomeTheme.subInk, _palette.secondary);
+  Color get moreInk => _palette.choose(PadHomeTheme.moreInk, _palette.icon);
+}
+
+@immutable
+class PadPageThemeColors {
+  const PadPageThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get ruleColour => _palette.choose(PadPageTheme.ruleColour, _palette.divider);
+  Color get barFill => _palette.choose(PadPageTheme.barFill, _palette.accent);
+  Color get tabInk => _palette.choose(PadPageTheme.tabInk, _palette.icon);
+  Color get headerTitle => _palette.choose(PadPageTheme.headerTitle, _palette.text);
+  Color get headerFieldFill => _palette.choose(PadPageTheme.headerFieldFill, _palette.raised);
+  Color get headerFieldInk => _palette.choose(PadPageTheme.headerFieldInk, _palette.secondary);
+  Color get headerInk => _palette.choose(PadPageTheme.headerInk, _palette.icon);
+  Color get commentRule => _palette.choose(PadPageTheme.commentRule, _palette.disabled);
+  Color get commentFieldFill => _palette.choose(PadPageTheme.commentFieldFill, _palette.raised);
+  Color get commentInk => _palette.choose(PadPageTheme.commentInk, _palette.secondary);
+}
+
+@immutable
+class PadBodyThemeColors {
+  const PadBodyThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get titleInk => _palette.choose(PadBodyTheme.titleInk, _palette.icon);
+  Color get tagInk => _palette.choose(PadBodyTheme.tagInk, _palette.icon);
+  Color get actionCount => _palette.choose(PadBodyTheme.actionCount, _palette.icon);
+}
+
+@immutable
+class DownloadSheetThemeColors {
+  const DownloadSheetThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get sheet => _palette.choose(DownloadSheetTheme.sheet, _palette.raised);
+  Color get card => _palette.choose(DownloadSheetTheme.card, _palette.surface);
+  Color get hairline => _palette.choose(DownloadSheetTheme.hairline, _palette.divider);
+  Color get grey => _palette.choose(DownloadSheetTheme.grey, _palette.icon);
+  Color get ink => _palette.choose(DownloadSheetTheme.ink, _palette.text);
+  Color get trackOff => _palette.choose(DownloadSheetTheme.trackOff, _palette.raised);
+  Color get playing => _palette.choose(DownloadSheetTheme.playing, _palette.accent);
+  Color get markTrack => _palette.choose(DownloadSheetTheme.markTrack, _palette.divider);
+}
+
+@immutable
+class OfflineListThemeColors {
+  const OfflineListThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get page => _palette.choose(OfflineListTheme.page, _palette.surface);
+  Color get ink => _palette.choose(OfflineListTheme.ink, _palette.text);
+  Color get grey => _palette.choose(OfflineListTheme.grey, _palette.icon);
+  Color get meta => _palette.choose(OfflineListTheme.meta, _palette.secondary);
+  Color get bar => _palette.choose(OfflineListTheme.bar, _palette.surface);
+  Color get barInk => _palette.choose(OfflineListTheme.barInk, _palette.text);
+  Color get field => _palette.choose(OfflineListTheme.field, _palette.page);
+  Color get fieldInk => _palette.choose(OfflineListTheme.fieldInk, _palette.text);
+  Color get fieldHint => _palette.choose(OfflineListTheme.fieldHint, _palette.disabled);
+  Color get caret => _palette.choose(OfflineListTheme.caret, _palette.accent);
+  Color get clearInk => _palette.choose(OfflineListTheme.clearInk, _palette.disabled);
+  Color get coverPlaceholder => _palette.choose(OfflineListTheme.coverPlaceholder, _palette.page);
+  Color get progressTrack => _palette.choose(OfflineListTheme.progressTrack, _palette.divider);
+  Color get progressActive => _palette.choose(OfflineListTheme.progressActive, _palette.accent);
+  Color get progressIdle => _palette.choose(OfflineListTheme.progressIdle, _palette.secondary);
+  Color get vip => _palette.choose(OfflineListTheme.vip, _palette.accent);
+  Color get divider => _palette.choose(OfflineListTheme.divider, _palette.divider);
+  Color get watched => _palette.choose(OfflineListTheme.watched, _palette.accent);
+  Color get stackCard => _palette.choose(OfflineListTheme.stackCard, _palette.disabled);
+  Color get allFill => _palette.choose(OfflineListTheme.allFill, _palette.raised);
+  Color get allGlyph => _palette.choose(OfflineListTheme.allGlyph, _palette.icon);
+  Color get countInk => _palette.choose(OfflineListTheme.countInk, _palette.secondary);
+  Color get circleRing => _palette.choose(OfflineListTheme.circleRing, _palette.icon);
+  Color get circleChosen => _palette.choose(OfflineListTheme.circleChosen, _palette.accent);
+  Color get selectAllInk => _palette.choose(OfflineListTheme.selectAllInk, _palette.icon);
+  Color get deleteInk => _palette.choose(OfflineListTheme.deleteInk, _palette.icon);
+  Color get confirmRuleInk => _palette.choose(OfflineListTheme.confirmRuleInk, _palette.divider);
+  Color get confirmCancel => _palette.choose(OfflineListTheme.confirmCancel, _palette.text);
+  Color get confirmAction => _palette.choose(OfflineListTheme.confirmAction, _palette.accent);
+  Color get confirmPressed => _palette.choose(OfflineListTheme.confirmPressed, _palette.pressed);
+  Color get sheet => _palette.choose(OfflineListTheme.sheet, _palette.raised);
+  Color get handle => _palette.choose(OfflineListTheme.handle, _palette.disabled);
+  Color get optionInk => _palette.choose(OfflineListTheme.optionInk, _palette.text);
+  Color get optionChosen => _palette.choose(OfflineListTheme.optionChosen, _palette.accent);
+  Color get optionRuleInk => _palette.choose(OfflineListTheme.optionRuleInk, _palette.divider);
+  Color get badgeFill => _palette.choose(OfflineListTheme.badgeFill, _palette.accent);
+}
+
+@immutable
+class OfflinePageThemeColors {
+  const OfflinePageThemeColors(this._palette);
+
+  final BiliPalette _palette;
+  Color get titleInk => _palette.choose(OfflinePageTheme.titleInk, _palette.text);
+  Color get countInk => _palette.choose(OfflinePageTheme.countInk, _palette.secondary);
+  Color get divider => _palette.choose(OfflinePageTheme.divider, _palette.divider);
+  Color get rowTitle => _palette.choose(OfflinePageTheme.rowTitle, _palette.text);
+  Color get playing => _palette.choose(OfflinePageTheme.playing, _palette.accent);
+  Color get meta => _palette.choose(OfflinePageTheme.meta, _palette.secondary);
+  Color get vip => _palette.choose(OfflinePageTheme.vip, _palette.accent);
+  Color get footerInk => _palette.choose(OfflinePageTheme.footerInk, _palette.disabled);
+  Color get sheetFill => _palette.choose(OfflinePageTheme.sheetFill, _palette.surface);
+  Color get sheetBand => _palette.choose(OfflinePageTheme.sheetBand, _palette.page);
+  Color get sheetIconInk => _palette.choose(OfflinePageTheme.sheetIconInk, _palette.accent);
+  Color get sheetInk => _palette.choose(OfflinePageTheme.sheetInk, _palette.text);
 }

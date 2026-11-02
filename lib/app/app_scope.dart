@@ -27,6 +27,7 @@ import '../playback/shared_engine.dart';
 import '../search/search_api.dart';
 import '../search/search_history_store.dart';
 import '../settings/font_store.dart';
+import '../settings/appearance_store.dart';
 import '../shared/image_disk_cache.dart';
 import '../skin/skin_api.dart';
 import '../skin/skin_model.dart';
@@ -160,6 +161,7 @@ class AppServices {
     required this.recents,
     PlayerDevice? device,
     FontStore? fonts,
+    AppearanceStore? appearance,
     PageApi? pageApi,
     this._searchApi,
     this._spaceApi,
@@ -192,6 +194,7 @@ class AppServices {
        offline = offline ?? FakeOfflineLibrary(),
        loginGate = loginGate ?? LoginPageGate(environment),
        fonts = fonts ?? FontStore.memory(),
+       appearance = appearance ?? AppearanceStore.memory(),
        pageApi = pageApi ?? ClientPageApi(environment.client),
        searchHistory = searchHistory ?? SearchHistoryStore.memory(),
        meProfile = meProfile ?? MeProfileStore.memory(),
@@ -255,6 +258,7 @@ class AppServices {
   final RecentStore recents;
   final PlayerDevice device;
   final FontStore fonts;
+  final AppearanceStore appearance;
   final PageApi pageApi;
   final SearchApi? _searchApi;
 
