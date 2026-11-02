@@ -28,4 +28,15 @@ Verified with the pinned Flutter 3.47.7 / Dart 3.13.5 SDK:
 - Windows release build succeeded. Home, My, settings, watch later, a library sheet, video introduction, comments and a portrait panel were rendered and inspected with the system-font stand-ins.
 - Workflow checks: 36 passed. Tool checks: 86 passed.
 
-The Windows Computer Use helper could not connect to its native pipe, so external click/screenshot automation was unavailable. The Windows appearance integration test supplies the interaction check. This is not an iOS device or TestFlight verification.
+The initial Windows Computer Use connection failure was resolved on 2026-11-02. The release app was then operated through native UI automation with `--fake-account --mute`, with each result inspected from a fresh screenshot:
+
+| Control/check | Verified result |
+| --- | --- |
+| My moon action | Switches the visible UI to dark and back to light; the restored dark action announces `日间模式`. |
+| Settings and Font settings | Dark surfaces, readable text, rose selection mark and white status icons; returning preserves dark My. |
+| Home and Search | Feed content stays visible against dark surfaces; thumbnails keep their colors, and search fields/chips adapt. |
+| Watch Later and its row action sheet | Loading/list/sheet surfaces and icons render in dark mode; dismissing the sheet leaves the list intact. |
+| Equipped skin | Header and bottom-bar artwork retain their supplied colors while ordinary content adapts. |
+| Full process restart | Closed the app, confirmed its window disappeared, relaunched it, and verified dark Home and My without another toggle. |
+
+The preview was left open on My with dark mode enabled. No application-code changes were needed after these checks. iOS device and TestFlight verification remain pending.
