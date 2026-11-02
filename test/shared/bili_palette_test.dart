@@ -4,6 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('painter color snapshots compare by appearance', () {
+    expect(const MeThemeColors(BiliPalette(Brightness.light)), const MeThemeColors(BiliPalette(Brightness.light)));
+    expect(const MeThemeColors(BiliPalette(Brightness.light)), isNot(const MeThemeColors(BiliPalette(Brightness.dark))));
+    expect(const MeThemeColors(BiliPalette(Brightness.dark)), isNot(const HistoryThemeColors(BiliPalette(Brightness.dark))));
+  });
+
   testWidgets('constant children depend on the palette and rebuild when appearance changes', (tester) async {
     final brightness = ValueNotifier(Brightness.light);
     addTearDown(brightness.dispose);

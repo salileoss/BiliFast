@@ -1,6 +1,6 @@
 # Dark mode implementation plan
 
-Prepared 2026-11-02. Planning only; application code has not changed.
+Prepared 2026-11-02 and approved for local implementation on `feat/dark-mode`. This document records the design; see `dark-mode.md` for implementation notes.
 
 ## Codebase map
 

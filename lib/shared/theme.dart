@@ -7836,11 +7836,24 @@ abstract final class OfflinePageTheme {
 
 // Context-resolved color views. The static constants above remain the measured light values.
 
+/// Color snapshots compare by appearance so unchanged painters need no extra repaint.
 @immutable
-class BiliColorsColors {
-  const BiliColorsColors(this._palette);
+abstract class BiliColorView {
+  const BiliColorView(this._palette);
 
   final BiliPalette _palette;
+
+  @override
+  bool operator ==(Object other) =>
+      other.runtimeType == runtimeType && other is BiliColorView && other._palette.brightness == _palette.brightness;
+
+  @override
+  int get hashCode => Object.hash(runtimeType, _palette.brightness);
+}
+
+@immutable
+class BiliColorsColors extends BiliColorView {
+  const BiliColorsColors(super._palette);
   Color get pink => _palette.choose(BiliColors.pink, _palette.accent);
   Color get pinkTint => _palette.choose(BiliColors.pinkTint, _palette.accentTint);
   Color get text => _palette.choose(BiliColors.text, _palette.text);
@@ -7862,18 +7875,14 @@ class BiliColorsColors {
 }
 
 @immutable
-class PageThemeColors {
-  const PageThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class PageThemeColors extends BiliColorView {
+  const PageThemeColors(super._palette);
   Color get tabText => _palette.choose(PageTheme.tabText, _palette.icon);
 }
 
 @immutable
-class IntroThemeColors {
-  const IntroThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class IntroThemeColors extends BiliColorView {
+  const IntroThemeColors(super._palette);
   Color get name => _palette.choose(IntroTheme.name, _palette.icon);
   Color get followedFill => _palette.choose(IntroTheme.followedFill, _palette.page);
   Color get followedText => _palette.choose(IntroTheme.followedText, _palette.secondary);
@@ -7881,37 +7890,29 @@ class IntroThemeColors {
 }
 
 @immutable
-class IntroListThemeColors {
-  const IntroListThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class IntroListThemeColors extends BiliColorView {
+  const IntroListThemeColors(super._palette);
   Color get chipTextColor => _palette.choose(IntroListTheme.chipTextColor, _palette.icon);
   Color get chipGlyphColor => _palette.choose(IntroListTheme.chipGlyphColor, _palette.icon);
 }
 
 @immutable
-class ActionThemeColors {
-  const ActionThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class ActionThemeColors extends BiliColorView {
+  const ActionThemeColors(super._palette);
   Color get icon => _palette.choose(ActionTheme.icon, _palette.icon);
   Color get count => _palette.choose(ActionTheme.count, _palette.secondary);
 }
 
 @immutable
-class FavouriteThemeColors {
-  const FavouriteThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class FavouriteThemeColors extends BiliColorView {
+  const FavouriteThemeColors(super._palette);
   Color get ringLight => _palette.choose(FavouriteTheme.ringLight, _palette.disabled);
   Color get switchOffLight => _palette.choose(FavouriteTheme.switchOffLight, _palette.raised);
 }
 
 @immutable
-class CommentRowThemeColors {
-  const CommentRowThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class CommentRowThemeColors extends BiliColorView {
+  const CommentRowThemeColors(super._palette);
   Color get vipName => _palette.choose(CommentRowTheme.vipName, _palette.accent);
   Color get vipMarkFill => _palette.choose(CommentRowTheme.vipMarkFill, _palette.accent);
   Color get name => _palette.choose(CommentRowTheme.name, _palette.secondary);
@@ -7933,10 +7934,8 @@ class CommentRowThemeColors {
 }
 
 @immutable
-class CommentListThemeColors {
-  const CommentListThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class CommentListThemeColors extends BiliColorView {
+  const CommentListThemeColors(super._palette);
   Color get background => _palette.choose(CommentListTheme.background, _palette.surface);
   Color get rule => _palette.choose(CommentListTheme.rule, _palette.divider);
   Color get sortInk => _palette.choose(CommentListTheme.sortInk, _palette.secondary);
@@ -7953,19 +7952,15 @@ class CommentListThemeColors {
 }
 
 @immutable
-class CommentTextThemeColors {
-  const CommentTextThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class CommentTextThemeColors extends BiliColorView {
+  const CommentTextThemeColors(super._palette);
   Color get link => _palette.choose(CommentTextTheme.link, _palette.link);
   Color get replyTarget => _palette.choose(CommentTextTheme.replyTarget, _palette.secondary);
 }
 
 @immutable
-class ComposerThemeColors {
-  const ComposerThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class ComposerThemeColors extends BiliColorView {
+  const ComposerThemeColors(super._palette);
   Color get accentFaded => _palette.choose(ComposerTheme.accentFaded, const Color(0xFF643044));
   Color get accent => _palette.choose(ComposerTheme.accent, _palette.accent);
   Color get sheet => _palette.choose(ComposerTheme.sheet, _palette.surface);
@@ -7983,10 +7978,8 @@ class ComposerThemeColors {
 }
 
 @immutable
-class CommentOverlayThemeColors {
-  const CommentOverlayThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class CommentOverlayThemeColors extends BiliColorView {
+  const CommentOverlayThemeColors(super._palette);
   Color get threadFill => _palette.choose(CommentOverlayTheme.threadFill, _palette.surface);
   Color get alertTitle => _palette.choose(CommentOverlayTheme.alertTitle, _palette.text);
   Color get alertMessage => _palette.choose(CommentOverlayTheme.alertMessage, _palette.secondary);
@@ -7995,10 +7988,8 @@ class CommentOverlayThemeColors {
 }
 
 @immutable
-class MentionThemeColors {
-  const MentionThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class MentionThemeColors extends BiliColorView {
+  const MentionThemeColors(super._palette);
   Color get fieldFill => _palette.choose(MentionTheme.fieldFill, _palette.page);
   Color get clearFill => _palette.choose(MentionTheme.clearFill, _palette.disabled);
   Color get clearGlyphColor => _palette.choose(MentionTheme.clearGlyphColor, _palette.surface);
@@ -8007,20 +7998,16 @@ class MentionThemeColors {
 }
 
 @immutable
-class AvatarPageThemeColors {
-  const AvatarPageThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class AvatarPageThemeColors extends BiliColorView {
+  const AvatarPageThemeColors(super._palette);
   Color get background => _palette.choose(AvatarPageTheme.background, _palette.raised);
   Color get barIcon => _palette.choose(AvatarPageTheme.barIcon, _palette.icon);
   Color get remove => _palette.choose(AvatarPageTheme.remove, _palette.disabled);
 }
 
 @immutable
-class MeThemeColors {
-  const MeThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class MeThemeColors extends BiliColorView {
+  const MeThemeColors(super._palette);
   Color get vipLabelFill => _palette.choose(MeTheme.vipLabelFill, _palette.accent);
   Color get listenGlyph => _palette.choose(MeTheme.listenGlyph, _palette.accent);
   Color get serviceGlyph => _palette.choose(MeTheme.serviceGlyph, _palette.accent);
@@ -8049,10 +8036,8 @@ class MeThemeColors {
 }
 
 @immutable
-class DanmakuPanelThemeColors {
-  const DanmakuPanelThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class DanmakuPanelThemeColors extends BiliColorView {
+  const DanmakuPanelThemeColors(super._palette);
   Color get lightFill => _palette.choose(DanmakuPanelTheme.lightFill, const Color(0x80643044));
   Color get lightBackground => _palette.choose(DanmakuPanelTheme.lightBackground, _palette.raised);
   Color get lightCard => _palette.choose(DanmakuPanelTheme.lightCard, _palette.surface);
@@ -8066,20 +8051,16 @@ class DanmakuPanelThemeColors {
 }
 
 @immutable
-class BlockWordsThemeColors {
-  const BlockWordsThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class BlockWordsThemeColors extends BiliColorView {
+  const BlockWordsThemeColors(super._palette);
   Color get grey => _palette.choose(BlockWordsTheme.grey, _palette.secondary);
   Color get fieldFill => _palette.choose(BlockWordsTheme.fieldFill, _palette.surface);
   Color get fieldInk => _palette.choose(BlockWordsTheme.fieldInk, _palette.text);
 }
 
 @immutable
-class DanmakuSendThemeColors {
-  const DanmakuSendThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class DanmakuSendThemeColors extends BiliColorView {
+  const DanmakuSendThemeColors(super._palette);
   Color get lightBar => _palette.choose(DanmakuSendTheme.lightBar, _palette.surface);
   Color get lightArea => _palette.choose(DanmakuSendTheme.lightArea, _palette.page);
   Color get lightAccent => _palette.choose(DanmakuSendTheme.lightAccent, _palette.accent);
@@ -8089,20 +8070,16 @@ class DanmakuSendThemeColors {
 }
 
 @immutable
-class DanmakuListThemeColors {
-  const DanmakuListThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class DanmakuListThemeColors extends BiliColorView {
+  const DanmakuListThemeColors(super._palette);
   Color get liked => _palette.choose(DanmakuListTheme.liked, _palette.accent);
   Color get divider => DanmakuListTheme.divider;
   Color get emptyColor => _palette.choose(DanmakuListTheme.emptyColor, _palette.secondary);
 }
 
 @immutable
-class HistoryThemeColors {
-  const HistoryThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class HistoryThemeColors extends BiliColorView {
+  const HistoryThemeColors(super._palette);
   Color get back => _palette.choose(HistoryTheme.back, _palette.icon);
   Color get divider => _palette.choose(HistoryTheme.divider, _palette.divider);
   Color get rowTitle => _palette.choose(HistoryTheme.rowTitle, _palette.text);
@@ -8121,10 +8098,8 @@ class HistoryThemeColors {
 }
 
 @immutable
-class LoginThemeColors {
-  const LoginThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class LoginThemeColors extends BiliColorView {
+  const LoginThemeColors(super._palette);
   Color get bar => _palette.choose(LoginTheme.bar, _palette.surface);
   Color get page => _palette.choose(LoginTheme.page, _palette.surface);
   Color get title => _palette.choose(LoginTheme.title, _palette.text);
@@ -8136,10 +8111,8 @@ class LoginThemeColors {
 }
 
 @immutable
-class SettingsThemeColors {
-  const SettingsThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class SettingsThemeColors extends BiliColorView {
+  const SettingsThemeColors(super._palette);
   Color get bar => _palette.choose(SettingsTheme.bar, _palette.surface);
   Color get barTitle => _palette.choose(SettingsTheme.barTitle, _palette.text);
   Color get backGlyph => _palette.choose(SettingsTheme.backGlyph, _palette.icon);
@@ -8165,10 +8138,8 @@ class SettingsThemeColors {
 }
 
 @immutable
-class HomeTabBarThemeColors {
-  const HomeTabBarThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class HomeTabBarThemeColors extends BiliColorView {
+  const HomeTabBarThemeColors(super._palette);
   Color get bar => _palette.choose(HomeTabBarTheme.bar, _palette.surface);
   Color get hairline => _palette.choose(HomeTabBarTheme.hairline, _palette.divider);
   Color get label => _palette.choose(HomeTabBarTheme.label, _palette.icon);
@@ -8179,28 +8150,22 @@ class HomeTabBarThemeColors {
 }
 
 @immutable
-class CoverPlaceholderThemeColors {
-  const CoverPlaceholderThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class CoverPlaceholderThemeColors extends BiliColorView {
+  const CoverPlaceholderThemeColors(super._palette);
   Color get fill => _palette.choose(CoverPlaceholderTheme.fill, _palette.raised);
   Color get ink => _palette.choose(CoverPlaceholderTheme.ink, _palette.disabled);
 }
 
 @immutable
-class TabIconThemeColors {
-  const TabIconThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class TabIconThemeColors extends BiliColorView {
+  const TabIconThemeColors(super._palette);
   Color get ink => _palette.choose(TabIconTheme.ink, _palette.icon);
   Color get selectedInk => _palette.choose(TabIconTheme.selectedInk, _palette.accent);
 }
 
 @immutable
-class SearchThemeColors {
-  const SearchThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class SearchThemeColors extends BiliColorView {
+  const SearchThemeColors(super._palette);
   Color get dim => _palette.choose(SearchTheme.dim, _palette.icon);
   Color get page => _palette.choose(SearchTheme.page, _palette.surface);
   Color get text => _palette.choose(SearchTheme.text, _palette.text);
@@ -8218,10 +8183,8 @@ class SearchThemeColors {
 }
 
 @immutable
-class SearchResultThemeColors {
-  const SearchResultThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class SearchResultThemeColors extends BiliColorView {
+  const SearchResultThemeColors(super._palette);
   Color get page => _palette.choose(SearchResultTheme.page, _palette.surface);
   Color get hairlineInk => _palette.choose(SearchResultTheme.hairlineInk, _palette.divider);
   Color get rowHairlineInk => _palette.choose(SearchResultTheme.rowHairlineInk, _palette.disabled);
@@ -8247,10 +8210,8 @@ class SearchResultThemeColors {
 }
 
 @immutable
-class SearchFilterThemeColors {
-  const SearchFilterThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class SearchFilterThemeColors extends BiliColorView {
+  const SearchFilterThemeColors(super._palette);
   Color get chipChosenLabel => _palette.choose(SearchFilterTheme.chipChosenLabel, _palette.accent);
   Color get panel => _palette.choose(SearchFilterTheme.panel, _palette.surface);
   Color get title => _palette.choose(SearchFilterTheme.title, _palette.text);
@@ -8259,18 +8220,14 @@ class SearchFilterThemeColors {
 }
 
 @immutable
-class LoadingTvThemeColors {
-  const LoadingTvThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class LoadingTvThemeColors extends BiliColorView {
+  const LoadingTvThemeColors(super._palette);
   Color get stateInk => _palette.choose(LoadingTvTheme.stateInk, _palette.secondary);
 }
 
 @immutable
-class UploaderSheetThemeColors {
-  const UploaderSheetThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class UploaderSheetThemeColors extends BiliColorView {
+  const UploaderSheetThemeColors(super._palette);
   Color get fill => _palette.choose(UploaderSheetTheme.fill, _palette.surface);
   Color get grabber => _palette.choose(UploaderSheetTheme.grabber, _palette.disabled);
   Color get nameInk => _palette.choose(UploaderSheetTheme.nameInk, _palette.text);
@@ -8286,10 +8243,8 @@ class UploaderSheetThemeColors {
 }
 
 @immutable
-class SpaceThemeColors {
-  const SpaceThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class SpaceThemeColors extends BiliColorView {
+  const SpaceThemeColors(super._palette);
   Color get pillFill => _palette.choose(SpaceTheme.pillFill, _palette.accentTint);
   Color get page => _palette.choose(SpaceTheme.page, _palette.surface);
   Color get bannerDefault => _palette.choose(SpaceTheme.bannerDefault, _palette.divider);
@@ -8327,10 +8282,8 @@ class SpaceThemeColors {
 }
 
 @immutable
-class SpaceVideosThemeColors {
-  const SpaceVideosThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class SpaceVideosThemeColors extends BiliColorView {
+  const SpaceVideosThemeColors(super._palette);
   Color get chipChosenFill => _palette.choose(SpaceVideosTheme.chipChosenFill, _palette.accentTint);
   Color get chipInk => _palette.choose(SpaceVideosTheme.chipInk, _palette.icon);
   Color get chipChosenInk => _palette.choose(SpaceVideosTheme.chipChosenInk, _palette.accent);
@@ -8353,10 +8306,8 @@ class SpaceVideosThemeColors {
 }
 
 @immutable
-class FeedDislikeThemeColors {
-  const FeedDislikeThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class FeedDislikeThemeColors extends BiliColorView {
+  const FeedDislikeThemeColors(super._palette);
   Color get sheetFill => _palette.choose(FeedDislikeTheme.sheetFill, _palette.raised);
   Color get grabberInk => _palette.choose(FeedDislikeTheme.grabberInk, _palette.disabled);
   Color get cardFill => _palette.choose(FeedDislikeTheme.cardFill, _palette.surface);
@@ -8366,10 +8317,8 @@ class FeedDislikeThemeColors {
 }
 
 @immutable
-class FavouritesThemeColors {
-  const FavouritesThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class FavouritesThemeColors extends BiliColorView {
+  const FavouritesThemeColors(super._palette);
   Color get newSwitchOn => _palette.choose(FavouritesTheme.newSwitchOn, _palette.accent);
   Color get playFillOff => _palette.choose(FavouritesTheme.playFillOff, _palette.raised);
   Color get tabInk => _palette.choose(FavouritesTheme.tabInk, _palette.text);
@@ -8420,10 +8369,8 @@ class FavouritesThemeColors {
 }
 
 @immutable
-class WatchLaterThemeColors {
-  const WatchLaterThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class WatchLaterThemeColors extends BiliColorView {
+  const WatchLaterThemeColors(super._palette);
   Color get artShade => _palette.choose(WatchLaterTheme.artShade, _palette.raised);
   Color get chipChosenFillOff => _palette.choose(WatchLaterTheme.chipChosenFillOff, _palette.raised);
   Color get chipChosenFill => _palette.choose(WatchLaterTheme.chipChosenFill, _palette.accentTint);
@@ -8451,18 +8398,14 @@ class WatchLaterThemeColors {
 }
 
 @immutable
-class AppAuthThemeColors {
-  const AppAuthThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class AppAuthThemeColors extends BiliColorView {
+  const AppAuthThemeColors(super._palette);
   Color get status => _palette.choose(AppAuthTheme.status, _palette.secondary);
 }
 
 @immutable
-class OwnSpaceThemeColors {
-  const OwnSpaceThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class OwnSpaceThemeColors extends BiliColorView {
+  const OwnSpaceThemeColors(super._palette);
   Color get editInk => _palette.choose(OwnSpaceTheme.editInk, _palette.accent);
   Color get editFill => _palette.choose(OwnSpaceTheme.editFill, _palette.surface);
   Color get pillRim => _palette.choose(OwnSpaceTheme.pillRim, _palette.disabled);
@@ -8474,10 +8417,8 @@ class OwnSpaceThemeColors {
 }
 
 @immutable
-class OwnSpaceTabsThemeColors {
-  const OwnSpaceTabsThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class OwnSpaceTabsThemeColors extends BiliColorView {
+  const OwnSpaceTabsThemeColors(super._palette);
   Color get greyPage => _palette.choose(OwnSpaceTabsTheme.greyPage, _palette.raised);
   Color get whitePage => _palette.choose(OwnSpaceTabsTheme.whitePage, _palette.surface);
   Color get titleInk => _palette.choose(OwnSpaceTabsTheme.titleInk, _palette.text);
@@ -8504,26 +8445,20 @@ class OwnSpaceTabsThemeColors {
 }
 
 @immutable
-class HomeHeaderThemeColors {
-  const HomeHeaderThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class HomeHeaderThemeColors extends BiliColorView {
+  const HomeHeaderThemeColors(super._palette);
   Color get searchInk => _palette.choose(HomeHeaderTheme.searchInk, _palette.icon);
 }
 
 @immutable
-class FeedBatchThemeColors {
-  const FeedBatchThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class FeedBatchThemeColors extends BiliColorView {
+  const FeedBatchThemeColors(super._palette);
   Color get ink => _palette.choose(FeedBatchTheme.ink, _palette.accent);
 }
 
 @immutable
-class FeedBigCardThemeColors {
-  const FeedBigCardThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class FeedBigCardThemeColors extends BiliColorView {
+  const FeedBigCardThemeColors(super._palette);
   Color get title => _palette.choose(FeedBigCardTheme.title, _palette.text);
   Color get like => _palette.choose(FeedBigCardTheme.like, _palette.icon);
   Color get liked => _palette.choose(FeedBigCardTheme.liked, _palette.accent);
@@ -8532,10 +8467,8 @@ class FeedBigCardThemeColors {
 }
 
 @immutable
-class DynamicCardThemeColors {
-  const DynamicCardThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class DynamicCardThemeColors extends BiliColorView {
+  const DynamicCardThemeColors(super._palette);
   Color get fill => _palette.choose(DynamicCardTheme.fill, _palette.surface);
   Color get bandInk => _palette.choose(DynamicCardTheme.bandInk, _palette.page);
   Color get spaceBandInk => _palette.choose(DynamicCardTheme.spaceBandInk, _palette.raised);
@@ -8567,10 +8500,8 @@ class DynamicCardThemeColors {
 }
 
 @immutable
-class DynamicFeedThemeColors {
-  const DynamicFeedThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class DynamicFeedThemeColors extends BiliColorView {
+  const DynamicFeedThemeColors(super._palette);
   Color get bar => _palette.choose(DynamicFeedTheme.bar, _palette.surface);
   Color get titleInk => _palette.choose(DynamicFeedTheme.titleInk, _palette.text);
   Color get switchFill => _palette.choose(DynamicFeedTheme.switchFill, _palette.raised);
@@ -8595,10 +8526,8 @@ class DynamicFeedThemeColors {
 }
 
 @immutable
-class DynamicPostThemeColors {
-  const DynamicPostThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class DynamicPostThemeColors extends BiliColorView {
+  const DynamicPostThemeColors(super._palette);
   Color get page => _palette.choose(DynamicPostTheme.page, _palette.surface);
   Color get barInk => _palette.choose(DynamicPostTheme.barInk, _palette.icon);
   Color get barRule => _palette.choose(DynamicPostTheme.barRule, _palette.divider);
@@ -8621,10 +8550,8 @@ class DynamicPostThemeColors {
 }
 
 @immutable
-class FollowingListThemeColors {
-  const FollowingListThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class FollowingListThemeColors extends BiliColorView {
+  const FollowingListThemeColors(super._palette);
   Color get bar => _palette.choose(FollowingListTheme.bar, _palette.surface);
   Color get barInk => _palette.choose(FollowingListTheme.barInk, _palette.text);
   Color get hairline => _palette.choose(FollowingListTheme.hairline, _palette.divider);
@@ -8650,10 +8577,8 @@ class FollowingListThemeColors {
 }
 
 @immutable
-class PadHomeThemeColors {
-  const PadHomeThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class PadHomeThemeColors extends BiliColorView {
+  const PadHomeThemeColors(super._palette);
   Color get pink => _palette.choose(PadHomeTheme.pink, _palette.accent);
   Color get page => _palette.choose(PadHomeTheme.page, _palette.surface);
   Color get fieldFill => _palette.choose(PadHomeTheme.fieldFill, _palette.page);
@@ -8668,10 +8593,8 @@ class PadHomeThemeColors {
 }
 
 @immutable
-class PadPageThemeColors {
-  const PadPageThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class PadPageThemeColors extends BiliColorView {
+  const PadPageThemeColors(super._palette);
   Color get ruleColour => _palette.choose(PadPageTheme.ruleColour, _palette.divider);
   Color get barFill => _palette.choose(PadPageTheme.barFill, _palette.accent);
   Color get tabInk => _palette.choose(PadPageTheme.tabInk, _palette.icon);
@@ -8685,20 +8608,16 @@ class PadPageThemeColors {
 }
 
 @immutable
-class PadBodyThemeColors {
-  const PadBodyThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class PadBodyThemeColors extends BiliColorView {
+  const PadBodyThemeColors(super._palette);
   Color get titleInk => _palette.choose(PadBodyTheme.titleInk, _palette.icon);
   Color get tagInk => _palette.choose(PadBodyTheme.tagInk, _palette.icon);
   Color get actionCount => _palette.choose(PadBodyTheme.actionCount, _palette.icon);
 }
 
 @immutable
-class DownloadSheetThemeColors {
-  const DownloadSheetThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class DownloadSheetThemeColors extends BiliColorView {
+  const DownloadSheetThemeColors(super._palette);
   Color get sheet => _palette.choose(DownloadSheetTheme.sheet, _palette.raised);
   Color get card => _palette.choose(DownloadSheetTheme.card, _palette.surface);
   Color get hairline => _palette.choose(DownloadSheetTheme.hairline, _palette.divider);
@@ -8710,10 +8629,8 @@ class DownloadSheetThemeColors {
 }
 
 @immutable
-class OfflineListThemeColors {
-  const OfflineListThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class OfflineListThemeColors extends BiliColorView {
+  const OfflineListThemeColors(super._palette);
   Color get page => _palette.choose(OfflineListTheme.page, _palette.surface);
   Color get ink => _palette.choose(OfflineListTheme.ink, _palette.text);
   Color get grey => _palette.choose(OfflineListTheme.grey, _palette.icon);
@@ -8753,10 +8670,8 @@ class OfflineListThemeColors {
 }
 
 @immutable
-class OfflinePageThemeColors {
-  const OfflinePageThemeColors(this._palette);
-
-  final BiliPalette _palette;
+class OfflinePageThemeColors extends BiliColorView {
+  const OfflinePageThemeColors(super._palette);
   Color get titleInk => _palette.choose(OfflinePageTheme.titleInk, _palette.text);
   Color get countInk => _palette.choose(OfflinePageTheme.countInk, _palette.secondary);
   Color get divider => _palette.choose(OfflinePageTheme.divider, _palette.divider);
