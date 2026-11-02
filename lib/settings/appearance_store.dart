@@ -6,7 +6,7 @@ import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter/foundation.dart';
 
 /// The device's appearance choice, applied immediately and restored before the first app frame.
-class AppearanceStore extends ChangeNotifier {
+class AppearanceStore extends ChangeNotifier implements ValueListenable<ThemeMode> {
   AppearanceStore._(this._path, this._logger, this._mode);
 
   factory AppearanceStore.memory({ThemeMode mode = ThemeMode.light, Logger? logger}) =>
@@ -36,6 +36,8 @@ class AppearanceStore extends ChangeNotifier {
   Future<void> _writing = Future.value();
 
   ThemeMode get mode => _mode;
+  @override
+  ThemeMode get value => _mode;
   bool get isDark => _mode == ThemeMode.dark;
 
   void toggle() => select(isDark ? ThemeMode.light : ThemeMode.dark);
