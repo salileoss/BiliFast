@@ -1,10 +1,17 @@
 import 'package:bilifast/main.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'shared/text_lines.dart';
 
 void main() {
+  testWidgets('a failed launch retains the restored dark appearance', (tester) async {
+    await tester.pumpWidget(const LaunchFailedApp(error: 'startup failed', mode: ThemeMode.dark));
+    expect(tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor, const Color(0xFF18191B));
+    expect(tester.widget<Text>(find.text('BiliFast 启动失败，请重启应用')).style?.color, const Color(0xFFE3E5E7));
+    expect(find.text('startup failed'), findsOneWidget);
+  });
+
   testWidgets('under the system font, an error mixing Latin and Chinese sits on a Chinese one\'s lines', (tester) async {
     await useSystemFont(tester);
     tester.view

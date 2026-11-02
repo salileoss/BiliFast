@@ -80,7 +80,10 @@ Future<void> main(List<String> args) async {
   final CodecMemory codecMemory;
   final MeProfileStore meProfile;
   final HistoryOutbox historyOutbox;
+  var launchMode = ThemeMode.light;
   try {
+    appearance = await AppearanceStore.load(supportFilePath('appearance.json'));
+    launchMode = appearance.mode;
     environment = await (Platform.isWindows
         ? loadWindowsEnvironment(
             realAccount: args.contains('--real-account') && !args.contains('--fake-account'))
@@ -88,7 +91,6 @@ Future<void> main(List<String> args) async {
     recents = await RecentStore.load(supportFilePath('recents.json'));
     PlayerPrefs.shared = await PlayerPrefs.load(supportFilePath('player_prefs.json'));
     fonts = await FontStore.load(supportFilePath('font.json'));
-    appearance = await AppearanceStore.load(supportFilePath('appearance.json'));
     searchHistory = await SearchHistoryStore.load(supportFilePath('search_history.json'));
     danmakuSettings = await DanmakuSettingsStore.load(supportFilePath('danmaku_settings.json'));
     RecentEmotes.shared = await RecentEmotes.load(supportFilePath('emotes_recent.json'));
@@ -98,7 +100,7 @@ Future<void> main(List<String> args) async {
   } catch (error, stack) {
     // Without this the launch screen would stay up with nothing to say why.
     CrashLog.report(error, stack, source: 'launch');
-    runApp(LaunchFailedApp(error: '$error'));
+    runApp(LaunchFailedApp(error: '$error', mode: launchMode));
     return;
   }
   // PC checks only: the page's actions, 搜索, UP主空间, 我的收藏 and 稍后再看 answer from memory, and the app token
@@ -207,9 +209,10 @@ void applyTurnTakeover(OrientationController orientation, PlayerPrefs prefs) =>
 
 /// What the app shows when it could not start.
 class LaunchFailedApp extends StatelessWidget {
-  const LaunchFailedApp({super.key, required this.error});
+  const LaunchFailedApp({super.key, required this.error, this.mode = ThemeMode.light});
 
   final String error;
+  final ThemeMode mode;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -218,20 +221,22 @@ class LaunchFailedApp extends StatelessWidget {
         locale: BiliFonts.locale,
         supportedLocales: const [BiliFonts.locale],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        theme: ThemeData(
-          fontFamily: BiliFonts.family,
-          fontFamilyFallback: BiliFonts.fallback,
-          textTheme: BiliFonts.untracked,
-        ),
-        home: Scaffold(
-          backgroundColor: BiliColors.pageGrey,
+        theme: biliTheme(Brightness.light),
+        darkTheme: biliTheme(Brightness.dark),
+        themeMode: mode,
+        builder: (context, child) => DefaultStatusBar(child: child!),
+        home: Builder(builder: (context) => Scaffold(
+          backgroundColor: BiliColors.colorsOf(context).pageGrey,
           body: SafeArea(
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.all(BiliMetrics.gutter),
                 child: Builder(builder: (context) {
-                  const title =
-                      TextStyle(fontSize: BiliMetrics.titleText, color: BiliColors.text, fontWeight: FontWeight.w600);
+                  final title = TextStyle(
+                    fontSize: BiliMetrics.titleText,
+                    color: BiliColors.colorsOf(context).text,
+                    fontWeight: FontWeight.w600,
+                  );
                   const detail = TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.failure);
                   return Column(
                     mainAxisSize: MainAxisSize.min,
@@ -252,7 +257,7 @@ class LaunchFailedApp extends StatelessWidget {
               ),
             ),
           ),
-        ),
+        )),
       );
 }
 

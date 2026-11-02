@@ -309,7 +309,12 @@ class AppServices {
   final SkinModel? _skin;
 
   /// The equipped 装扮 (its value null for the stock look): the one given, else made on first use. `main` starts it.
-  late final SkinModel skin = _skin ?? SkinModel(api: skinApi, environment: environment, folder: skinFolder);
+  late final SkinModel skin = _skin ?? SkinModel(
+    api: skinApi,
+    environment: environment,
+    folder: skinFolder,
+    appearance: appearance,
+  );
 
   /// The pictures kept on the phone (`ImageDiskCache.shared` in the app); null when launch couldn't get the caches
   /// folder, and in tests that don't give one.
