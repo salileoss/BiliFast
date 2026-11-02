@@ -375,7 +375,7 @@ class _Button extends StatelessWidget {
         decoration: ShapeDecoration(
           shape: StadiumBorder(side: BorderSide(color: LoginTheme.colorsOf(context).retry)),
         ),
-        child: Text(label, style: LoginTheme.retryStyle),
+        child: Text(label, style: LoginTheme.retryStyle.copyWith(color: LoginTheme.colorsOf(context).retry)),
       ),
     ),
   );

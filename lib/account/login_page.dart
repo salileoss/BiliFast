@@ -336,7 +336,7 @@ class _Retry extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: LoginTheme.retryPadX),
             alignment: Alignment.center,
             decoration: ShapeDecoration(shape: StadiumBorder(side: BorderSide(color: LoginTheme.colorsOf(context).retry))),
-            child: Text('重试', style: LoginTheme.retryStyle),
+            child: Text('重试', style: LoginTheme.retryStyle.copyWith(color: LoginTheme.colorsOf(context).retry)),
           ),
         ),
       ],
