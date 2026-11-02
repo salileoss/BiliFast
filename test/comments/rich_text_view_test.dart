@@ -2,6 +2,8 @@ import 'package:bili_core/api.dart' hide RichText;
 import 'package:bilifast/comments/rich_text_view.dart';
 import 'package:bilifast/shared/remote_image.dart';
 import 'package:bilifast/shared/theme.dart';
+import 'package:bilifast/shared/app_theme.dart';
+import 'package:flutter/material.dart' show Theme;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -99,6 +101,24 @@ Future<void> _expireToast(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('cached rich-text links follow an inherited appearance change', (tester) async {
+    const comment = CommentText(
+      runs: [RichRun.link(title: 'link', url: 'https://example.com')],
+      style: _style,
+    );
+    Widget host(Brightness brightness) => Theme(
+      data: biliTheme(brightness),
+      child: const Directionality(textDirection: TextDirection.ltr, child: comment),
+    );
+    await tester.pumpWidget(host(Brightness.light));
+    final element = tester.element(find.byType(CommentText));
+    expect(_span(tester, 'link').style!.color, BiliColors.link);
+    await tester.pumpWidget(host(Brightness.dark));
+    expect(tester.element(find.byType(CommentText)), same(element));
+    expect(_span(tester, 'link').style!.color, const Color(0xFF69B7E5));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('plain text as it is, the leading span first, and an ellipsis once maxLines runs out', (tester) async {
     final rig = Rig();
     const leading = TextSpan(

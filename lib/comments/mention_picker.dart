@@ -97,12 +97,12 @@ class _MentionPickerState extends State<MentionPicker> {
       fontFamily: BiliFonts.family,
       fontFamilyFallback: BiliFonts.fallback,
       fontSize: MentionTheme.nameText,
-      color: BiliColors.text,
+      color: BiliColors.colorsOf(context).text,
       decoration: TextDecoration.none,
     ),
     child: DecoratedBox(
-      decoration: const BoxDecoration(
-        color: BiliColors.card,
+      decoration: BoxDecoration(
+        color: BiliColors.colorsOf(context).card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(BiliMetrics.sheetRadius)),
       ),
       child: Column(
@@ -120,13 +120,13 @@ class _MentionPickerState extends State<MentionPicker> {
   );
 
   TextStyle get _fieldText =>
-      TextStyle(fontFamily: BiliFonts.family, fontSize: MentionTheme.fieldText, color: BiliColors.text);
+      TextStyle(fontFamily: BiliFonts.family, fontSize: MentionTheme.fieldText, color: BiliColors.colorsOf(context).text);
 
   Widget _searchField() => Container(
     height: MentionTheme.fieldHeight,
     padding: const EdgeInsets.symmetric(horizontal: MentionTheme.fieldPadX),
     decoration: BoxDecoration(
-      color: MentionTheme.fieldFill,
+      color: MentionTheme.colorsOf(context).fieldFill,
       borderRadius: BorderRadius.circular(MentionTheme.fieldHeight / 2),
     ),
     child: Row(
@@ -139,7 +139,7 @@ class _MentionPickerState extends State<MentionPicker> {
                   key: ValueKey('mention-searching'),
                   radius: MentionTheme.fieldSpinnerRadius,
                 )
-              : const Icon(Icons.search, size: MentionTheme.fieldIcon, color: BiliColors.secondaryText),
+              : Icon(Icons.search, size: MentionTheme.fieldIcon, color: BiliColors.colorsOf(context).secondaryText),
         ),
         const SizedBox(width: MentionTheme.fieldIconGap),
         Expanded(
@@ -152,7 +152,7 @@ class _MentionPickerState extends State<MentionPicker> {
               onChanged: _typed,
               onSubmitted: (text) => unawaited(_run(text.trim())),
               textInputAction: TextInputAction.search,
-              cursorColor: BiliColors.pink,
+              cursorColor: BiliColors.colorsOf(context).pink,
               style: _fieldText,
               strutStyle: fieldStrut(context, _fieldText),
               decoration: InputDecoration(
@@ -162,7 +162,7 @@ class _MentionPickerState extends State<MentionPicker> {
                 hintStyle: TextStyle(
                   fontFamily: BiliFonts.family,
                   fontSize: MentionTheme.fieldText,
-                  color: BiliColors.secondaryText,
+                  color: BiliColors.colorsOf(context).secondaryText,
                 ),
               ),
             ),
@@ -190,11 +190,11 @@ class _MentionPickerState extends State<MentionPicker> {
                         child: Container(
                           width: MentionTheme.clearSize,
                           height: MentionTheme.clearSize,
-                          decoration: const BoxDecoration(color: MentionTheme.clearFill, shape: BoxShape.circle),
-                          child: const Icon(
+                          decoration: BoxDecoration(color: MentionTheme.colorsOf(context).clearFill, shape: BoxShape.circle),
+                          child: Icon(
                             Icons.close,
                             size: MentionTheme.clearGlyph,
-                            color: MentionTheme.clearGlyphColor,
+                            color: MentionTheme.colorsOf(context).clearGlyphColor,
                           ),
                         ),
                       ),
@@ -244,7 +244,7 @@ class _MentionPickerState extends State<MentionPicker> {
         style: TextStyle(
           fontFamily: BiliFonts.family,
           fontSize: MentionTheme.stateText,
-          color: BiliColors.secondaryText,
+          color: BiliColors.colorsOf(context).secondaryText,
         ),
       ),
     );
@@ -281,7 +281,7 @@ class _MentionPickerState extends State<MentionPicker> {
               style: TextStyle(
                 fontFamily: BiliFonts.family,
                 fontSize: MentionTheme.sectionText,
-                color: MentionTheme.sectionColour,
+                color: MentionTheme.colorsOf(context).sectionColour,
               ),
             ),
           );
@@ -331,7 +331,7 @@ class _CandidateRowState extends State<_CandidateRow> {
       onTap: widget.onTap,
       child: Container(
         height: MentionTheme.rowHeight,
-        color: _pressed ? BiliColors.pressedFill : null,
+        color: _pressed ? BiliColors.colorsOf(context).pressedFill : null,
         padding: const EdgeInsets.symmetric(horizontal: MentionTheme.gutter),
         child: Row(
           children: [
@@ -344,7 +344,7 @@ class _CandidateRowState extends State<_CandidateRow> {
             const SizedBox(width: MentionTheme.avatarGap),
             Expanded(
               child: Text.rich(
-                TextSpan(children: _highlighted(widget.who.name, widget.query)),
+                TextSpan(children: _highlighted(context, widget.who.name, widget.query)),
                 strutStyle: BiliFonts.strutOf(context),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -357,7 +357,7 @@ class _CandidateRowState extends State<_CandidateRow> {
   );
 
   /// [name] with each case-insensitive occurrence of [query] in pink.
-  static List<TextSpan> _highlighted(String name, String query) {
+  static List<TextSpan> _highlighted(BuildContext context, String name, String query) {
     final lower = name.toLowerCase();
     final needle = query.toLowerCase();
     // Lowercasing can change a string's length, and then the offsets no longer line up with the name.
@@ -371,7 +371,7 @@ class _CandidateRowState extends State<_CandidateRow> {
       spans.add(
         TextSpan(
           text: name.substring(at, at + needle.length),
-          style: const TextStyle(color: MentionTheme.match),
+          style: TextStyle(color: MentionTheme.colorsOf(context).match),
         ),
       );
       from = at + needle.length;

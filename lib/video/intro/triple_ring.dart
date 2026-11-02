@@ -28,13 +28,14 @@ class TripleRing extends StatelessWidget {
   Widget build(BuildContext context) => IgnorePointer(
     child: SizedBox.square(
       dimension: size,
-      child: CustomPaint(painter: _RingPainter(progress, burst)),
+      child: CustomPaint(painter: _RingPainter(progress, burst, palette: BiliPalette.of(context))),
     ),
   );
 }
 
 class _RingPainter extends CustomPainter {
-  _RingPainter(this.progress, this.burst) : super(repaint: Listenable.merge([progress, burst]));
+  final BiliPalette palette;
+  _RingPainter(this.progress, this.burst, {this.palette = const BiliPalette(Brightness.light)}) : super(repaint: Listenable.merge([progress, burst]));
 
   final Animation<double> progress;
   final Animation<double> burst;
@@ -44,7 +45,7 @@ class _RingPainter extends CustomPainter {
     final centre = size.center(Offset.zero);
     final radius = (size.shortestSide - ActionTheme.ringWidth) / 2;
     final stroke = Paint()
-      ..color = BiliColors.pink
+      ..color = BiliColorsColors(palette).pink
       ..style = PaintingStyle.stroke
       ..strokeWidth = ActionTheme.ringWidth
       ..strokeCap = StrokeCap.round;
@@ -62,7 +63,7 @@ class _RingPainter extends CustomPainter {
     if (t <= 0 || t >= 1) return;
     final spread = 1 + (ActionTheme.burstSpread - 1) * Curves.easeOut.transform(t);
     final opacity = 1 - Curves.easeIn.transform(t);
-    final faded = BiliColors.pink.withValues(alpha: opacity);
+    final faded = BiliColorsColors(palette).pink.withValues(alpha: opacity);
     canvas.drawCircle(centre, radius * spread, stroke..color = faded);
     final dot = Paint()..color = faded;
     for (var i = 0; i < 8; i++) {
@@ -76,5 +77,5 @@ class _RingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RingPainter old) => old.progress != progress || old.burst != burst;
+  bool shouldRepaint(_RingPainter old) => (old.progress != progress || old.burst != burst) || old.palette.brightness != palette.brightness;
 }

@@ -93,7 +93,7 @@ class _PartStripState extends State<PartStrip> {
                             style: TextStyle(
                               fontFamily: BiliFonts.family,
                               fontSize: IntroListTheme.collectionTitleText,
-                              color: BiliColors.text,
+                              color: BiliColors.colorsOf(context).text,
                             ),
                           ),
                         ),
@@ -102,14 +102,14 @@ class _PartStripState extends State<PartStrip> {
                           style: TextStyle(
                             fontFamily: BiliFonts.family,
                             fontSize: IntroListTheme.collectionPlaceText,
-                            color: BiliColors.secondaryText,
+                            color: BiliColors.colorsOf(context).secondaryText,
                           ),
                         ),
                         const SizedBox(width: IntroListTheme.collectionChevronGap),
-                        const Chevron(
+                        Chevron(
                           size: Size(IntroListTheme.collectionChevronWidth, IntroListTheme.collectionChevronHeight),
                           stroke: IntroListTheme.chevronStroke,
-                          color: BiliColors.secondaryText,
+                          color: BiliColors.colorsOf(context).secondaryText,
                         ),
                       ],
                     ),
@@ -172,7 +172,7 @@ class _PartChipState extends State<_PartChip> {
   Widget build(BuildContext context) {
     final playing = widget.part.current;
     final still = MediaQuery.disableAnimationsOf(context);
-    final colour = playing ? BiliColors.pink : BiliColors.text;
+    final colour = playing ? BiliColors.colorsOf(context).pink : BiliColors.colorsOf(context).text;
     final style = TextStyle(
       fontFamily: BiliFonts.family,
       fontSize: IntroListTheme.partChipText,
@@ -202,10 +202,10 @@ class _PartChipState extends State<_PartChip> {
             padding: const EdgeInsets.symmetric(horizontal: IntroListTheme.partChipPad),
             alignment: Alignment.centerLeft,
             decoration: BoxDecoration(
-              color: BiliColors.softGrey,
+              color: BiliColors.colorsOf(context).softGrey,
               borderRadius: BorderRadius.circular(BiliMetrics.cardRadius),
               border: Border.all(
-                color: playing ? BiliColors.pink : BiliColors.softGrey,
+                color: playing ? BiliColors.colorsOf(context).pink : BiliColors.colorsOf(context).softGrey,
                 width: IntroListTheme.partChipBorder,
               ),
             ),
@@ -213,11 +213,11 @@ class _PartChipState extends State<_PartChip> {
               TextSpan(
                 children: [
                   if (playing)
-                    const WidgetSpan(
+                    WidgetSpan(
                       alignment: PlaceholderAlignment.middle,
                       child: Padding(
                         padding: EdgeInsets.only(right: IntroListTheme.partPlayingGap),
-                        child: PlayingBars(color: BiliColors.pink, height: IntroListTheme.partChipText * 0.85),
+                        child: PlayingBars(color: BiliColors.colorsOf(context).pink, height: IntroListTheme.partChipText * 0.85),
                       ),
                     ),
                   TextSpan(text: widget.part.title),

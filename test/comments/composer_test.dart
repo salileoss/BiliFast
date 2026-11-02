@@ -10,6 +10,7 @@ import 'package:bilifast/comments/emote_panel.dart';
 import 'package:bilifast/comments/mention_picker.dart';
 import 'package:bilifast/comments/picture_attach.dart';
 import 'package:bilifast/shared/theme.dart';
+import 'package:bilifast/shared/app_theme.dart';
 import 'package:bilifast/video/fake_page_api.dart';
 import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/material.dart';
@@ -116,7 +117,11 @@ class Rig {
   PicturePick toPick = const PicturePick([]);
 }
 
-Widget app(Rig rig, {double inset = 0, bool still = false, double? top}) => MaterialApp(
+Widget app(Rig rig, {double inset = 0, bool still = false, double? top, ThemeMode? appearance}) => MaterialApp(
+  theme: appearance == null ? null : biliTheme(Brightness.light),
+  darkTheme: appearance == null ? null : biliTheme(Brightness.dark),
+  themeMode: appearance,
+  themeAnimationDuration: Duration.zero,
   home: MediaQuery(
     data: MediaQueryData(
       size: screen,
@@ -193,6 +198,28 @@ PickedPicture picture(String name) => PickedPicture(bytes: Uint8List(4), name: n
 
 void main() {
   setUp(Composer.debugForgetKeyboard);
+
+  testWidgets('dark composer keeps its draft and controller when appearance changes', (tester) async {
+    tester.view.physicalSize = screen;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final model = FakeComposerModel(text: 'draft');
+    addTearDown(model.dispose);
+    final rig = Rig(model);
+    await tester.pumpWidget(app(rig, appearance: ThemeMode.dark, still: true));
+    await tester.pump();
+    final controller = controllerOf(tester);
+    expect(tester.widget<TextField>(field).keyboardAppearance, Brightness.dark);
+    expect(tester.widget<TextField>(field).style!.color, const Color(0xFFE3E5E7));
+    await tester.enterText(field, 'retained draft');
+    await tester.pumpWidget(app(rig, appearance: ThemeMode.light, still: true));
+    await tester.pump();
+    expect(controllerOf(tester), same(controller));
+    expect(controllerOf(tester).text, 'retained draft');
+    expect(tester.widget<TextField>(field).keyboardAppearance, Brightness.light);
+    expect(tester.widget<TextField>(field).style!.color, ComposerTheme.text);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('opens on the keyboard: the draft in a focused field', (tester) async {
     final rig = await pumpComposer(tester, FakeComposerModel(text: '草稿'));

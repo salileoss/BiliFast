@@ -271,7 +271,7 @@ class _Thumbnail extends StatelessWidget {
                   cacheWidth: pixels,
                   gaplessPlayback: true,
                   excludeFromSemantics: true,
-                  errorBuilder: (context, error, stack) => const ColoredBox(color: BiliColors.pageGrey),
+                  errorBuilder: (context, error, stack) => ColoredBox(color: BiliColors.colorsOf(context).pageGrey),
                 ),
               ),
             ),

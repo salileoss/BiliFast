@@ -24,7 +24,7 @@ class UnfollowConfirm extends StatelessWidget {
       fontFamily: BiliFonts.family,
       fontFamilyFallback: BiliFonts.fallback,
       fontSize: FavouriteTheme.alertButtonText,
-      color: BiliColors.text,
+      color: BiliColors.colorsOf(context).text,
       decoration: TextDecoration.none,
     ),
     child: Stack(
@@ -75,7 +75,7 @@ class _Alert extends StatelessWidget {
     key: const ValueKey('unfollow-alert'),
     width: FavouriteTheme.alertWidth,
     clipBehavior: Clip.antiAlias,
-    decoration: BoxDecoration(color: BiliColors.card, borderRadius: BorderRadius.circular(FavouriteTheme.alertRadius)),
+    decoration: BoxDecoration(color: BiliColors.colorsOf(context).card, borderRadius: BorderRadius.circular(FavouriteTheme.alertRadius)),
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -94,22 +94,22 @@ class _Alert extends StatelessWidget {
               fontFamily: BiliFonts.family,
               fontSize: FavouriteTheme.alertTitleText,
               fontWeight: FontWeight.w500,
-              color: BiliColors.text,
+              color: BiliColors.colorsOf(context).text,
             ),
           ),
         ),
-        Container(height: BiliMetrics.panelHairline, color: BiliColors.divider),
+        Container(height: BiliMetrics.panelHairline, color: BiliColors.colorsOf(context).divider),
         SizedBox(
           height: FavouriteTheme.alertButtonHeight,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: _AlertButton(label: '取消', color: BiliColors.secondaryText, onTap: onCancel),
+                child: _AlertButton(label: '取消', color: BiliColors.colorsOf(context).secondaryText, onTap: onCancel),
               ),
-              Container(width: BiliMetrics.panelHairline, color: BiliColors.divider),
+              Container(width: BiliMetrics.panelHairline, color: BiliColors.colorsOf(context).divider),
               Expanded(
-                child: _AlertButton(label: '确定', color: BiliColors.pink, onTap: onConfirm, strong: true),
+                child: _AlertButton(label: '确定', color: BiliColors.colorsOf(context).pink, onTap: onConfirm, strong: true),
               ),
             ],
           ),
@@ -153,7 +153,7 @@ class _AlertButtonState extends State<_AlertButton> {
       onTapCancel: () => _press(false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 120),
-        color: _down ? BiliColors.pressedFill : BiliColors.card,
+        color: _down ? BiliColors.colorsOf(context).pressedFill : BiliColors.colorsOf(context).card,
         alignment: Alignment.center,
         child: Text(
           widget.label,

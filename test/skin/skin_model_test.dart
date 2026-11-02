@@ -15,6 +15,7 @@ import 'package:bilifast/skin/skin_package.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_test/flutter_test.dart';
 
 /// The account half [SkinModel] follows: the test sets the account and counts the logins.
@@ -176,9 +177,9 @@ void main() {
     logger = Logger(session: 'test')..add(sink);
   });
 
-  ({SkinModel model, _Environment environment}) make(FakeSkinApi api, {Account account = loggedIn}) {
+  ({SkinModel model, _Environment environment}) make(FakeSkinApi api, {Account account = loggedIn, ValueListenable<ThemeMode>? appearance}) {
     final environment = _Environment(account);
-    final model = SkinModel(api: api, environment: environment, folder: folder.path, logger: logger);
+    final model = SkinModel(api: api, environment: environment, folder: folder.path, logger: logger, appearance: appearance);
     addTearDown(() async {
       model.dispose();
       await model.settle();
@@ -884,6 +885,32 @@ void main() {
     }
 
     File kept() => File('${versionFolders(7, 1).single.path}/.status.json');
+
+    test('a transparent header follows appearance without fetching the skin, with separate cached measures', () async {
+      final clear = await solidPng(const Color(0x00000000), 1320, 318);
+      final api = pictured(entries: {'head_bg.png': clear});
+      final appearance = ValueNotifier(ThemeMode.light);
+      addTearDown(appearance.dispose);
+      final (:model, environment: _) = make(api, appearance: appearance);
+      await settle(model);
+      await model.settle();
+      expect(model.value!.lightStatusHome, isFalse);
+      final downloads = api.calls.where((call) => call == 'download').length;
+      final calls = List.of(api.calls);
+      appearance.value = ThemeMode.dark;
+      await model.settle();
+      expect(model.value!.lightStatusHome, isTrue);
+      expect(api.calls.where((call) => call == 'download'), hasLength(downloads));
+      expect(api.calls, calls);
+      final darkKept = File('${versionFolders(7, 1).single.path}/.status-dark.json');
+      expect(await darkKept.exists(), isTrue);
+      expect(await kept().exists(), isTrue);
+      appearance.value = ThemeMode.light;
+      appearance.value = ThemeMode.dark;
+      appearance.value = ThemeMode.light;
+      await model.settle();
+      expect(model.value!.lightStatusHome, isFalse, reason: 'a stale dark measure cannot reverse the latest choice');
+    });
 
     test("measured once the skin shows, by the pictures over color_mode's dark text: white over a dark head_bg, "
         "black over a light 我的; logged without a path or the package's URL", () async {

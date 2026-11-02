@@ -63,6 +63,8 @@ import 'package:bilifast/shared/cover_preset.dart';
 import 'package:bilifast/shared/image_disk_cache.dart';
 import 'package:bilifast/shared/remote_image.dart';
 import 'package:bilifast/shared/theme.dart';
+import 'package:bilifast/shared/app_theme.dart';
+import 'package:bilifast/settings/font_store.dart';
 import 'package:bilifast/space/fake_space_api.dart';
 import 'package:bilifast/space/space_api.dart';
 import 'package:bilifast/space/uploader_sheet.dart';
@@ -98,6 +100,9 @@ import '../playback/fakes.dart';
 import '../support/fake_player.dart';
 import '../support/fake_player_session.dart';
 import '../support/fake_video_actions.dart';
+import '../support/look_alike.dart';
+import '../support/stand_in_fonts.dart';
+import 'intro/intro_tab_test.dart' as intro_fixture show detail, card;
 
 const heartbeatPath = '/x/click-interface/web/heartbeat';
 const bv = 'BV1GJ411x7h7';
@@ -265,6 +270,8 @@ void main() {
     PageApi? pageApi,
     SpaceApi? spaceApi,
     AppAuth? appAuth,
+    ValueNotifier<ThemeMode>? appearance,
+    bool systemFont = false,
   }) async {
     screen(tester, portrait, portraitInsets);
     addTearDown(tester.view.reset);
@@ -303,15 +310,24 @@ void main() {
       spaceApi: spaceApi,
       appAuth: appAuth,
       loginGate: gate,
+      fonts: systemFont ? (FontStore.memory()..select(FontChoice.system)) : null,
     );
     // The small window's restore button pushes on the app's navigator.
     nav = services.navigator;
     await tester.pumpWidget(
-      MaterialApp(
+      ListenableBuilder(
+        listenable: appearance ?? const AlwaysStoppedAnimation(ThemeMode.light),
+        builder: (context, _) => MaterialApp(
+        theme: appearance == null ? null : biliTheme(Brightness.light),
+        darkTheme: appearance == null ? null : biliTheme(Brightness.dark),
+        themeMode: appearance?.value,
+        themeAnimationDuration: Duration.zero,
         navigatorKey: nav,
         navigatorObservers: [pageRoutes],
-        builder: (context, child) => AppScope(services: services, child: child!),
+        builder: (context, child) => AppScope(services: services,
+          child: RepaintBoundary(key: const ValueKey('appearance-boundary'), child: child!)),
         home: home,
+        ),
       ),
     );
   }
@@ -407,6 +423,66 @@ void main() {
     // The player grows into its new place once the screen has turned.
     await tester.pump(RotationTheme.grow);
   }
+
+  testWidgets('appearance updates an open video without recreating its player or session', (tester) async {
+    final appearance = ValueNotifier(ThemeMode.light);
+    addTearDown(appearance.dispose);
+    final shots = Platform.environment['BILIFAST_SHOTS'];
+    if (shots != null) {
+      final previousFont = BiliFonts.family;
+      BiliFonts.family = BiliFonts.system;
+      addTearDown(() => BiliFonts.family = previousFont);
+      await tester.runAsync(() async {
+        await loadSystemFontStandIns();
+        await loadIconFonts();
+      });
+    }
+    await host(tester, appearance: appearance, systemFont: shots != null,
+      pageApi: shots == null ? null : (FakePageApi.demo()..delay = Duration.zero));
+    pushVideo(const VideoRoute(bvid: bv, cid: p1, start: 0));
+    await opened(tester);
+    final session = sessions.single;
+    if (shots != null) {
+      session
+        ..detail = intro_fixture.detail()
+        ..title = intro_fixture.detail().title
+        ..related = [intro_fixture.card('BV1x'), intro_fixture.card('BV1y')]
+        ..changed();
+      detailsMade.single
+        ..actions = FakeVideoActions()
+        ..uploader = const UploaderCard(mid: 1, name: '星宇动漫社', face: '', fans: 475000, videos: 410,
+          isVip: false, following: false, official: OfficialKind.person)
+        ..changed();
+      player.emit(const StatusChanged(PlayerStatus.paused));
+      await frames(tester, 8);
+    }
+    final playingController = controller;
+    final playingPlayer = player;
+    final activeUi = ui(tester);
+    final requests = sessionOpens.length;
+    appearance.value = ThemeMode.dark;
+    await frames(tester, 2);
+    expect(BiliPalette.of(tester.element(find.byType(VideoPage))).isDark, isTrue);
+    expect(sessions.single, same(session));
+    expect(controller, same(playingController));
+    expect(player, same(playingPlayer));
+    expect(ui(tester), same(activeUi));
+    expect(sessionOpens, hasLength(requests));
+    expect(tester.takeException(), isNull);
+    if (shots != null) {
+      await frames(tester, 8);
+      await saveShot(tester, find.byKey(const ValueKey('appearance-boundary')), '$shots/video-intro-dark.png');
+      activeUi.panels.open(PlayerPanel.more);
+      await frames(tester, 14);
+      await saveShot(tester, find.byKey(const ValueKey('appearance-boundary')), '$shots/video-sheet-dark.png');
+      activeUi.panels.close();
+      await frames(tester, 14);
+      await tester.tap(find.byKey(const ValueKey('tab-comments')));
+      await frames(tester, 14);
+      await saveShot(tester, find.byKey(const ValueKey('appearance-boundary')), '$shots/video-comments-dark.png');
+    }
+    await back(tester);
+  });
 
   testWidgets('S7 重试 after a failed open plays, and back still gives the player back', (tester) async {
     http.routes[Canned.playUrlPath] = (500, '');

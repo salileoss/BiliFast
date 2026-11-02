@@ -80,7 +80,7 @@ class _CommentsTabState extends State<CommentsTab> {
   Widget build(BuildContext context) {
     final model = widget.model;
     return ColoredBox(
-      color: CommentListTheme.background,
+      color: CommentListTheme.colorsOf(context).background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -264,10 +264,10 @@ class CommentSortHeader extends StatelessWidget {
   /// Where the title's and the button's line centres, down from the header's top.
   final double centre;
 
-  TextStyle _style(double size, double spacing) => TextStyle(
+  TextStyle _style(BuildContext context, double size, double spacing) => TextStyle(
     fontFamily: BiliFonts.family,
     fontSize: size,
-    color: CommentListTheme.sortInk,
+    color: CommentListTheme.colorsOf(context).sortInk,
     height: CommentListTheme.sortLine / size,
     leadingDistribution: TextLeadingDistribution.even,
     letterSpacing: spacing,
@@ -278,7 +278,7 @@ class CommentSortHeader extends StatelessWidget {
     final label = sort == CommentSort.hot ? '按热度' : '按时间';
     void toggle() => onChange(sort == CommentSort.hot ? CommentSort.time : CommentSort.hot);
     const line = CommentListTheme.sortLine;
-    final titleStyle = _style(CommentListTheme.sortTitleText, CommentListTheme.sortTitleSpacing);
+    final titleStyle = _style(context, CommentListTheme.sortTitleText, CommentListTheme.sortTitleSpacing);
     return SizedBox(
       height: height,
       child: Stack(
@@ -323,16 +323,16 @@ class CommentSortHeader extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const CustomPaint(
+                          CustomPaint(
                             size: Size(CommentListTheme.sortIconWidth, line),
-                            painter: _SortGlyphPainter(),
+                            painter: _SortGlyphPainter(palette: BiliPalette.of(context)),
                           ),
                           const SizedBox(width: CommentListTheme.sortIconGap),
                           Text(
                             label,
                             maxLines: 1,
                             softWrap: false,
-                            style: _style(CommentListTheme.sortText, CommentListTheme.sortSpacing),
+                            style: _style(context, CommentListTheme.sortText, CommentListTheme.sortSpacing),
                           ),
                         ],
                       ),
@@ -349,12 +349,13 @@ class CommentSortHeader extends StatelessWidget {
 }
 
 class _SortGlyphPainter extends CustomPainter {
-  const _SortGlyphPainter();
+  final BiliPalette palette;
+  const _SortGlyphPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = CommentListTheme.sortInk
+      ..color = CommentListThemeColors(palette).sortInk
       ..strokeWidth = CommentListTheme.sortIconBar;
     final middle = size.height / 2;
     for (final offset in const [-CommentListTheme.sortIconPitch, 0.0, CommentListTheme.sortIconPitch]) {
@@ -363,7 +364,7 @@ class _SortGlyphPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SortGlyphPainter oldDelegate) => false;
+  bool shouldRepaint(_SortGlyphPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// The end of a list: the spinner while a page loads, 没有更多了, 还没有评论，快来抢沙发吧, or 加载失败，点击重试. Idle with
@@ -420,16 +421,16 @@ class CommentListFooter extends StatelessWidget {
                     reason,
                     key: const ValueKey('comments-error'),
                     textAlign: TextAlign.center,
-                    style: _style(CommentListTheme.retryInk),
-                    strutStyle: BiliFonts.strutOf(context, _style(CommentListTheme.retryInk)),
+                    style: _style(CommentListTheme.colorsOf(context).retryInk),
+                    strutStyle: BiliFonts.strutOf(context, _style(CommentListTheme.colorsOf(context).retryInk)),
                   ),
                   const SizedBox(height: CommentListTheme.retryGap),
                 ],
                 Text.rich(
                   TextSpan(
                     children: [
-                      TextSpan(text: '加载失败，', style: _style(CommentListTheme.retryInk)),
-                      TextSpan(text: '点击重试', style: _style(CommentListTheme.retryAction)),
+                      TextSpan(text: '加载失败，', style: _style(CommentListTheme.colorsOf(context).retryInk)),
+                      TextSpan(text: '点击重试', style: _style(CommentListTheme.colorsOf(context).retryAction)),
                     ],
                   ),
                   textAlign: TextAlign.center,
@@ -447,7 +448,7 @@ class CommentListFooter extends StatelessWidget {
         child: Text(
           isEmpty ? '还没有评论，快来抢沙发吧' : '没有更多了',
           textAlign: TextAlign.center,
-          style: _style(CommentListTheme.footerInk),
+          style: _style(CommentListTheme.colorsOf(context).footerInk),
         ),
       );
     }
@@ -476,7 +477,7 @@ class _ClosedNotice extends StatelessWidget {
     final style = TextStyle(
       fontFamily: BiliFonts.family,
       fontSize: CommentListTheme.closedText,
-      color: CommentListTheme.closedInk,
+      color: CommentListTheme.colorsOf(context).closedInk,
       letterSpacing: 0,
     );
     return Padding(
@@ -488,11 +489,11 @@ class _ClosedNotice extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const ExcludeSemantics(
+          ExcludeSemantics(
             child: Icon(
               Icons.chat_bubble_outline,
               size: CommentListTheme.closedIcon,
-              color: CommentListTheme.closedInk,
+              color: CommentListTheme.colorsOf(context).closedInk,
             ),
           ),
           const SizedBox(height: CommentListTheme.closedGap),
@@ -523,15 +524,15 @@ class CommentWriteBar extends StatelessWidget {
     final promptStyle = TextStyle(
       fontFamily: BiliFonts.family,
       fontSize: CommentListTheme.fieldText,
-      color: CommentListTheme.fieldInk,
+      color: CommentListTheme.colorsOf(context).fieldInk,
       letterSpacing: CommentListTheme.fieldSpacing,
     );
     return DecoratedBox(
       key: const ValueKey('comment-bar'),
-      decoration: const BoxDecoration(
-        color: CommentListTheme.background,
+      decoration: BoxDecoration(
+        color: CommentListTheme.colorsOf(context).background,
         border: Border(
-          top: BorderSide(color: CommentListTheme.rule, width: CommentListTheme.barHairline),
+          top: BorderSide(color: CommentListTheme.colorsOf(context).rule, width: CommentListTheme.barHairline),
         ),
       ),
       child: Padding(
@@ -556,7 +557,7 @@ class CommentWriteBar extends StatelessWidget {
                     behavior: HitTestBehavior.opaque,
                     onTap: () => onWrite(false),
                     child: DecoratedBox(
-                      decoration: const ShapeDecoration(color: CommentListTheme.fieldFill, shape: StadiumBorder()),
+                      decoration: ShapeDecoration(color: CommentListTheme.colorsOf(context).fieldFill, shape: StadiumBorder()),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: CommentListTheme.fieldPadding),
                         child: Align(
@@ -584,10 +585,10 @@ class CommentWriteBar extends StatelessWidget {
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () => onWrite(true),
-                  child: const SizedBox(
+                  child: SizedBox(
                     width: CommentListTheme.faceBox,
                     child: Center(
-                      child: CustomPaint(size: Size.square(CommentListTheme.face), painter: _EmoteFacePainter()),
+                      child: CustomPaint(size: Size.square(CommentListTheme.face), painter: _EmoteFacePainter(palette: BiliPalette.of(context))),
                     ),
                   ),
                 ),
@@ -602,7 +603,8 @@ class CommentWriteBar extends StatelessWidget {
 
 /// 10's face: a ring, > < eyes and an ω mouth, traced at 3 px per pt as fractions of the 20 pt face.
 class _EmoteFacePainter extends CustomPainter {
-  const _EmoteFacePainter();
+  final BiliPalette palette;
+  const _EmoteFacePainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -610,7 +612,7 @@ class _EmoteFacePainter extends CustomPainter {
     final centre = size.center(Offset.zero);
     Offset p(double x, double y) => centre + Offset(x * side, y * side);
     final paint = Paint()
-      ..color = CommentListTheme.faceInk
+      ..color = CommentListThemeColors(palette).faceInk
       ..style = PaintingStyle.stroke
       ..strokeWidth = CommentListTheme.faceStroke
       ..strokeCap = StrokeCap.round
@@ -640,7 +642,7 @@ class _EmoteFacePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_EmoteFacePainter oldDelegate) => false;
+  bool shouldRepaint(_EmoteFacePainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// The iPad's 发条评论 bar under the sideways column (05): the field with the face inside its end, and ↑, which takes
@@ -660,15 +662,15 @@ class PadCommentWriteBar extends StatelessWidget {
     final promptStyle = TextStyle(
       fontFamily: BiliFonts.family,
       fontSize: PadPageTheme.commentPromptText,
-      color: PadPageTheme.commentInk,
+      color: PadPageTheme.colorsOf(context).commentInk,
       letterSpacing: 0,
     );
     return DecoratedBox(
       key: const ValueKey('comment-bar'),
-      decoration: const BoxDecoration(
-        color: CommentListTheme.background,
+      decoration: BoxDecoration(
+        color: CommentListTheme.colorsOf(context).background,
         border: Border(
-          top: BorderSide(color: PadPageTheme.commentRule, width: CommentListTheme.barHairline),
+          top: BorderSide(color: PadPageTheme.colorsOf(context).commentRule, width: CommentListTheme.barHairline),
         ),
       ),
       child: SizedBox(
@@ -682,7 +684,7 @@ class PadCommentWriteBar extends StatelessWidget {
               height: PadPageTheme.commentFieldHeight,
               child: DecoratedBox(
                 key: const ValueKey('comment-field-box'),
-                decoration: const ShapeDecoration(color: PadPageTheme.commentFieldFill, shape: StadiumBorder()),
+                decoration: ShapeDecoration(color: PadPageTheme.colorsOf(context).commentFieldFill, shape: StadiumBorder()),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -722,10 +724,10 @@ class PadCommentWriteBar extends StatelessWidget {
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () => onWrite(true),
-                        child: const SizedBox(
+                        child: SizedBox(
                           width: PadPageTheme.commentFaceRight * 2,
                           child: Center(
-                            child: CustomPaint(size: Size.square(CommentListTheme.face), painter: _EmoteFacePainter()),
+                            child: CustomPaint(size: Size.square(CommentListTheme.face), painter: _EmoteFacePainter(palette: BiliPalette.of(context))),
                           ),
                         ),
                       ),
@@ -748,10 +750,10 @@ class PadCommentWriteBar extends StatelessWidget {
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: onTop,
-                  child: const Center(
+                  child: Center(
                     child: CustomPaint(
                       size: Size(PadPageTheme.commentTopWidth, PadPageTheme.commentTopHeight),
-                      painter: _BackToTopPainter(),
+                      painter: _BackToTopPainter(palette: BiliPalette.of(context)),
                     ),
                   ),
                 ),
@@ -766,14 +768,15 @@ class PadCommentWriteBar extends StatelessWidget {
 
 /// 05's ↑: a bar over an arrow whose shaft is a hollow box, traced at 2 px per pt in the 18 × 20 glyph.
 class _BackToTopPainter extends CustomPainter {
-  const _BackToTopPainter();
+  final BiliPalette palette;
+  const _BackToTopPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final x = size.width / PadPageTheme.commentTopWidth;
     final y = size.height / PadPageTheme.commentTopHeight;
     final paint = Paint()
-      ..color = PadPageTheme.commentInk
+      ..color = PadPageThemeColors(palette).commentInk
       ..style = PaintingStyle.stroke
       ..strokeWidth = PadPageTheme.commentTopStroke
       ..strokeCap = StrokeCap.round
@@ -795,7 +798,7 @@ class _BackToTopPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_BackToTopPainter oldDelegate) => false;
+  bool shouldRepaint(_BackToTopPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// 评论 before the video's aid is known: the loading TV under the reserve, centred in a box as tall as the list, as 64
@@ -806,7 +809,7 @@ class CommentsSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-    color: CommentListTheme.background,
+    color: CommentListTheme.colorsOf(context).background,
     child: CustomScrollView(
       primary: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -950,18 +953,18 @@ class PadCommentsHeader extends StatelessWidget {
     final label = sort == CommentSort.hot ? '按热度' : '按时间';
     void toggle() => onChange(sort == CommentSort.hot ? CommentSort.time : CommentSort.hot);
     final shown = prompt ?? CommentWriteBar.placeholder;
-    final fieldStyle = _style(PadPageTheme.headerFieldText, PadPageTheme.headerFieldInk);
-    final textStyle = _style(PadPageTheme.headerText, PadPageTheme.headerInk);
+    final fieldStyle = _style(PadPageTheme.headerFieldText, PadPageTheme.colorsOf(context).headerFieldInk);
+    final textStyle = _style(PadPageTheme.headerText, PadPageTheme.colorsOf(context).headerInk);
     final titleStyle = _style(
       PadPageTheme.headerTitleText,
-      PadPageTheme.headerTitle,
+      PadPageTheme.colorsOf(context).headerTitle,
     ).copyWith(fontWeight: PadPageTheme.headerTitleWeight);
     return DecoratedBox(
       key: const ValueKey('pad-comments-header'),
-      decoration: const BoxDecoration(
-        color: CommentListTheme.background,
+      decoration: BoxDecoration(
+        color: CommentListTheme.colorsOf(context).background,
         border: Border(
-          top: BorderSide(color: PadPageTheme.ruleColour, width: PadPageTheme.rule),
+          top: BorderSide(color: PadPageTheme.colorsOf(context).ruleColour, width: PadPageTheme.rule),
         ),
       ),
       child: SizedBox(
@@ -999,7 +1002,7 @@ class PadCommentsHeader extends StatelessWidget {
                       child: Container(
                         width: PadPageTheme.headerFieldWidth,
                         height: PadPageTheme.headerFieldHeight,
-                        decoration: const ShapeDecoration(color: PadPageTheme.headerFieldFill, shape: StadiumBorder()),
+                        decoration: ShapeDecoration(color: PadPageTheme.colorsOf(context).headerFieldFill, shape: StadiumBorder()),
                         padding: const EdgeInsets.only(left: PadPageTheme.headerFieldPadding),
                         child: Row(
                           children: [
@@ -1022,14 +1025,14 @@ class PadCommentsHeader extends StatelessWidget {
                               child: GestureDetector(
                                 behavior: HitTestBehavior.opaque,
                                 onTap: () => onWrite(true),
-                                child: const Padding(
+                                child: Padding(
                                   padding: EdgeInsets.only(
                                     left: PadPageTheme.headerFaceRight,
                                     right: PadPageTheme.headerFaceRight,
                                   ),
                                   child: CustomPaint(
                                     size: Size.square(PadPageTheme.headerFace),
-                                    painter: _EmoteFacePainter(),
+                                    painter: _EmoteFacePainter(palette: BiliPalette.of(context)),
                                   ),
                                 ),
                               ),
@@ -1052,9 +1055,9 @@ class PadCommentsHeader extends StatelessWidget {
                       onTap: toggle,
                       child: Row(
                         children: [
-                          const CustomPaint(
+                          CustomPaint(
                             size: Size.square(PadPageTheme.headerSortGlyph),
-                            painter: _UpDownPainter(),
+                            painter: _UpDownPainter(palette: BiliPalette.of(context)),
                           ),
                           const SizedBox(width: PadPageTheme.headerSortGap),
                           Text(label, maxLines: 1, softWrap: false, style: textStyle),
@@ -1063,10 +1066,10 @@ class PadCommentsHeader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: PadPageTheme.headerRuleGap),
-                  const SizedBox(
+                  SizedBox(
                     width: PadPageTheme.rule,
                     height: PadPageTheme.headerRuleHeight,
-                    child: ColoredBox(color: PadPageTheme.ruleColour),
+                    child: ColoredBox(color: PadPageTheme.colorsOf(context).ruleColour),
                   ),
                   const SizedBox(width: PadPageTheme.headerRuleGap),
                   Semantics(
@@ -1082,9 +1085,9 @@ class PadCommentsHeader extends StatelessWidget {
                         children: [
                           Text('查看 $total 条评论', maxLines: 1, softWrap: false, style: textStyle),
                           const SizedBox(width: PadPageTheme.headerChevronGap),
-                          const CustomPaint(
+                          CustomPaint(
                             size: Size(PadPageTheme.headerChevronWidth, PadPageTheme.headerChevronHeight),
-                            painter: _ChevronPainter(),
+                            painter: _ChevronPainter(palette: BiliPalette.of(context)),
                           ),
                         ],
                       ),
@@ -1103,12 +1106,13 @@ class PadCommentsHeader extends StatelessWidget {
 
 /// 查看N条评论's thin ›.
 class _ChevronPainter extends CustomPainter {
-  const _ChevronPainter();
+  final BiliPalette palette;
+  const _ChevronPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = PadPageTheme.headerInk
+      ..color = PadPageThemeColors(palette).headerInk
       ..style = PaintingStyle.stroke
       ..strokeWidth = PadPageTheme.headerChevronStroke
       ..strokeCap = StrokeCap.round
@@ -1123,17 +1127,18 @@ class _ChevronPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_ChevronPainter oldDelegate) => false;
+  bool shouldRepaint(_ChevronPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// ⇅: an arrow up on the left, an arrow down on the right, as 03 draws the sort.
 class _UpDownPainter extends CustomPainter {
-  const _UpDownPainter();
+  final BiliPalette palette;
+  const _UpDownPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = PadPageTheme.headerInk
+      ..color = PadPageThemeColors(palette).headerInk
       ..style = PaintingStyle.stroke
       ..strokeWidth = CommentListTheme.sortIconBar
       ..strokeCap = StrokeCap.round
@@ -1154,5 +1159,5 @@ class _UpDownPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_UpDownPainter oldDelegate) => false;
+  bool shouldRepaint(_UpDownPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }

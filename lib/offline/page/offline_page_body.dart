@@ -58,14 +58,14 @@ class OfflinePageHeader extends StatelessWidget {
       fontFamily: BiliFonts.family,
       fontSize: OfflinePageTheme.titleText,
       fontWeight: OfflinePageTheme.titleWeight,
-      color: OfflinePageTheme.titleInk,
+      color: OfflinePageTheme.colorsOf(context).titleInk,
       height: 1,
       letterSpacing: 0,
     );
     final countStyle = TextStyle(
       fontFamily: BiliFonts.family,
       fontSize: OfflinePageTheme.countText,
-      color: OfflinePageTheme.countInk,
+      color: OfflinePageTheme.colorsOf(context).countInk,
       height: 1,
       letterSpacing: 0,
     );
@@ -73,7 +73,7 @@ class OfflinePageHeader extends StatelessWidget {
     return SizedBox(
       height: OfflinePageTheme.headerHeight,
       child: ColoredBox(
-        color: BiliColors.card,
+        color: BiliColors.colorsOf(context).card,
         child: Stack(
           children: [
             Positioned(
@@ -144,7 +144,7 @@ class OfflinePageList extends StatelessWidget {
     builder: (context, items) {
       final bottom = MediaQuery.paddingOf(context).bottom;
       return ColoredBox(
-        color: BiliColors.card,
+        color: BiliColors.colorsOf(context).card,
         child: ListView.builder(
           key: const ValueKey('offline-list'),
           controller: controller,
@@ -158,12 +158,12 @@ class OfflinePageList extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (index > 0)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(left: OfflinePageTheme.gutter),
                     child: SizedBox(
                       height: OfflinePageTheme.hairline,
                       width: double.infinity,
-                      child: ColoredBox(color: OfflinePageTheme.divider),
+                      child: ColoredBox(color: OfflinePageTheme.colorsOf(context).divider),
                     ),
                   ),
                 _Row(
@@ -191,7 +191,7 @@ class _Footer extends StatelessWidget {
     final style = TextStyle(
       fontFamily: BiliFonts.family,
       fontSize: OfflinePageTheme.footerText,
-      color: OfflinePageTheme.footerInk,
+      color: OfflinePageTheme.colorsOf(context).footerInk,
       height: 1,
       letterSpacing: 0,
     );
@@ -221,11 +221,11 @@ class _Row extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onMore;
 
-  TextStyle get _meta => TextStyle(
+  TextStyle _meta(BuildContext context) => TextStyle(
     fontFamily: BiliFonts.family,
     fontSize: OfflinePageTheme.metaText,
     height: OfflinePageTheme.metaLine / OfflinePageTheme.metaText,
-    color: OfflinePageTheme.meta,
+    color: OfflinePageTheme.colorsOf(context).meta,
     letterSpacing: 0,
   );
 
@@ -236,7 +236,7 @@ class _Row extends StatelessWidget {
       fontFamily: BiliFonts.family,
       fontSize: OfflinePageTheme.rowTitleText,
       height: OfflinePageTheme.rowTitleLine / OfflinePageTheme.rowTitleText,
-      color: playing ? OfflinePageTheme.playing : OfflinePageTheme.rowTitle,
+      color: playing ? OfflinePageTheme.colorsOf(context).playing : OfflinePageTheme.colorsOf(context).rowTitle,
       letterSpacing: 0,
     );
     final size = offlinePageSize(item.totalBytes > 0 ? item.totalBytes : item.bytes);
@@ -317,8 +317,8 @@ class _Row extends StatelessWidget {
                             child: Text(
                               request.ownerName,
                               key: const ValueKey('offline-row-owner'),
-                              style: _meta,
-                              strutStyle: BiliFonts.strut(_meta),
+                              style: _meta(context),
+                              strutStyle: BiliFonts.strut(_meta(context)),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -331,8 +331,8 @@ class _Row extends StatelessWidget {
                       Text(
                         item.vipOnly ? '大会员专享 · $size' : size,
                         key: const ValueKey('offline-row-size'),
-                        style: item.vipOnly ? _meta.copyWith(color: OfflinePageTheme.vip) : _meta,
-                        strutStyle: BiliFonts.strut(_meta),
+                        style: item.vipOnly ? _meta(context).copyWith(color: OfflinePageTheme.colorsOf(context).vip) : _meta(context),
+                        strutStyle: BiliFonts.strut(_meta(context)),
                         maxLines: 1,
                       ),
                     ),

@@ -127,7 +127,7 @@ class _DanmakuSendBarState extends State<DanmakuSendBar> {
       // The small player's bar is framed by the hairline all round (39).
       return DecoratedBox(
         decoration: BoxDecoration(
-          color: DanmakuSendTheme.lightBar,
+          color: DanmakuSendTheme.colorsOf(context).lightBar,
           border: Border.all(color: DanmakuSendTheme.hairline, width: DanmakuSendTheme.hairlineWidth),
         ),
         child: bar,
@@ -135,7 +135,7 @@ class _DanmakuSendBarState extends State<DanmakuSendBar> {
     }
     final sheet = Stack(
       children: [
-        const Positioned.fill(child: ColoredBox(color: DanmakuSendTheme.lightBar)),
+        Positioned.fill(child: ColoredBox(color: DanmakuSendTheme.colorsOf(context).lightBar)),
         const Positioned(
           left: 0,
           right: 0,
@@ -156,8 +156,8 @@ class _DanmakuSendBarState extends State<DanmakuSendBar> {
     final model = widget.model;
     final shown = widget.styleShown;
     final colour = shown
-        ? (_dark ? DanmakuSendTheme.darkAccent : DanmakuSendTheme.lightAccent)
-        : (_dark ? DanmakuSendTheme.darkGlyph : DanmakuSendTheme.lightGlyph);
+        ? (_dark ? DanmakuSendTheme.darkAccent : DanmakuSendTheme.colorsOf(context).lightAccent)
+        : (_dark ? DanmakuSendTheme.darkGlyph : DanmakuSendTheme.colorsOf(context).lightGlyph);
     return Semantics(
       key: const ValueKey('danmaku-send-style'),
       button: true,
@@ -220,7 +220,7 @@ class _DanmakuSendBarState extends State<DanmakuSendBar> {
       key: const ValueKey('danmaku-send-field'),
       height: DanmakuSendTheme.fieldHeight,
       decoration: ShapeDecoration(
-        color: _dark ? DanmakuSendTheme.darkField : DanmakuSendTheme.lightField,
+        color: _dark ? DanmakuSendTheme.darkField : DanmakuSendTheme.colorsOf(context).lightField,
         shape: StadiumBorder(
           side: _vertical
               ? const BorderSide(color: DanmakuSendTheme.hairline, width: DanmakuSendTheme.hairlineWidth)
@@ -238,7 +238,7 @@ class _DanmakuSendBarState extends State<DanmakuSendBar> {
                 readOnly: widget.closed,
                 maxLines: 1,
                 textInputAction: TextInputAction.send,
-                keyboardAppearance: _dark ? Brightness.dark : Brightness.light,
+                keyboardAppearance: _dark ? Brightness.dark : BiliPalette.of(context).brightness,
                 inputFormatters: [
                   LengthLimitingTextInputFormatter(
                     DanmakuSendModel.maxLength,
@@ -318,14 +318,14 @@ class _DanmakuSendBarState extends State<DanmakuSendBar> {
       colour = DanmakuSendTheme.sendReady;
       filled = true;
     } else {
-      colour = _vertical ? DanmakuSendTheme.verticalSendIdle : DanmakuSendTheme.lightGlyph;
+      colour = _vertical ? DanmakuSendTheme.verticalSendIdle : DanmakuSendTheme.colorsOf(context).lightGlyph;
     }
     final glyph = model.sending
         ? CupertinoActivityIndicator(color: colour, radius: DanmakuSendTheme.sendSpinnerRadius)
         : SizedBox(
             width: DanmakuSendTheme.sendWidth * scale,
             height: DanmakuSendTheme.sendHeight * scale,
-            child: CustomPaint(painter: _PlanePainter(colour, filled: filled)),
+            child: CustomPaint(painter: _PlanePainter(colour, filled: filled, palette: BiliPalette.of(context))),
           );
     return Padding(
       padding: EdgeInsets.only(right: _vertical ? DanmakuSendTheme.verticalSendTrailing : 0),
@@ -384,7 +384,8 @@ class _APainter extends CustomPainter {
 
 /// The paper plane, drawn on an 18 × 17.5 grid: outlined, with its fold line, or filled with the fold cut out of it.
 class _PlanePainter extends CustomPainter {
-  const _PlanePainter(this.colour, {required this.filled});
+  final BiliPalette palette;
+  const _PlanePainter(this.colour, {this.palette = const BiliPalette(Brightness.light), required this.filled});
 
   final Color colour;
   final bool filled;
@@ -430,14 +431,14 @@ class _PlanePainter extends CustomPainter {
         at(2.6, 8.95),
         at(10.8, 8.55),
         Paint()
-          ..color = DanmakuSendTheme.lightBar
+          ..color = DanmakuSendThemeColors(palette).lightBar
           ..strokeWidth = sx
           ..strokeCap = StrokeCap.round,
       );
   }
 
   @override
-  bool shouldRepaint(_PlanePainter oldDelegate) => oldDelegate.colour != colour || oldDelegate.filled != filled;
+  bool shouldRepaint(_PlanePainter oldDelegate) => (oldDelegate.colour != colour || oldDelegate.filled != filled) || oldDelegate.palette.brightness != palette.brightness;
 }
 
 class _ClearPainter extends CustomPainter {

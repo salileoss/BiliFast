@@ -185,8 +185,8 @@ class _RetryLine extends StatelessWidget {
         child: Text.rich(
           TextSpan(
             children: [
-              TextSpan(text: '加载失败，', style: _style(CommentListTheme.retryInk)),
-              TextSpan(text: '点击重试', style: _style(CommentListTheme.retryAction)),
+              TextSpan(text: '加载失败，', style: _style(CommentListTheme.colorsOf(context).retryInk)),
+              TextSpan(text: '点击重试', style: _style(CommentListTheme.colorsOf(context).retryAction)),
             ],
           ),
           textAlign: TextAlign.center,

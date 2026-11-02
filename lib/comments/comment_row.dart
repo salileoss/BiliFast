@@ -133,7 +133,7 @@ class CommentRow extends StatelessWidget {
                       },
                       child: CommentText(
                         runs: runs,
-                        style: CommentRowTheme.textStyle,
+                        style: CommentRowTheme.textStyle.copyWith(color: CommentRowTheme.colorsOf(context).text),
                         leading: comment.isPinned
                             ? const WidgetSpan(
                                 alignment: PlaceholderAlignment.middle,
@@ -206,12 +206,12 @@ class CommentRow extends StatelessWidget {
             child: FanCard(image: card, number: member.fanCardNumber, color: member.fanCardColor),
           ),
         if (showsDivider)
-          const Positioned(
+          Positioned(
             left: CommentRowTheme.dividerLeading,
             right: 0,
             bottom: 0,
             height: CommentRowTheme.divider,
-            child: ColoredBox(key: ValueKey('comment-divider'), color: CommentRowTheme.dividerColour),
+            child: ColoredBox(key: ValueKey('comment-divider'), color: CommentRowTheme.colorsOf(context).dividerColour),
           ),
       ],
     );
@@ -244,7 +244,7 @@ class _NameLine extends StatelessWidget {
       fontSize: CommentRowTheme.nameText,
       height: CommentRowTheme.nameLine / CommentRowTheme.nameText,
       leadingDistribution: TextLeadingDistribution.even,
-      color: member.isVip ? CommentRowTheme.vipName : CommentRowTheme.name,
+      color: member.isVip ? CommentRowTheme.colorsOf(context).vipName : CommentRowTheme.colorsOf(context).name,
     );
     return SizedBox(
       height: CommentRowTheme.nameLine,
@@ -325,8 +325,8 @@ class _MetaLine extends StatelessWidget {
                   _stamp,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: CommentRowTheme.metaStyle(CommentRowTheme.meta),
-                  strutStyle: BiliFonts.strutOf(context, CommentRowTheme.metaStyle(CommentRowTheme.meta)),
+                  style: CommentRowTheme.metaStyle(CommentRowTheme.colorsOf(context).meta),
+                  strutStyle: BiliFonts.strutOf(context, CommentRowTheme.metaStyle(CommentRowTheme.colorsOf(context).meta)),
                 ),
               ),
               Semantics(
@@ -343,7 +343,7 @@ class _MetaLine extends StatelessWidget {
                       left: CommentRowTheme.replyGap,
                       right: CommentRowTheme.replyTrailing,
                     ),
-                    child: Center(child: Text('回复', style: CommentRowTheme.metaStyle(CommentRowTheme.action))),
+                    child: Center(child: Text('回复', style: CommentRowTheme.metaStyle(CommentRowTheme.colorsOf(context).action))),
                   ),
                 ),
               ),
@@ -377,7 +377,7 @@ class _MetaLine extends StatelessWidget {
                   child: CommentThumb(
                     down: true,
                     solid: hated,
-                    color: hated ? CommentRowTheme.liked : CommentRowTheme.action,
+                    color: hated ? CommentRowTheme.colorsOf(context).liked : CommentRowTheme.colorsOf(context).action,
                   ),
                 ),
               ),
@@ -399,10 +399,10 @@ class _MetaLine extends StatelessWidget {
                 key: const ValueKey('comment-more'),
                 behavior: HitTestBehavior.opaque,
                 onTap: () => onMore(anchor),
-                child: const Center(
+                child: Center(
                   child: CustomPaint(
                     size: Size(CommentRowTheme.moreDot, CommentRowTheme.moreDot + CommentRowTheme.morePitch * 2),
-                    painter: _DotsPainter(),
+                    painter: _DotsPainter(palette: BiliPalette.of(context)),
                   ),
                 ),
               ),
@@ -460,7 +460,7 @@ class _LikeButtonState extends State<_LikeButton> with SingleTickerProviderState
   @override
   Widget build(BuildContext context) {
     final liked = widget.liked;
-    final colour = liked ? CommentRowTheme.liked : CommentRowTheme.action;
+    final colour = liked ? CommentRowTheme.colorsOf(context).liked : CommentRowTheme.colorsOf(context).action;
     final count = widget.likes > 0 ? CountFormat.short(widget.likes) : null;
     return Semantics(
       button: true,
@@ -504,11 +504,12 @@ class _LikeButtonState extends State<_LikeButton> with SingleTickerProviderState
 }
 
 class _DotsPainter extends CustomPainter {
-  const _DotsPainter();
+  final BiliPalette palette;
+  const _DotsPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = CommentRowTheme.action;
+    final paint = Paint()..color = CommentRowThemeColors(palette).action;
     const radius = CommentRowTheme.moreDot / 2;
     for (var i = 0; i < 3; i++) {
       canvas.drawCircle(Offset(radius, radius + i * CommentRowTheme.morePitch), radius, paint);
@@ -516,7 +517,7 @@ class _DotsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DotsPainter oldDelegate) => false;
+  bool shouldRepaint(_DotsPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 class _UpLiked extends StatelessWidget {
@@ -529,12 +530,12 @@ class _UpLiked extends StatelessWidget {
       height: CommentRowTheme.upLikedHeight,
       child: Row(
         children: [
-          const CommentThumb(solid: true, width: CommentRowTheme.upLikedIcon, color: CommentRowTheme.upLiked),
+          CommentThumb(solid: true, width: CommentRowTheme.upLikedIcon, color: CommentRowTheme.colorsOf(context).upLiked),
           const SizedBox(width: CommentRowTheme.upLikedGap),
           Text(
             'UP主觉得很赞',
-            style: CommentRowTheme.metaStyle(CommentRowTheme.upLiked),
-            strutStyle: BiliFonts.strutOf(context, CommentRowTheme.metaStyle(CommentRowTheme.upLiked)),
+            style: CommentRowTheme.metaStyle(CommentRowTheme.colorsOf(context).upLiked),
+            strutStyle: BiliFonts.strutOf(context, CommentRowTheme.metaStyle(CommentRowTheme.colorsOf(context).upLiked)),
           ),
         ],
       ),
@@ -553,8 +554,8 @@ class _UpLikedChip extends StatelessWidget {
       alignment: Alignment.topLeft,
       child: DecoratedBox(
         key: const ValueKey('comment-up-liked'),
-        decoration: const BoxDecoration(
-          color: CommentRowTheme.upChipFill,
+        decoration: BoxDecoration(
+          color: CommentRowTheme.colorsOf(context).upChipFill,
           borderRadius: BorderRadius.all(Radius.circular(CommentRowTheme.upChipRadius)),
         ),
         child: SizedBox(
@@ -567,8 +568,8 @@ class _UpLikedChip extends StatelessWidget {
                 'UP主觉得很赞',
                 maxLines: 1,
                 softWrap: false,
-                style: CommentRowTheme.upChipStyle,
-                strutStyle: BiliFonts.strutOf(context, CommentRowTheme.upChipStyle),
+                style: CommentRowTheme.upChipStyle.copyWith(color: CommentRowTheme.colorsOf(context).upChipInk),
+                strutStyle: BiliFonts.strutOf(context, CommentRowTheme.upChipStyle.copyWith(color: CommentRowTheme.colorsOf(context).upChipInk)),
               ),
             ),
           ),
@@ -594,7 +595,7 @@ class _RepliesBox extends StatelessWidget {
     final moreStyle = TextStyle(
       fontFamily: BiliFonts.family,
       fontSize: CommentRowTheme.moreText,
-      color: CommentRowTheme.moreLink,
+      color: CommentRowTheme.colorsOf(context).moreLink,
     );
     // The box's tap is PressHighlight's own: a second one on this node would split that off as a blank node.
     return Semantics(
@@ -607,7 +608,7 @@ class _RepliesBox extends StatelessWidget {
           key: const ValueKey('comment-replies'),
           onTap: onOpen,
           child: ColoredBox(
-            color: CommentRowTheme.box,
+            color: CommentRowTheme.colorsOf(context).box,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: CommentRowTheme.boxPadding),
               child: Column(
@@ -636,9 +637,9 @@ class _RepliesBox extends StatelessWidget {
                                 strutStyle: BiliFonts.strutOf(context, moreStyle),
                               ),
                               const SizedBox(width: CommentRowTheme.chevronGap),
-                              const CustomPaint(
+                              CustomPaint(
                                 size: Size(CommentRowTheme.chevronWidth, CommentRowTheme.chevronHeight),
-                                painter: _ChevronPainter(),
+                                painter: _ChevronPainter(palette: BiliPalette.of(context)),
                               ),
                             ],
                           ),
@@ -680,12 +681,12 @@ class _PreviewLineState extends State<_PreviewLine> {
     final reply = widget.reply;
     final text = CommentText(
       runs: reply.runs,
-      style: CommentRowTheme.previewStyle,
+      style: CommentRowTheme.previewStyle.copyWith(color: CommentRowTheme.colorsOf(context).preview),
       leading: TextSpan(
         children: [
           TextSpan(
             text: reply.member.name,
-            style: const TextStyle(color: CommentRowTheme.previewName),
+            style: TextStyle(color: CommentRowTheme.colorsOf(context).previewName),
             recognizer: _writerMid(reply) > 0 ? _name : null,
           ),
           const TextSpan(text: ': '),
@@ -696,8 +697,8 @@ class _PreviewLineState extends State<_PreviewLine> {
     );
     final open = _spaceOpener(context, reply);
     final preview = _PreviewText(
-      ellipsis: CommentRowTheme.previewStyle,
-      mask: CommentRowTheme.box,
+      ellipsis: CommentRowTheme.previewStyle.copyWith(color: CommentRowTheme.colorsOf(context).preview),
+      mask: CommentRowTheme.colorsOf(context).box,
       cutGrowth: CommentRowTheme.previewCutGrowth,
       children: [
         text,
@@ -710,20 +711,20 @@ class _PreviewLineState extends State<_PreviewLine> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(width: CommentRowTheme.previewRuleGap),
-                const SizedBox(
+                SizedBox(
                   width: CommentRowTheme.previewRuleWidth,
                   height: CommentRowTheme.previewRuleHeight,
-                  child: ColoredBox(color: CommentRowTheme.dividerColour),
+                  child: ColoredBox(color: CommentRowTheme.colorsOf(context).dividerColour),
                 ),
                 const SizedBox(width: CommentRowTheme.previewRuleGap),
-                const CommentThumb(color: CommentRowTheme.action),
+                CommentThumb(color: CommentRowTheme.colorsOf(context).action),
                 const SizedBox(width: CommentRowTheme.thumbCountGap),
                 Transform.translate(
                   offset: Offset(0, CommentRowTheme.metaDrop),
                   child: Text(
                     CountFormat.short(reply.likes),
-                    style: CommentRowTheme.metaStyle(CommentRowTheme.action),
-                    strutStyle: BiliFonts.strutOf(context, CommentRowTheme.metaStyle(CommentRowTheme.action)),
+                    style: CommentRowTheme.metaStyle(CommentRowTheme.colorsOf(context).action),
+                    strutStyle: BiliFonts.strutOf(context, CommentRowTheme.metaStyle(CommentRowTheme.colorsOf(context).action)),
                   ),
                 ),
               ],
@@ -888,7 +889,8 @@ class _RenderPreviewText extends RenderBox
 }
 
 class _ChevronPainter extends CustomPainter {
-  const _ChevronPainter();
+  final BiliPalette palette;
+  const _ChevronPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -899,7 +901,7 @@ class _ChevronPainter extends CustomPainter {
         ..lineTo(size.width - inset, size.height / 2)
         ..lineTo(inset, size.height - inset),
       Paint()
-        ..color = CommentRowTheme.moreLink
+        ..color = CommentRowThemeColors(palette).moreLink
         ..style = PaintingStyle.stroke
         ..strokeWidth = CommentRowTheme.chevronStroke
         ..strokeCap = StrokeCap.round
@@ -908,7 +910,7 @@ class _ChevronPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_ChevronPainter oldDelegate) => false;
+  bool shouldRepaint(_ChevronPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// Its child drawn [by] higher than where the column puts it, and that much shorter, so it can sit closer to what's
@@ -1041,7 +1043,7 @@ class _PictureCell extends StatelessWidget {
           child: SizedBox.fromSize(
             size: size,
             child: ColoredBox(
-              color: CommentRowTheme.picturePlaceholder,
+              color: CommentRowTheme.colorsOf(context).picturePlaceholder,
               child: Image(
                 image: CommentPictures.thumbnailImage(picture.url, width: pixels),
                 fit: BoxFit.cover,

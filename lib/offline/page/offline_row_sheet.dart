@@ -123,10 +123,10 @@ class _OfflineRowSheetState extends State<OfflineRowSheet> with SingleTickerProv
   }
 }
 
-TextStyle _style(double size) => TextStyle(
+TextStyle _style(BuildContext context, double size) => TextStyle(
   fontFamily: BiliFonts.family,
   fontSize: size,
-  color: OfflinePageTheme.sheetInk,
+  color: OfflinePageTheme.colorsOf(context).sheetInk,
   height: 1,
   letterSpacing: 0,
   decoration: TextDecoration.none,
@@ -141,7 +141,7 @@ class _Sheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ColoredBox(
     key: const ValueKey('offline-sheet'),
-    color: OfflinePageTheme.sheetBand,
+    color: OfflinePageTheme.colorsOf(context).sheetBand,
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -153,18 +153,18 @@ class _Sheet extends StatelessWidget {
           child: SizedBox(
             height: OfflinePageTheme.sheetRowHeight,
             child: ColoredBox(
-              color: OfflinePageTheme.sheetFill,
+              color: OfflinePageTheme.colorsOf(context).sheetFill,
               child: Row(
                 children: [
                   const SizedBox(width: OfflinePageTheme.sheetIconLeft),
-                  const CustomPaint(size: Size.square(OfflinePageTheme.sheetIcon), painter: _PlayRingPainter()),
+                  CustomPaint(size: Size.square(OfflinePageTheme.sheetIcon), painter: _PlayRingPainter(palette: BiliPalette.of(context))),
                   const SizedBox(
                     width:
                         OfflinePageTheme.sheetLabelLeft - OfflinePageTheme.sheetIconLeft - OfflinePageTheme.sheetIcon,
                   ),
                   Transform.translate(
                     offset: const Offset(0, -OfflinePageTheme.sheetLabelLift),
-                    child: Text('查看详情页', style: _style(OfflinePageTheme.sheetLabelText)),
+                    child: Text('查看详情页', style: _style(context, OfflinePageTheme.sheetLabelText)),
                   ),
                 ],
               ),
@@ -179,11 +179,11 @@ class _Sheet extends StatelessWidget {
           child: SizedBox(
             height: OfflinePageTheme.sheetCancelHeight,
             child: ColoredBox(
-              color: OfflinePageTheme.sheetFill,
+              color: OfflinePageTheme.colorsOf(context).sheetFill,
               child: Center(
                 child: Transform.translate(
                   offset: const Offset(0, -OfflinePageTheme.sheetCancelLift),
-                  child: Text('取消', style: _style(OfflinePageTheme.sheetCancelText)),
+                  child: Text('取消', style: _style(context, OfflinePageTheme.sheetCancelText)),
                 ),
               ),
             ),
@@ -214,7 +214,8 @@ class _Button extends StatelessWidget {
 
 /// 查看详情页's pink ring with a rounded ▷ in it (159).
 class _PlayRingPainter extends CustomPainter {
-  const _PlayRingPainter();
+  final BiliPalette palette;
+  const _PlayRingPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -224,7 +225,7 @@ class _PlayRingPainter extends CustomPainter {
       centre,
       size.shortestSide / 2 - stroke / 2,
       Paint()
-        ..color = OfflinePageTheme.sheetIconInk
+        ..color = OfflinePageThemeColors(palette).sheetIconInk
         ..style = PaintingStyle.stroke
         ..strokeWidth = stroke,
     );
@@ -238,13 +239,13 @@ class _PlayRingPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = OfflinePageTheme.sheetIconInk
+        ..color = OfflinePageThemeColors(palette).sheetIconInk
         ..style = PaintingStyle.fill,
     );
     canvas.drawPath(
       path,
       Paint()
-        ..color = OfflinePageTheme.sheetIconInk
+        ..color = OfflinePageThemeColors(palette).sheetIconInk
         ..style = PaintingStyle.stroke
         ..strokeWidth = s
         ..strokeJoin = StrokeJoin.round,
@@ -252,5 +253,5 @@ class _PlayRingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_PlayRingPainter oldDelegate) => false;
+  bool shouldRepaint(_PlayRingPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }

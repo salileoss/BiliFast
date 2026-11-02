@@ -118,7 +118,7 @@ class MorePanel extends StatefulWidget {
 }
 
 class _MorePanelState extends State<MorePanel> {
-  static const _remainingStyle = TextStyle(fontSize: BiliMetrics.panelDetailText, color: BiliColors.pink);
+  TextStyle get _remainingStyle => TextStyle(fontSize: BiliMetrics.panelDetailText, color: BiliColors.colorsOf(context).pink);
 
   var _page = _Page.root;
   var _customMinutes = 30;
@@ -346,7 +346,7 @@ class _MorePanelState extends State<MorePanel> {
             height: BiliMetrics.panelButtonHeight,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: BiliColors.pink,
+              color: BiliColors.colorsOf(context).pink,
               borderRadius: BorderRadius.circular(BiliMetrics.panelButtonHeight / 2),
             ),
             child: const Text('确定', style: TextStyle(color: BiliColors.onPink)),
@@ -400,7 +400,7 @@ class _SleepWheelState extends State<SleepWheel> {
     fontFamily: BiliFonts.family,
     fontFamilyFallback: BiliFonts.fallback,
     fontSize: BiliMetrics.bodyText,
-    color: widget.light ? BiliColors.text : BiliColors.panelText,
+    color: widget.light ? BiliColors.colorsOf(context).text : BiliColors.panelText,
   );
 
   @override

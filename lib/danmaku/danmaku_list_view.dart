@@ -185,7 +185,7 @@ class _DanmakuListViewState extends State<DanmakuListView> {
                 SizedBox(
                   height: DanmakuListTheme.rowMinHeight,
                   child: Center(
-                    child: Text('暂无弹幕', style: DanmakuListTheme.textStyle.copyWith(color: DanmakuListTheme.emptyColor)),
+                    child: Text('暂无弹幕', style: DanmakuListTheme.textStyle.copyWith(color: DanmakuListTheme.colorsOf(context).emptyColor)),
                   ),
                 )
               else
@@ -321,7 +321,7 @@ class _DanmakuRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final liked = stat?.liked ?? false;
     final likes = stat?.likes ?? 0;
-    final colour = liked ? DanmakuListTheme.liked : DanmakuListTheme.thumb;
+    final colour = liked ? DanmakuListTheme.colorsOf(context).liked : DanmakuListTheme.thumb;
     final count = likes > 0 ? CountFormat.short(likes) : null;
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: DanmakuListTheme.rowMinHeight),
@@ -399,7 +399,7 @@ class _DanmakuRow extends StatelessWidget {
                   width: DanmakuListTheme.dividerWidth,
                   top: (DanmakuListTheme.rowMinHeight - DanmakuListTheme.dividerHeight) / 2,
                   height: DanmakuListTheme.dividerHeight,
-                  child: const ColoredBox(color: DanmakuListTheme.divider),
+                  child: ColoredBox(color: DanmakuListTheme.colorsOf(context).divider),
                 ),
                 Positioned(
                   right: 0,

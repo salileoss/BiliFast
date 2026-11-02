@@ -68,7 +68,7 @@ class PadPlayerBar extends StatelessWidget {
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: onResume,
-            child: ColoredBox(color: PadPageTheme.barFill.withValues(alpha: progress.clamp(0.0, 1.0))),
+            child: ColoredBox(color: PadPageTheme.colorsOf(context).barFill.withValues(alpha: progress.clamp(0.0, 1.0))),
           ),
         ),
         Positioned(
@@ -215,7 +215,7 @@ class PadPlayerColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-    color: BiliColors.card,
+    color: BiliColors.colorsOf(context).card,
     child: CustomScrollView(
       key: const ValueKey('pad-player-column'),
       controller: controller,
@@ -296,10 +296,10 @@ class PadPinnedStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
     key: const ValueKey('pad-pinned-strip'),
-    decoration: const BoxDecoration(
-      color: BiliColors.card,
+    decoration: BoxDecoration(
+      color: BiliColors.colorsOf(context).card,
       border: Border(
-        bottom: BorderSide(color: PadPageTheme.ruleColour, width: PadPageTheme.rule),
+        bottom: BorderSide(color: PadPageTheme.colorsOf(context).ruleColour, width: PadPageTheme.rule),
       ),
     ),
     child: SizedBox(

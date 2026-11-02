@@ -115,7 +115,7 @@ class _RelatedSliverState extends State<RelatedSliver> {
     if (widget.column) return top;
     return SliverMainAxisGroup(
       slivers: [
-        const SliverToBoxAdapter(
+        SliverToBoxAdapter(
           child: Padding(
             key: ValueKey('related-hairline'),
             padding: EdgeInsets.only(
@@ -125,7 +125,7 @@ class _RelatedSliverState extends State<RelatedSliver> {
             ),
             child: SizedBox(
               height: PageTheme.hairline,
-              child: ColoredBox(color: BiliColors.divider),
+              child: ColoredBox(color: BiliColors.colorsOf(context).divider),
             ),
           ),
         ),
@@ -273,14 +273,14 @@ class _RelatedRow extends StatelessWidget {
   final VoidCallback onOpen;
   final VoidCallback onWatchLater;
 
-  TextStyle get _meta => TextStyle(
+  TextStyle _meta(BuildContext context) => TextStyle(
     fontFamily: BiliFonts.family,
     fontSize: IntroListTheme.relatedMetaText,
     height: 1,
-    color: BiliColors.secondaryText,
+    color: BiliColors.colorsOf(context).secondaryText,
   );
 
-  TextStyle get _count => _meta.copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+  TextStyle _count(BuildContext context) => _meta(context).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
 
   @override
   Widget build(BuildContext context) {
@@ -297,7 +297,7 @@ class _RelatedRow extends StatelessWidget {
       fontSize: IntroListTheme.relatedTitleText,
       height: IntroListTheme.relatedTitleLine / IntroListTheme.relatedTitleText,
       fontWeight: m.titleWeight,
-      color: BiliColors.text,
+      color: BiliColors.colorsOf(context).text,
     );
     return MediaQuery.withClampedTextScaling(
       maxScaleFactor: 1,
@@ -319,7 +319,7 @@ class _RelatedRow extends StatelessWidget {
                         left: first ? 0 : IntroListTheme.relatedDividerInset,
                         right: 0,
                         height: BiliMetrics.panelHairline,
-                        child: const ColoredBox(color: BiliColors.divider),
+                        child: ColoredBox(color: BiliColors.colorsOf(context).divider),
                       ),
                     Positioned(
                       left: m.gutter,
@@ -382,8 +382,8 @@ class _RelatedRow extends StatelessWidget {
                           Flexible(
                             child: Text(
                               card.ownerName,
-                              style: _meta,
-                              strutStyle: BiliFonts.strut(_meta),
+                              style: _meta(context),
+                              strutStyle: BiliFonts.strut(_meta(context)),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -398,11 +398,11 @@ class _RelatedRow extends StatelessWidget {
                         children: [
                           _CountIcon(CountGlyph.views, metrics: m),
                           SizedBox(width: m.metaGap),
-                          Text(CountFormat.short(card.views), style: _count, strutStyle: BiliFonts.strut(_count)),
+                          Text(CountFormat.short(card.views), style: _count(context), strutStyle: BiliFonts.strut(_count(context))),
                           SizedBox(width: m.countSpacing),
                           _CountIcon(CountGlyph.danmaku, metrics: m),
                           SizedBox(width: m.metaGap),
-                          Text(CountFormat.short(card.danmaku), style: _count, strutStyle: BiliFonts.strut(_count)),
+                          Text(CountFormat.short(card.danmaku), style: _count(context), strutStyle: BiliFonts.strut(_count(context))),
                         ],
                       ),
                     ),
@@ -444,7 +444,7 @@ class _UpBadge extends StatelessWidget {
     height: metrics.iconHeight,
     alignment: Alignment.center,
     decoration: BoxDecoration(
-      border: Border.all(color: BiliColors.secondaryText, width: BiliMetrics.endUpBorder),
+      border: Border.all(color: BiliColors.colorsOf(context).secondaryText, width: BiliMetrics.endUpBorder),
       borderRadius: BorderRadius.circular(metrics.upRadius),
     ),
     child: Text(
@@ -452,7 +452,7 @@ class _UpBadge extends StatelessWidget {
       textScaler: TextScaler.noScaling,
       style: TextStyle(
         fontFamily: BiliFonts.family,
-        color: BiliColors.secondaryText,
+        color: BiliColors.colorsOf(context).secondaryText,
         fontSize: metrics.upFont,
         fontWeight: FontWeight.bold,
         height: 1,
@@ -470,7 +470,7 @@ class _CountIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) => CustomPaint(
     size: Size(metrics.iconWidth, metrics.iconHeight),
-    painter: CountPainter(glyph, color: BiliColors.secondaryText),
+    painter: CountPainter(glyph, color: BiliColors.colorsOf(context).secondaryText),
   );
 }
 
@@ -508,7 +508,7 @@ class _More extends StatelessWidget {
       child: Center(
         child: CustomPaint(
           size: Size(dot, dot * 3 + dotGap * 2),
-          painter: _DotsPainter(dot: dot, gap: dotGap),
+          painter: _DotsPainter(dot: dot, gap: dotGap, palette: BiliPalette.of(context)),
         ),
       ),
     ),
@@ -516,14 +516,15 @@ class _More extends StatelessWidget {
 }
 
 class _DotsPainter extends CustomPainter {
-  const _DotsPainter({required this.dot, required this.gap});
+  final BiliPalette palette;
+  const _DotsPainter({this.palette = const BiliPalette(Brightness.light), required this.dot, required this.gap});
 
   final double dot;
   final double gap;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = BiliColors.secondaryText;
+    final paint = Paint()..color = BiliColorsColors(palette).secondaryText;
     final radius = dot / 2;
     for (var i = 0; i < 3; i++) {
       canvas.drawCircle(Offset(radius, radius + i * (dot + gap)), radius, paint);
@@ -531,7 +532,7 @@ class _DotsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DotsPainter oldDelegate) => oldDelegate.dot != dot || oldDelegate.gap != gap;
+  bool shouldRepaint(_DotsPainter oldDelegate) => (oldDelegate.dot != dot || oldDelegate.gap != gap) || oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// ⋮'s menu, as the feed card's: frosted glass growing out of the dots, below them or, near the bottom, above.

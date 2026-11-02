@@ -177,7 +177,7 @@ class _TitleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = _style(IntroTheme.titleText, BiliColors.text, line: IntroTheme.titleLine, weight: FontWeight.w600);
+    final style = _style(IntroTheme.titleText, BiliColors.colorsOf(context).text, line: IntroTheme.titleLine, weight: FontWeight.w600);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -204,9 +204,9 @@ class _TitleRow extends StatelessWidget {
                 turns: expanded ? 0.5 : 0,
                 duration: animate ? IntroTheme.expandDuration : Duration.zero,
                 curve: Curves.easeOutCubic,
-                child: const CustomPaint(
+                child: CustomPaint(
                   size: Size(IntroTheme.chevronWidth, IntroTheme.chevronHeight),
-                  painter: _ChevronPainter(),
+                  painter: _ChevronPainter(palette: BiliPalette.of(context)),
                 ),
               ),
             ),
@@ -225,13 +225,14 @@ class _HonorTag extends StatelessWidget {
     height: IntroTheme.titleRow,
     padding: const EdgeInsets.symmetric(horizontal: IntroTheme.honorPadding),
     alignment: Alignment.center,
-    decoration: BoxDecoration(color: BiliColors.softGrey, borderRadius: BorderRadius.circular(IntroTheme.titleRow / 2)),
-    child: Text('活动', style: _style(IntroTheme.honorText, BiliColors.pink, line: IntroTheme.titleRow)),
+    decoration: BoxDecoration(color: BiliColors.colorsOf(context).softGrey, borderRadius: BorderRadius.circular(IntroTheme.titleRow / 2)),
+    child: Text('活动', style: _style(IntroTheme.honorText, BiliColors.colorsOf(context).pink, line: IntroTheme.titleRow)),
   );
 }
 
 class _ChevronPainter extends CustomPainter {
-  const _ChevronPainter();
+  final BiliPalette palette;
+  const _ChevronPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -247,12 +248,12 @@ class _ChevronPainter extends CustomPainter {
         ..strokeWidth = IntroTheme.chevronStroke
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round
-        ..color = BiliColors.secondaryText,
+        ..color = BiliColorsColors(palette).secondaryText,
     );
   }
 
   @override
-  bool shouldRepaint(_ChevronPainter oldDelegate) => false;
+  bool shouldRepaint(_ChevronPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// ▶ 3.7万  ☰ 337  2026年10月11日 21:05, then the viewers mark and 53人正在看. Only N人正在看 rebuilds when the count
@@ -267,7 +268,7 @@ class _MetaLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = _style(
       IntroTheme.metaText,
-      BiliColors.secondaryText,
+      BiliColors.colorsOf(context).secondaryText,
       line: IntroTheme.metaLine,
       spacing: IntroTheme.metaSpacing,
     );
@@ -281,16 +282,16 @@ class _MetaLine extends StatelessWidget {
         child: Row(
           children: [
             const SizedBox(width: IntroTheme.metaLead),
-            const CustomPaint(
+            CustomPaint(
               size: icon,
-              painter: CountPainter(CountGlyph.views, color: BiliColors.secondaryText),
+              painter: CountPainter(CountGlyph.views, color: BiliColors.colorsOf(context).secondaryText),
             ),
             const SizedBox(width: IntroTheme.metaIconGap),
             Text(CountFormat.short(detail.stat.view), style: text, strutStyle: strut),
             const SizedBox(width: IntroTheme.metaGroupGap),
-            const CustomPaint(
+            CustomPaint(
               size: icon,
-              painter: CountPainter(CountGlyph.danmaku, color: BiliColors.secondaryText),
+              painter: CountPainter(CountGlyph.danmaku, color: BiliColors.colorsOf(context).secondaryText),
             ),
             const SizedBox(width: IntroTheme.metaIconGap),
             Text(CountFormat.short(detail.stat.danmaku), style: text, strutStyle: strut),
@@ -304,9 +305,9 @@ class _MetaLine extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(width: IntroTheme.metaGroupGap),
-                    const CustomPaint(
+                    CustomPaint(
                       size: Size(IntroTheme.metaIconWidth, IntroTheme.onlineIconHeight),
-                      painter: OnlinePainter(),
+                      painter: OnlinePainter(palette: BiliPalette.of(context)),
                     ),
                     const SizedBox(width: IntroTheme.metaIconGap),
                     Text('$count人正在看', style: text, strutStyle: strut),
@@ -331,7 +332,7 @@ class _NoticeLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = _style(
       IntroTheme.noticeText,
-      BiliColors.secondaryText,
+      BiliColors.colorsOf(context).secondaryText,
       line: IntroTheme.noticeLine,
       spacing: IntroTheme.proseSpacing,
     );
@@ -346,7 +347,7 @@ class _NoticeLine extends StatelessWidget {
           child: Row(
             children: [
               const SizedBox(width: IntroTheme.metaLead),
-              const CustomPaint(size: Size.square(IntroTheme.noticeIcon), painter: _NoticePainter()),
+              CustomPaint(size: Size.square(IntroTheme.noticeIcon), painter: _NoticePainter(palette: BiliPalette.of(context))),
               const SizedBox(width: IntroTheme.noticeIconGap),
               Flexible(
                 child: Text(
@@ -367,7 +368,8 @@ class _NoticeLine extends StatelessWidget {
 
 /// The notice's ⓘ: a ring with a round-ended bar and a dot inside, traced on font-check 03 at 12×.
 class _NoticePainter extends CustomPainter {
-  const _NoticePainter();
+  final BiliPalette palette;
+  const _NoticePainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -376,20 +378,21 @@ class _NoticePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = IntroTheme.metaStroke
       ..strokeCap = StrokeCap.round
-      ..color = BiliColors.secondaryText;
+      ..color = BiliColorsColors(palette).secondaryText;
     canvas
       ..drawCircle(centre, (size.shortestSide - IntroTheme.metaStroke) / 2, line)
       ..drawLine(centre.translate(0, -2.63), centre.translate(0, 0.5), line)
-      ..drawCircle(centre.translate(0, 2.43), 0.55, Paint()..color = BiliColors.secondaryText);
+      ..drawCircle(centre.translate(0, 2.43), 0.55, Paint()..color = BiliColorsColors(palette).secondaryText);
   }
 
   @override
-  bool shouldRepaint(_NoticePainter oldDelegate) => false;
+  bool shouldRepaint(_NoticePainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// 03's N人正在看 mark: a head and shoulders like an Ω, and the edge of a second one behind it on the right.
 class OnlinePainter extends CustomPainter {
-  const OnlinePainter();
+  final BiliPalette palette;
+  const OnlinePainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -401,7 +404,7 @@ class OnlinePainter extends CustomPainter {
       ..strokeWidth = IntroTheme.metaStroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..color = BiliColors.secondaryText;
+      ..color = BiliColorsColors(palette).secondaryText;
     const start = 128 * math.pi / 180;
     const sweep = 284 * math.pi / 180;
     final head = Path()
@@ -420,7 +423,7 @@ class OnlinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(OnlinePainter oldDelegate) => false;
+  bool shouldRepaint(OnlinePainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 class _Details extends StatelessWidget {
@@ -440,7 +443,7 @@ class _Details extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final meta = _style(IntroTheme.metaText, BiliColors.secondaryText, line: IntroTheme.metaLine);
+    final meta = _style(IntroTheme.metaText, BiliColors.colorsOf(context).secondaryText, line: IntroTheme.metaLine);
     final runs = descriptionRuns(detail.descParts);
     final plain = [
       for (final tag in tags)
@@ -478,7 +481,7 @@ class _Details extends StatelessWidget {
             runs: runs,
             style: _style(
               IntroTheme.descText,
-              BiliColors.secondaryText,
+              BiliColors.colorsOf(context).secondaryText,
               line: IntroTheme.descLine,
               spacing: IntroTheme.proseSpacing,
             ),
@@ -511,7 +514,7 @@ class _PlainTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = _style(
       IntroTheme.tagText,
-      IntroTheme.tagInk,
+      IntroTheme.colorsOf(context).tagInk,
       line: IntroTheme.tagHeight,
       spacing: IntroTheme.proseSpacing,
     );
@@ -519,7 +522,7 @@ class _PlainTag extends StatelessWidget {
       height: IntroTheme.tagHeight,
       padding: const EdgeInsets.symmetric(horizontal: IntroTheme.tagPadding),
       decoration: BoxDecoration(
-        color: BiliColors.softGrey,
+        color: BiliColors.colorsOf(context).softGrey,
         borderRadius: BorderRadius.circular(IntroTheme.tagHeight / 2),
       ),
       child: Center(

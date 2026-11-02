@@ -138,7 +138,7 @@ class _PageTabsState extends State<PageTabs> {
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-    color: BiliColors.card,
+    color: BiliColors.colorsOf(context).card,
     child: PageView(
       key: const ValueKey('page-tabs'),
       controller: widget.controller.pager,
@@ -245,22 +245,22 @@ class PageTabRow extends StatelessWidget {
     // Measured as the labels render: over whatever the surrounding text style leaves in place.
     final base = DefaultTextStyle.of(context).style;
     final count = replyCount == null ? null : CountFormat.short(replyCount!);
-    final introWidth = _measure('简介', base.merge(_labelStyle(PageTheme.tabText)), scaler);
+    final introWidth = _measure('简介', base.merge(_labelStyle(PageTheme.colorsOf(context).tabText)), scaler);
     final commentsWidth =
-        _measure('评论', base.merge(_labelStyle(PageTheme.tabText)), scaler) +
+        _measure('评论', base.merge(_labelStyle(PageTheme.colorsOf(context).tabText)), scaler) +
         (count == null
             ? 0
-            : PageTheme.tabCountGap + _measure(count, base.merge(_countStyle(PageTheme.tabText)), scaler));
+            : PageTheme.tabCountGap + _measure(count, base.merge(_countStyle(PageTheme.colorsOf(context).tabText)), scaler));
     const pad = PageTheme.tabSpacing / 2;
     const introLeft = PageTheme.tabFirstLabel;
     final commentsLeft = introLeft + introWidth + PageTheme.tabSpacing;
     return SizedBox(
       height: PageTheme.tabRowHeight,
       child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: BiliColors.card,
+        decoration: BoxDecoration(
+          color: BiliColors.colorsOf(context).card,
           border: Border(
-            bottom: BorderSide(color: BiliColors.divider, width: PageTheme.hairline),
+            bottom: BorderSide(color: BiliColors.colorsOf(context).divider, width: PageTheme.hairline),
           ),
         ),
         child: ListenableBuilder(
@@ -273,7 +273,7 @@ class PageTabRow extends StatelessWidget {
                   left: introLeft - pad,
                   top: 0,
                   bottom: 0,
-                  child: _tab(
+                  child: _tab(context,
                     key: const ValueKey('tab-intro'),
                     tab: PageTab.intro,
                     label: '简介',
@@ -286,7 +286,7 @@ class PageTabRow extends StatelessWidget {
                   left: commentsLeft - pad,
                   top: 0,
                   bottom: 0,
-                  child: _tab(
+                  child: _tab(context,
                     key: const ValueKey('tab-comments'),
                     tab: PageTab.comments,
                     label: '评论',
@@ -295,7 +295,7 @@ class PageTabRow extends StatelessWidget {
                     still: still,
                   ),
                 ),
-                _underline(position: position, from: (introLeft, introWidth), to: (commentsLeft, commentsWidth)),
+                _underline(context, position: position, from: (introLeft, introWidth), to: (commentsLeft, commentsWidth)),
                 Positioned(
                   right: BiliMetrics.gutter,
                   top: 0,
@@ -329,7 +329,7 @@ class PageTabRow extends StatelessWidget {
     return width;
   }
 
-  Widget _tab({
+  Widget _tab(BuildContext context, {
     required Key key,
     required PageTab tab,
     required String label,
@@ -337,7 +337,7 @@ class PageTabRow extends StatelessWidget {
     required double emphasis,
     required bool still,
   }) {
-    final color = Color.lerp(PageTheme.tabText, BiliColors.pink, emphasis.clamp(0.0, 1.0))!;
+    final color = Color.lerp(PageTheme.colorsOf(context).tabText, BiliColors.colorsOf(context).pink, emphasis.clamp(0.0, 1.0))!;
     final selected = controller.selected == tab;
     void select() => controller.select(tab, animate: !still);
     return Semantics(
@@ -376,7 +376,7 @@ class PageTabRow extends StatelessWidget {
   }
 
   /// The leading end runs ahead and the trailing end catches up, so the bar stretches as it travels.
-  Widget _underline({required double position, required (double, double) from, required (double, double) to}) {
+  Widget _underline(BuildContext context, {required double position, required (double, double) from, required (double, double) to}) {
     final (fromLeft, fromWidth) = from;
     final (toLeft, toWidth) = to;
     final lead = Curves.easeOut.transform(position);
@@ -389,9 +389,9 @@ class PageTabRow extends StatelessWidget {
       width: math.max(0, right - left),
       bottom: 0,
       height: PageTheme.underlineHeight,
-      child: const DecoratedBox(
+      child: DecoratedBox(
         decoration: BoxDecoration(
-          color: BiliColors.pink,
+          color: BiliColors.colorsOf(context).pink,
           borderRadius: BorderRadius.all(Radius.circular(PageTheme.underlineRadius)),
         ),
       ),
@@ -425,10 +425,10 @@ class DanmakuCapsule extends StatelessWidget {
 
   static const _curve = Curves.easeOutCubic;
 
-  static TextStyle get _fieldStyle => TextStyle(
+  static TextStyle _fieldStyle(BuildContext context) => TextStyle(
     fontFamily: BiliFonts.family,
     fontSize: PageTheme.danmakuFieldText,
-    color: BiliColors.secondaryText,
+    color: BiliColors.colorsOf(context).secondaryText,
     letterSpacing: 0,
   );
 
@@ -442,10 +442,10 @@ class DanmakuCapsule extends StatelessWidget {
       width: on ? PageTheme.danmakuFieldWidth + PageTheme.danmakuToggleOn : PageTheme.danmakuToggleOff,
       height: height,
       clipBehavior: Clip.antiAlias,
-      decoration: const ShapeDecoration(color: BiliColors.softGrey, shape: StadiumBorder()),
+      decoration: ShapeDecoration(color: BiliColors.colorsOf(context).softGrey, shape: StadiumBorder()),
       foregroundDecoration: ShapeDecoration(
         shape: StadiumBorder(
-          side: BorderSide(color: BiliColors.divider, width: border),
+          side: BorderSide(color: BiliColors.colorsOf(context).divider, width: border),
         ),
       ),
       child: Row(
@@ -455,7 +455,7 @@ class DanmakuCapsule extends StatelessWidget {
             duration: duration,
             curve: _curve,
             width: toggleWidth,
-            color: on ? BiliColors.card : BiliColors.softGrey,
+            color: on ? BiliColors.colorsOf(context).card : BiliColors.colorsOf(context).softGrey,
             child: _toggle(),
           ),
         ],
@@ -490,8 +490,8 @@ class DanmakuCapsule extends StatelessWidget {
                     key: ValueKey(text),
                     maxLines: 1,
                     softWrap: false,
-                    style: _fieldStyle,
-                    strutStyle: BiliFonts.strutOf(context, _fieldStyle),
+                    style: _fieldStyle(context),
+                    strutStyle: BiliFonts.strutOf(context, _fieldStyle(context)),
                   ),
                 ),
               ),
@@ -536,19 +536,19 @@ class DanmakuMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!on) {
-      return const Icon(CustomIcons.danmakuOff, size: PageTheme.danmakuMark, color: PageTheme.tabText);
+      return Icon(CustomIcons.danmakuOff, size: PageTheme.danmakuMark, color: PageTheme.colorsOf(context).tabText);
     }
-    return const SizedBox.square(
+    return SizedBox.square(
       dimension: PageTheme.danmakuMark,
       child: Stack(
         children: [
           ClipPath(
             clipper: _TickClip(tick: false),
-            child: Icon(CustomIcons.danmakuOn, size: PageTheme.danmakuMark, color: PageTheme.tabText),
+            child: Icon(CustomIcons.danmakuOn, size: PageTheme.danmakuMark, color: PageTheme.colorsOf(context).tabText),
           ),
           ClipPath(
             clipper: _TickClip(tick: true),
-            child: Icon(CustomIcons.danmakuOn, size: PageTheme.danmakuMark, color: BiliColors.pink),
+            child: Icon(CustomIcons.danmakuOn, size: PageTheme.danmakuMark, color: BiliColors.colorsOf(context).pink),
           ),
         ],
       ),
@@ -608,7 +608,7 @@ class PadPageTabRow extends StatelessWidget {
     return SizedBox(
       height: PadPageTheme.tabRowHeight,
       child: ColoredBox(
-        color: BiliColors.card,
+        color: BiliColors.colorsOf(context).card,
         child: ListenableBuilder(
           listenable: Listenable.merge([controller, controller.pager]),
           builder: (context, _) {
@@ -616,8 +616,8 @@ class PadPageTabRow extends StatelessWidget {
             return Row(
               children: [
                 const SizedBox(width: PadPageTheme.tabFirstLabel - PadPageTheme.tabSpacing / 2),
-                _tab(PageTab.intro, '简介', 1 - position, still, const ValueKey('tab-intro')),
-                _tab(
+                _tab(context, PageTab.intro, '简介', 1 - position, still, const ValueKey('tab-intro')),
+                _tab(context,
                   PageTab.comments,
                   count == null ? '评论' : '评论 ($count)',
                   position,
@@ -641,8 +641,8 @@ class PadPageTabRow extends StatelessWidget {
     );
   }
 
-  Widget _tab(PageTab tab, String label, double emphasis, bool still, Key key) {
-    final color = Color.lerp(PadPageTheme.tabInk, BiliColors.pink, emphasis.clamp(0.0, 1.0))!;
+  Widget _tab(BuildContext context, PageTab tab, String label, double emphasis, bool still, Key key) {
+    final color = Color.lerp(PadPageTheme.colorsOf(context).tabInk, BiliColors.colorsOf(context).pink, emphasis.clamp(0.0, 1.0))!;
     void select() => controller.select(tab, animate: !still);
     return Semantics(
       key: key,

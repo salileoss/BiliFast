@@ -308,8 +308,8 @@ class _ComposerState extends State<Composer> with SingleTickerProviderStateMixin
               position: _motion.drive(Tween(begin: const Offset(0, 1), end: Offset.zero)),
               child: DecoratedBox(
                 key: const ValueKey('composer-sheet'),
-                decoration: const BoxDecoration(
-                  color: ComposerTheme.sheet,
+                decoration: BoxDecoration(
+                  color: ComposerTheme.colorsOf(context).sheet,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(ComposerTheme.sheetRadius)),
                 ),
                 child: Material(
@@ -363,9 +363,9 @@ class _ComposerState extends State<Composer> with SingleTickerProviderStateMixin
     final textStyle = TextStyle(
       fontFamily: BiliFonts.family,
       fontSize: ComposerTheme.editorFont,
-      color: ComposerTheme.text,
+      color: ComposerTheme.colorsOf(context).text,
     );
-    final hintStyle = textStyle.copyWith(color: ComposerTheme.placeholder);
+    final hintStyle = textStyle.copyWith(color: ComposerTheme.colorsOf(context).placeholder);
     final strut = fieldStrut(context, textStyle);
     return AnimatedContainer(
       duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : ComposerTheme.expand,
@@ -382,9 +382,9 @@ class _ComposerState extends State<Composer> with SingleTickerProviderStateMixin
               expands: true,
               maxLines: null,
               keyboardType: TextInputType.multiline,
-              keyboardAppearance: Brightness.light,
+              keyboardAppearance: BiliPalette.of(context).brightness,
               textAlignVertical: TextAlignVertical.top,
-              cursorColor: ComposerTheme.accent,
+              cursorColor: ComposerTheme.colorsOf(context).accent,
               contextMenuBuilder: _editMenu,
               style: textStyle,
               strutStyle: strut,
@@ -425,7 +425,7 @@ class _ComposerState extends State<Composer> with SingleTickerProviderStateMixin
                 _expanded ? _GlyphKind.collapse : _GlyphKind.expand,
                 width: ComposerTheme.expandIcon,
                 height: ComposerTheme.expandIcon,
-                color: ComposerTheme.tool,
+                color: ComposerTheme.colorsOf(context).tool,
                 stroke: ComposerTheme.expandStroke,
               ),
             ),
@@ -447,26 +447,26 @@ class _ComposerState extends State<Composer> with SingleTickerProviderStateMixin
             label: emotes ? '键盘' : '表情',
             onTap: _toggleEmotes,
             child: emotes
-                ? const _Glyph(
+                ? _Glyph(
                     _GlyphKind.keyboard,
                     width: ComposerTheme.toolIcon,
                     height: ComposerTheme.keyboardIconHeight,
-                    color: ComposerTheme.accent,
+                    color: ComposerTheme.colorsOf(context).accent,
                     stroke: ComposerTheme.toolStroke,
                   )
-                : const _Glyph(_GlyphKind.face, color: ComposerTheme.tool, stroke: ComposerTheme.toolStroke),
+                : _Glyph(_GlyphKind.face, color: ComposerTheme.colorsOf(context).tool, stroke: ComposerTheme.toolStroke),
           ),
           _tool(
             key: const ValueKey('composer-mention'),
             label: '提及好友',
             onTap: _openMentions,
-            child: const _Glyph(_GlyphKind.at, color: ComposerTheme.tool, stroke: ComposerTheme.toolStroke),
+            child: _Glyph(_GlyphKind.at, color: ComposerTheme.colorsOf(context).tool, stroke: ComposerTheme.toolStroke),
           ),
           _tool(
             key: const ValueKey('composer-pictures'),
             label: '添加图片',
             onTap: () => unawaited(_addPictures()),
-            child: const _Glyph(_GlyphKind.plus, color: ComposerTheme.tool, stroke: ComposerTheme.toolStroke),
+            child: _Glyph(_GlyphKind.plus, color: ComposerTheme.colorsOf(context).tool, stroke: ComposerTheme.toolStroke),
           ),
           const Spacer(),
           _publishButton(model),
@@ -497,7 +497,7 @@ class _ComposerState extends State<Composer> with SingleTickerProviderStateMixin
               children: [
                 SizedBox.square(
                   dimension: ComposerTheme.syncRingSize,
-                  child: CustomPaint(painter: _SyncRingPainter(on: on)),
+                  child: CustomPaint(painter: _SyncRingPainter(on: on, palette: BiliPalette.of(context))),
                 ),
                 const SizedBox(width: ComposerTheme.syncGap),
                 Text(
@@ -507,7 +507,7 @@ class _ComposerState extends State<Composer> with SingleTickerProviderStateMixin
                   style: TextStyle(
                     fontFamily: BiliFonts.family,
                     fontSize: ComposerTheme.syncFont,
-                    color: ComposerTheme.syncText,
+                    color: ComposerTheme.colorsOf(context).syncText,
                   ),
                 ),
               ],
@@ -564,7 +564,7 @@ class _ComposerState extends State<Composer> with SingleTickerProviderStateMixin
                 alignment: Alignment.center,
                 decoration: ShapeDecoration(
                   shape: const StadiumBorder(),
-                  color: model.canPost || posting ? ComposerTheme.accent : ComposerTheme.accentFaded,
+                  color: model.canPost || posting ? ComposerTheme.colorsOf(context).accent : ComposerTheme.colorsOf(context).accentFaded,
                 ),
                 child: posting
                     ? const CupertinoActivityIndicator(
@@ -591,7 +591,8 @@ class _ComposerState extends State<Composer> with SingleTickerProviderStateMixin
 }
 
 class _SyncRingPainter extends CustomPainter {
-  const _SyncRingPainter({required this.on});
+  final BiliPalette palette;
+  const _SyncRingPainter({this.palette = const BiliPalette(Brightness.light), required this.on});
 
   final bool on;
 
@@ -604,13 +605,13 @@ class _SyncRingPainter extends CustomPainter {
         centre,
         radius - ComposerTheme.syncRingStroke / 2,
         Paint()
-          ..color = ComposerTheme.syncRing
+          ..color = ComposerThemeColors(palette).syncRing
           ..style = PaintingStyle.stroke
           ..strokeWidth = ComposerTheme.syncRingStroke,
       );
       return;
     }
-    canvas.drawCircle(centre, radius, Paint()..color = ComposerTheme.accent);
+    canvas.drawCircle(centre, radius, Paint()..color = ComposerThemeColors(palette).accent);
     final unit = size.shortestSide / 10;
     canvas.drawPath(
       Path()
@@ -627,7 +628,7 @@ class _SyncRingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SyncRingPainter oldDelegate) => oldDelegate.on != on;
+  bool shouldRepaint(_SyncRingPainter oldDelegate) => (oldDelegate.on != on) || oldDelegate.palette.brightness != palette.brightness;
 }
 
 enum _GlyphKind { face, keyboard, at, plus, expand, collapse }

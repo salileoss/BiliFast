@@ -28,16 +28,16 @@ class DanmakuStylePanel extends StatelessWidget {
 
   static const _colourNames = ['白色', '红色', '黄色', '绿色', '蓝色', '品红', '黄绿', '深蓝', '橙色', '紫色', '浅蓝', '橄榄'];
 
-  Color get _accent => dark ? DanmakuSendTheme.darkAccent : DanmakuSendTheme.lightAccent;
+  Color _accent(BuildContext context) => dark ? DanmakuSendTheme.darkAccent : DanmakuSendTheme.colorsOf(context).lightAccent;
 
-  Color get _secondary => dark ? DanmakuSendTheme.darkSecondary : DanmakuSendTheme.lightSecondary;
+  Color _secondary(BuildContext context) => dark ? DanmakuSendTheme.darkSecondary : DanmakuSendTheme.colorsOf(context).lightSecondary;
 
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
     return Material(
       key: const ValueKey('danmaku-style-panel'),
-      color: dark ? DanmakuSendTheme.darkArea : DanmakuSendTheme.lightArea,
+      color: dark ? DanmakuSendTheme.darkArea : DanmakuSendTheme.colorsOf(context).lightArea,
       child: Padding(
         padding: EdgeInsets.only(
           left: DanmakuSendTheme.panelGutter + padding.left,
@@ -49,14 +49,14 @@ class DanmakuStylePanel extends StatelessWidget {
           builder: (context, _) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _row('弹幕字号', [
-                for (final size in DanmakuSize.values) _sizeOption(size),
+              _row(context, '弹幕字号', [
+                for (final size in DanmakuSize.values) _sizeOption(context, size),
               ]),
-              _row('弹幕类型', [
+              _row(context, '弹幕类型', [
                 for (final position in DanmakuPosition.values)
-                  if (offerBottom || position != DanmakuPosition.bottom) _positionOption(position),
+                  if (offerBottom || position != DanmakuPosition.bottom) _positionOption(context, position),
               ]),
-              ..._colours(),
+              ..._colours(context),
             ],
           ),
         ),
@@ -64,7 +64,7 @@ class DanmakuStylePanel extends StatelessWidget {
     );
   }
 
-  Widget _label(String title) => SizedBox(
+  Widget _label(BuildContext context, String title) => SizedBox(
     width: DanmakuSendTheme.labelWidth,
     child: Text(
       title,
@@ -74,19 +74,19 @@ class DanmakuStylePanel extends StatelessWidget {
         fontFamily: BiliFonts.family,
         fontSize: DanmakuSendTheme.labelFont,
         letterSpacing: DanmakuSendTheme.labelSpacing,
-        color: _secondary,
+        color: _secondary(context),
       ),
     ),
   );
 
-  Widget _row(String title, List<Widget> options) => SizedBox(
+  Widget _row(BuildContext context, String title, List<Widget> options) => SizedBox(
     height: DanmakuSendTheme.rowHeight,
-    child: Row(children: [_label(title), ...options]),
+    child: Row(children: [_label(context, title), ...options]),
   );
 
-  Widget _sizeOption(DanmakuSize size) {
+  Widget _sizeOption(BuildContext context, DanmakuSize size) {
     final selected = model.style.size == size;
-    return _option(
+    return _option(context,
       key: ValueKey('danmaku-style-size-${size.name}'),
       title: switch (size) {
         DanmakuSize.normal => '默认',
@@ -95,14 +95,14 @@ class DanmakuStylePanel extends StatelessWidget {
       selected: selected,
       onTap: () => model.style = model.style.copyWith(size: size),
       glyph: CustomPaint(
-        painter: _SizePainter(small: size == DanmakuSize.small, colour: selected ? _accent : _secondary),
+        painter: _SizePainter(small: size == DanmakuSize.small, colour: selected ? _accent(context) : _secondary(context)),
       ),
     );
   }
 
-  Widget _positionOption(DanmakuPosition position) {
+  Widget _positionOption(BuildContext context, DanmakuPosition position) {
     final selected = model.style.position == position;
-    return _option(
+    return _option(context,
       key: ValueKey('danmaku-style-position-${position.name}'),
       title: switch (position) {
         DanmakuPosition.scroll => '滚动',
@@ -111,18 +111,18 @@ class DanmakuStylePanel extends StatelessWidget {
       },
       selected: selected,
       onTap: () => model.style = model.style.copyWith(position: position),
-      glyph: CustomPaint(painter: _ModePainter(position, selected ? _accent : _secondary)),
+      glyph: CustomPaint(painter: _ModePainter(position, selected ? _accent(context) : _secondary(context))),
     );
   }
 
-  Widget _option({
+  Widget _option(BuildContext context, {
     required Key key,
     required String title,
     required bool selected,
     required VoidCallback onTap,
     required Widget glyph,
   }) {
-    final tint = selected ? _accent : _secondary;
+    final tint = selected ? _accent(context) : _secondary(context);
     return Semantics(
       key: key,
       button: true,
@@ -163,13 +163,13 @@ class DanmakuStylePanel extends StatelessWidget {
     );
   }
 
-  List<Widget> _colours() {
+  List<Widget> _colours(BuildContext context) {
     final cell = dark ? DanmakuSendTheme.swatchCell : DanmakuSendTheme.portraitSwatchCell;
     final lead = dark ? DanmakuSendTheme.swatchLead : DanmakuSendTheme.portraitSwatchLead;
     final swatches = [
-      _swatch(0, cell, DanmakuSendTheme.rowHeight),
-      _vipChip(cell, DanmakuSendTheme.rowHeight),
-      for (var index = 1; index < DanmakuStyle.colors.length; index++) _swatch(index, cell, DanmakuSendTheme.rowHeight),
+      _swatch(context, 0, cell, DanmakuSendTheme.rowHeight),
+      _vipChip(context, cell, DanmakuSendTheme.rowHeight),
+      for (var index = 1; index < DanmakuStyle.colors.length; index++) _swatch(context, index, cell, DanmakuSendTheme.rowHeight),
     ];
     Widget line(Widget leading, List<Widget> cells, double height) => SizedBox(
       height: height,
@@ -180,27 +180,27 @@ class DanmakuStylePanel extends StatelessWidget {
         ],
       ),
     );
-    if (dark) return [line(_label('弹幕颜色'), swatches, DanmakuSendTheme.rowHeight)];
+    if (dark) return [line(_label(context, '弹幕颜色'), swatches, DanmakuSendTheme.rowHeight)];
     const split = DanmakuSendTheme.portraitSwatchesPerRow;
     return [
-      line(_label('弹幕颜色'), swatches.sublist(0, split), DanmakuSendTheme.rowHeight),
+      line(_label(context, '弹幕颜色'), swatches.sublist(0, split), DanmakuSendTheme.rowHeight),
       line(
         const SizedBox(width: DanmakuSendTheme.labelWidth),
         [
           for (var index = split - 1; index < DanmakuStyle.colors.length; index++)
-            _swatch(index, cell, DanmakuSendTheme.secondSwatchRow),
+            _swatch(context, index, cell, DanmakuSendTheme.secondSwatchRow),
         ],
         DanmakuSendTheme.secondSwatchRow,
       ),
     ];
   }
 
-  Widget _swatch(int index, double cell, double height) {
+  Widget _swatch(BuildContext context, int index, double cell, double height) {
     final rgb = DanmakuStyle.colors[index];
     final style = model.style;
     final selected = !style.gradient && style.color == rgb;
     final fill = dark ? DanmakuSendTheme.darkSwatches[index] : Color(0xFF000000 | rgb);
-    return _cell(
+    return _cell(context,
       key: ValueKey('danmaku-style-colour-$index'),
       label: _colourNames[index],
       selected: selected,
@@ -217,7 +217,7 @@ class DanmakuStylePanel extends StatelessWidget {
     );
   }
 
-  Widget _vipChip(double cell, double height) {
+  Widget _vipChip(BuildContext context, double cell, double height) {
     final style = model.style;
     void pick() {
       if (isVip) {
@@ -227,7 +227,7 @@ class DanmakuStylePanel extends StatelessWidget {
       }
     }
 
-    return _cell(
+    return _cell(context,
       key: const ValueKey('danmaku-style-vip'),
       label: '会员渐变色',
       selected: style.gradient,
@@ -258,7 +258,7 @@ class DanmakuStylePanel extends StatelessWidget {
             height: DanmakuSendTheme.vipBadgeHeight,
             child: DecoratedBox(
               decoration: ShapeDecoration(
-                color: _accent,
+                color: _accent(context),
                 shape: const StadiumBorder(
                   side: BorderSide(
                     color: DanmakuSendTheme.vipBadgeBorder,
@@ -291,7 +291,7 @@ class DanmakuStylePanel extends StatelessWidget {
   }
 
   /// A swatch's tap cell, with the tick over its bottom right corner while it is the colour.
-  Widget _cell({
+  Widget _cell(BuildContext context, {
     required Key key,
     required String label,
     required bool selected,
@@ -327,7 +327,7 @@ class DanmakuStylePanel extends StatelessWidget {
                     bottom: -DanmakuSendTheme.tickOffset,
                     width: DanmakuSendTheme.tickSize,
                     height: DanmakuSendTheme.tickSize,
-                    child: CustomPaint(painter: _TickPainter(_accent)),
+                    child: CustomPaint(painter: _TickPainter(_accent(context))),
                   ),
               ],
             ),

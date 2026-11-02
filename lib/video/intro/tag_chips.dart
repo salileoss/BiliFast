@@ -37,7 +37,7 @@ class TagChips extends StatelessWidget {
               final scaler = MediaQuery.textScalerOf(context);
               var scrolling = -1;
               for (var index = 0; index < shown.length && scrolling < 0; index++) {
-                if (_shownWidth(shown[index].name, scaler) > rooms[index]) scrolling = index;
+                if (_shownWidth(context, shown[index].name, scaler) > rooms[index]) scrolling = index;
               }
               return ListView.separated(
                 scrollDirection: Axis.horizontal,
@@ -63,8 +63,8 @@ double _chrome(VideoTagKind kind) =>
     IntroListTheme.chipChevronWidth +
     IntroListTheme.chipTrailing;
 
-double _nameWidth(String text, TextScaler scaler) {
-  final style = ChipName.style();
+double _nameWidth(BuildContext context, String text, TextScaler scaler) {
+  final style = ChipName.style(context);
   final painter = TextPainter(
     text: TextSpan(text: text, style: style),
     strutStyle: BiliFonts.strut(style),
@@ -85,7 +85,7 @@ const _closing = '》〉」』】〕〗〙〛）］｝、。，．';
 double _trailingTrim(String text, TextScaler scaler) =>
     text.isNotEmpty && _closing.contains(text[text.length - 1]) ? scaler.scale(IntroListTheme.chipText) / 2 : 0;
 
-double _shownWidth(String text, TextScaler scaler) => _nameWidth(text, scaler) - _trailingTrim(text, scaler);
+double _shownWidth(BuildContext context, String text, TextScaler scaler) => _nameWidth(context, text, scaler) - _trailingTrim(text, scaler);
 
 class _Chip extends StatelessWidget {
   const _Chip(this.tag, {required this.room, required this.scrolls});
@@ -102,29 +102,29 @@ class _Chip extends StatelessWidget {
       height: IntroListTheme.chipHeight,
       padding: const EdgeInsets.only(left: IntroListTheme.chipLead, right: IntroListTheme.chipTrailing),
       decoration: BoxDecoration(
-        color: BiliColors.softGrey,
+        color: BiliColors.colorsOf(context).softGrey,
         borderRadius: BorderRadius.circular(IntroListTheme.chipHeight / 2),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (tag.kind == VideoTagKind.bgm)
-            const CustomPaint(
+            CustomPaint(
               size: Size(IntroListTheme.musicGlyphWidth, IntroListTheme.musicGlyphHeight),
-              painter: _MusicPainter(),
+              painter: _MusicPainter(palette: BiliPalette.of(context)),
             )
           else
-            const CustomPaint(
+            CustomPaint(
               size: Size(IntroListTheme.topicGlyphWidth, IntroListTheme.topicGlyphHeight),
-              painter: _TopicPainter(),
+              painter: _TopicPainter(palette: BiliPalette.of(context)),
             ),
           const SizedBox(width: IntroListTheme.chipIconGap),
           ChipName(tag.name, room: room, scrolls: scrolls),
           const SizedBox(width: IntroListTheme.chipChevronGap),
-          const Chevron(
+          Chevron(
             size: Size(IntroListTheme.chipChevronWidth, IntroListTheme.chipChevronHeight),
             stroke: IntroListTheme.chipChevronStroke,
-            color: IntroListTheme.chipGlyphColor,
+            color: IntroListTheme.colorsOf(context).chipGlyphColor,
           ),
         ],
       ),
@@ -143,11 +143,11 @@ class ChipName extends StatefulWidget {
 
   /// The style a name is drawn and measured in. It names the fallback itself because a [TextPainter] inherits
   /// nothing from the page, and a name measured in another font than it is drawn in can ellipsise or scroll wrongly.
-  static TextStyle style() => TextStyle(
+  static TextStyle style([BuildContext? context]) => TextStyle(
     fontFamily: BiliFonts.family,
     fontFamilyFallback: BiliFonts.fallback,
     fontSize: IntroListTheme.chipText,
-    color: IntroListTheme.chipTextColor,
+    color: context == null ? IntroListTheme.chipTextColor : IntroListTheme.colorsOf(context).chipTextColor,
     height: 1,
   );
 
@@ -184,8 +184,8 @@ class _ChipNameState extends State<ChipName> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     final scaler = MediaQuery.textScalerOf(context);
-    final width = _nameWidth(widget.text, scaler);
-    final style = ChipName.style();
+    final width = _nameWidth(context, widget.text, scaler);
+    final style = ChipName.style(context);
     final strut = BiliFonts.strut(style);
     final text = Text(widget.text, maxLines: 1, softWrap: false, style: style, strutStyle: strut);
     final shown = width - _trailingTrim(widget.text, scaler);
@@ -268,11 +268,12 @@ class _ChipNameState extends State<ChipName> with SingleTickerProviderStateMixin
 
 /// Two beamed quavers, drawn from 03 at 3 px per point.
 class _MusicPainter extends CustomPainter {
-  const _MusicPainter();
+  final BiliPalette palette;
+  const _MusicPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = IntroListTheme.chipGlyphColor;
+    final paint = Paint()..color = IntroListThemeColors(palette).chipGlyphColor;
     const head = 1.94;
     canvas
       ..drawCircle(const Offset(1.95, 10.84), head, paint)
@@ -293,18 +294,19 @@ class _MusicPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_MusicPainter oldDelegate) => false;
+  bool shouldRepaint(_MusicPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// Bilibili's topic mark: a # on a little television with its two antennae, drawn from 03 at 3 px per point.
 class _TopicPainter extends CustomPainter {
-  const _TopicPainter();
+  final BiliPalette palette;
+  const _TopicPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
     const stroke = IntroListTheme.topicGlyphStroke;
     final paint = Paint()
-      ..color = IntroListTheme.chipGlyphColor
+      ..color = IntroListThemeColors(palette).chipGlyphColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
@@ -329,5 +331,5 @@ class _TopicPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_TopicPainter oldDelegate) => false;
+  bool shouldRepaint(_TopicPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }

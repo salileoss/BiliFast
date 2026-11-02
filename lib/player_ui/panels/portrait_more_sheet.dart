@@ -121,26 +121,26 @@ class _PortraitMoreSheetState extends State<PortraitMoreSheet> {
     final cards = <List<Widget>>[
       [
         _SheetRow(
-          icon: const PanelGlyph(PanelGlyphKind.speed, color: DownloadSheetTheme.ink),
+          icon: PanelGlyph(PanelGlyphKind.speed, color: DownloadSheetTheme.colorsOf(context).ink),
           title: '倍速',
           overlay: _SpeedStrip(rate: session.rate, onSelect: rows.setRate),
         ),
         if (vertical)
           _ToggleRow(
-            icon: const PanelGlyph(PanelGlyphKind.autoplay, color: DownloadSheetTheme.ink),
+            icon: PanelGlyph(PanelGlyphKind.autoplay, color: DownloadSheetTheme.colorsOf(context).ink),
             title: '自动上滑',
             value: false,
             onChanged: (_) => _soon(),
           )
         else ...[
           _ToggleRow(
-            icon: const PanelGlyph(PanelGlyphKind.autoplay, color: DownloadSheetTheme.ink),
+            icon: PanelGlyph(PanelGlyphKind.autoplay, color: DownloadSheetTheme.colorsOf(context).ink),
             title: '自动连播',
             value: session.autoplayNext,
             onChanged: session.setAutoplayNext,
           ),
           _SheetRow(
-            icon: const PanelGlyph(PanelGlyphKind.loop, color: DownloadSheetTheme.ink),
+            icon: PanelGlyph(PanelGlyphKind.loop, color: DownloadSheetTheme.colorsOf(context).ink),
             title: '循环播放',
             trailing: _Cells(
               items: [for (final mode in LoopMode.values) (mode, mode.label)],
@@ -151,7 +151,7 @@ class _PortraitMoreSheetState extends State<PortraitMoreSheet> {
         ],
         _SheetRow(
           key: const ValueKey('more-timer'),
-          icon: const PanelGlyph(PanelGlyphKind.timer, color: DownloadSheetTheme.ink),
+          icon: PanelGlyph(PanelGlyphKind.timer, color: DownloadSheetTheme.colorsOf(context).ink),
           title: '定时关闭',
           onTap: () => _go(_Page.timer),
           trailing: ValueListenableBuilder(
@@ -164,13 +164,13 @@ class _PortraitMoreSheetState extends State<PortraitMoreSheet> {
         ),
         if (vertical)
           _SheetRow(
-            icon: const PanelGlyph(PanelGlyphKind.gesture, color: DownloadSheetTheme.ink),
+            icon: PanelGlyph(PanelGlyphKind.gesture, color: DownloadSheetTheme.colorsOf(context).ink),
             title: '单双击手势',
             onTap: _soon,
             trailing: const _Disclosure(text: '单击暂停'),
           ),
         _ToggleRow(
-          icon: const PanelGlyph(PanelGlyphKind.listen, color: DownloadSheetTheme.ink),
+          icon: PanelGlyph(PanelGlyphKind.listen, color: DownloadSheetTheme.colorsOf(context).ink),
           title: '后台听视频',
           value: false,
           onChanged: (_) => _soon(),
@@ -178,7 +178,7 @@ class _PortraitMoreSheetState extends State<PortraitMoreSheet> {
         if (vertical)
           _SheetRow(
             key: const ValueKey('more-quality'),
-            icon: const PanelGlyph(PanelGlyphKind.quality, color: DownloadSheetTheme.ink),
+            icon: PanelGlyph(PanelGlyphKind.quality, color: DownloadSheetTheme.colorsOf(context).ink),
             title: '清晰度',
             onTap: () => _ui.panels.open(PlayerPanel.quality),
             trailing: _Disclosure(
@@ -190,7 +190,7 @@ class _PortraitMoreSheetState extends State<PortraitMoreSheet> {
           )
         else
           _ToggleRow(
-            icon: const PanelGlyph(PanelGlyphKind.subtitle, color: DownloadSheetTheme.ink),
+            icon: PanelGlyph(PanelGlyphKind.subtitle, color: DownloadSheetTheme.colorsOf(context).ink),
             title: '字幕',
             value: false,
             onChanged: (_) => _soon(),
@@ -198,24 +198,24 @@ class _PortraitMoreSheetState extends State<PortraitMoreSheet> {
         if (_ui.danmaku != null)
           _SheetRow(
             key: const ValueKey('more-danmaku-settings'),
-            icon: const Icon(
+            icon: Icon(
               CustomIcons.danmakuSettings,
               size: BiliMetrics.panelRowIcon,
-              color: DownloadSheetTheme.ink,
+              color: DownloadSheetTheme.colorsOf(context).ink,
             ),
             title: '弹幕设置',
             onTap: () => _ui.panels.open(PlayerPanel.danmakuSettings),
             trailing: const _Disclosure(),
           ),
         _ToggleRow(
-          icon: const PanelGlyph(PanelGlyphKind.mirror, color: DownloadSheetTheme.ink),
+          icon: PanelGlyph(PanelGlyphKind.mirror, color: DownloadSheetTheme.colorsOf(context).ink),
           title: '镜像翻转',
           value: session.mirrored,
           onChanged: rows.setMirrored,
         ),
         _SheetRow(
           key: const ValueKey('more-fit'),
-          icon: const PanelGlyph(PanelGlyphKind.fit, color: DownloadSheetTheme.ink),
+          icon: PanelGlyph(PanelGlyphKind.fit, color: DownloadSheetTheme.colorsOf(context).ink),
           title: '画面尺寸',
           onTap: () => _go(_Page.fit),
           trailing: _Disclosure(text: session.fit.label),
@@ -224,13 +224,13 @@ class _PortraitMoreSheetState extends State<PortraitMoreSheet> {
       if (widget.devTools)
         [
           _ToggleRow(
-            icon: const Icon(Icons.bolt, size: BiliMetrics.panelRowIcon, color: DownloadSheetTheme.ink),
+            icon: Icon(Icons.bolt, size: BiliMetrics.panelRowIcon, color: DownloadSheetTheme.colorsOf(context).ink),
             title: 'BTR 加速',
             value: session.btr,
             onChanged: rows.setBtr,
           ),
           _ToggleRow(
-            icon: const Icon(Icons.bar_chart, size: BiliMetrics.panelRowIcon, color: DownloadSheetTheme.ink),
+            icon: Icon(Icons.bar_chart, size: BiliMetrics.panelRowIcon, color: DownloadSheetTheme.colorsOf(context).ink),
             title: '显示统计',
             value: session.showStats,
             onChanged: session.setShowStats,
@@ -334,7 +334,7 @@ class _PortraitMoreSheetState extends State<PortraitMoreSheet> {
           margin: const EdgeInsets.symmetric(horizontal: DownloadSheetTheme.cardInset),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: BiliColors.pink,
+            color: BiliColors.colorsOf(context).pink,
             borderRadius: BorderRadius.circular(BiliMetrics.panelButtonHeight / 2),
           ),
           child: const Text('确定', style: TextStyle(color: BiliColors.onPink)),
@@ -377,7 +377,7 @@ class _Tile extends StatelessWidget {
   final VoidCallback? onTap;
   final double glyphWidth;
 
-  static const _label = TextStyle(fontSize: DownloadSheetTheme.tileLabelText, color: DownloadSheetTheme.grey);
+  static TextStyle _label(BuildContext context) => TextStyle(fontSize: DownloadSheetTheme.tileLabelText, color: DownloadSheetTheme.colorsOf(context).grey);
 
   @override
   Widget build(BuildContext context) => SheetTap(
@@ -394,7 +394,7 @@ class _Tile extends StatelessWidget {
               height: DownloadSheetTheme.tileSize,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: DownloadSheetTheme.card,
+                color: DownloadSheetTheme.colorsOf(context).card,
                 borderRadius: BorderRadius.circular(DownloadSheetTheme.tileRadius),
               ),
               child: SheetIcon(asset, width: glyphWidth),
@@ -408,8 +408,8 @@ class _Tile extends StatelessWidget {
                     title,
                     maxLines: 1,
                     softWrap: false,
-                    style: _label,
-                    strutStyle: BiliFonts.strutOf(context, _label),
+                    style: _label(context),
+                    strutStyle: BiliFonts.strutOf(context, _label(context)),
                   ),
                 ),
               ),
@@ -432,7 +432,7 @@ class _Card extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.symmetric(horizontal: DownloadSheetTheme.cardInset),
     decoration: BoxDecoration(
-      color: DownloadSheetTheme.card,
+      color: DownloadSheetTheme.colorsOf(context).card,
       borderRadius: BorderRadius.circular(DownloadSheetTheme.cardRadius),
     ),
     clipBehavior: Clip.antiAlias,
@@ -442,7 +442,7 @@ class _Card extends StatelessWidget {
         for (final (index, row) in children.indexed)
           index == children.length - 1
               ? row
-              : DecoratedBox(position: DecorationPosition.foreground, decoration: _Hairline(inset), child: row),
+              : DecoratedBox(position: DecorationPosition.foreground, decoration: _Hairline(inset, DownloadSheetTheme.colorsOf(context).hairline), child: row),
       ],
     ),
   );
@@ -459,7 +459,7 @@ class _SheetRow extends StatelessWidget {
   final Widget? overlay;
   final VoidCallback? onTap;
 
-  static const _style = TextStyle(fontSize: DownloadSheetTheme.rowText, color: DownloadSheetTheme.ink);
+  static TextStyle _style(BuildContext context) => TextStyle(fontSize: DownloadSheetTheme.rowText, color: DownloadSheetTheme.colorsOf(context).ink);
 
   @override
   Widget build(BuildContext context) {
@@ -479,7 +479,7 @@ class _SheetRow extends StatelessWidget {
                   const SizedBox(
                     width: BiliMetrics.panelLabelInset - BiliMetrics.panelRowLead - BiliMetrics.panelRowIcon,
                   ),
-                  Text(title, maxLines: 1, style: _style, strutStyle: BiliFonts.strutOf(context, _style)),
+                  Text(title, maxLines: 1, style: _style(context), strutStyle: BiliFonts.strutOf(context, _style(context))),
                   Expanded(
                     child: Align(alignment: Alignment.centerRight, child: trailing),
                   ),
@@ -541,7 +541,7 @@ class _Switch extends StatelessWidget {
       height: BiliMetrics.panelSwitchHeight,
       padding: const EdgeInsets.all(inset),
       decoration: BoxDecoration(
-        color: on ? BiliColors.pink : DownloadSheetTheme.trackOff,
+        color: on ? BiliColors.colorsOf(context).pink : DownloadSheetTheme.colorsOf(context).trackOff,
         borderRadius: BorderRadius.circular(BiliMetrics.panelSwitchHeight / 2),
       ),
       child: AnimatedAlign(
@@ -579,31 +579,31 @@ class _Disclosure extends StatelessWidget {
           maxLines: 1,
           style: TextStyle(
             fontSize: DownloadSheetTheme.detailText,
-            color: highlight ? BiliColors.pink : BiliColors.secondaryText,
+            color: highlight ? BiliColors.colorsOf(context).pink : BiliColors.colorsOf(context).secondaryText,
           ),
         ),
         const SizedBox(width: BiliMetrics.panelChevronGap),
       ],
-      const PanelGlyph(PanelGlyphKind.chevron, color: BiliColors.secondaryText),
+      PanelGlyph(PanelGlyphKind.chevron, color: BiliColors.colorsOf(context).secondaryText),
       const SizedBox(width: BiliMetrics.panelChevronTrailing),
     ],
   );
 }
 
 /// Whole, since AnimatedDefaultTextStyle replaces the inherited style rather than merging into it.
-TextStyle _cellStyle(bool chosen) => TextStyle(
+TextStyle _cellStyle(BuildContext context, bool chosen) => TextStyle(
   fontFamily: BiliFonts.family,
   fontFamilyFallback: BiliFonts.fallback,
   decoration: TextDecoration.none,
   fontSize: DownloadSheetTheme.segmentText,
-  color: chosen ? BiliColors.pink : DownloadSheetTheme.grey,
+  color: chosen ? BiliColors.colorsOf(context).pink : DownloadSheetTheme.colorsOf(context).grey,
   fontWeight: chosen ? FontWeight.w600 : FontWeight.w400,
 );
 
-Widget _divider() => Container(
+Widget _divider(BuildContext context) => Container(
   width: BiliMetrics.panelHairline,
   height: DownloadSheetTheme.segmentDivider,
-  color: DownloadSheetTheme.hairline,
+  color: DownloadSheetTheme.colorsOf(context).hairline,
 );
 
 /// 循环播放's choices in cells of one width, packed to the right with hairlines between (42).
@@ -622,7 +622,7 @@ class _Cells<T> extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         for (final (index, (value, label)) in items.indexed) ...[
-          if (index > 0) _divider(),
+          if (index > 0) _divider(context),
           SheetTap(
             label: label,
             selected: value == selected,
@@ -633,7 +633,7 @@ class _Cells<T> extends StatelessWidget {
               child: Center(
                 child: AnimatedDefaultTextStyle(
                   duration: const Duration(milliseconds: 160),
-                  style: _cellStyle(value == selected),
+                  style: _cellStyle(context, value == selected),
                   child: Text(label, maxLines: 1),
                 ),
               ),
@@ -700,7 +700,7 @@ class _SpeedStripState extends State<_SpeedStrip> {
   /// Where the [index]th cell's label runs, measured from the fast end.
   (double, double) _span(String label, bool chosen, int index, TextScaler scaler) {
     final painter = TextPainter(
-      text: TextSpan(text: label, style: _cellStyle(chosen)),
+      text: TextSpan(text: label, style: _cellStyle(context, chosen)),
       textDirection: TextDirection.ltr,
       textScaler: scaler,
     )..layout();
@@ -742,11 +742,11 @@ class _SpeedStripState extends State<_SpeedStrip> {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        if (index < speeds.length - 1) Align(alignment: Alignment.centerLeft, child: _divider()),
+                        if (index < speeds.length - 1) Align(alignment: Alignment.centerLeft, child: _divider(context)),
                         Center(
                           child: AnimatedDefaultTextStyle(
                             duration: const Duration(milliseconds: 160),
-                            style: _cellStyle(value == widget.rate),
+                            style: _cellStyle(context, value == widget.rate),
                             child: Text(label, maxLines: 1),
                           ),
                         ),
@@ -771,7 +771,7 @@ class _SheetPage extends StatelessWidget {
   final List<Widget> rows;
   final List<Widget> below;
 
-  static const _title = TextStyle(fontSize: DownloadSheetTheme.pageTitleText, color: DownloadSheetTheme.ink);
+  static TextStyle _title(BuildContext context) => TextStyle(fontSize: DownloadSheetTheme.pageTitleText, color: DownloadSheetTheme.colorsOf(context).ink);
 
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
@@ -785,7 +785,7 @@ class _SheetPage extends StatelessWidget {
           child: Stack(
             children: [
               Center(
-                child: Text(title, style: _title, strutStyle: BiliFonts.strutOf(context, _title)),
+                child: Text(title, style: _title(context), strutStyle: BiliFonts.strutOf(context, _title(context))),
               ),
               Positioned(
                 left: DownloadSheetTheme.cardInset - (BiliMetrics.panelHitBox - DownloadSheetTheme.pageBackGlyph) / 2,
@@ -796,11 +796,11 @@ class _SheetPage extends StatelessWidget {
                   key: const ValueKey('more-page-back'),
                   label: '返回',
                   onTap: back,
-                  child: const Center(
+                  child: Center(
                     child: Icon(
                       Icons.arrow_back_ios_new,
                       size: DownloadSheetTheme.pageBackGlyph,
-                      color: DownloadSheetTheme.ink,
+                      color: DownloadSheetTheme.colorsOf(context).ink,
                     ),
                   ),
                 ),
@@ -828,7 +828,7 @@ class _PickRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = TextStyle(
       fontSize: DownloadSheetTheme.rowText,
-      color: selected ? BiliColors.pink : DownloadSheetTheme.ink,
+      color: selected ? BiliColors.colorsOf(context).pink : DownloadSheetTheme.colorsOf(context).ink,
       fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
     );
     return SheetTap(
@@ -847,16 +847,20 @@ class _PickRow extends StatelessWidget {
 
 /// The card's hairline under a row, from [inset] to the card's right edge.
 class _Hairline extends Decoration {
-  const _Hairline(this.inset);
+  const _Hairline(this.inset, this.color);
+
+  final Color color;
 
   final double inset;
 
   @override
-  BoxPainter createBoxPainter([VoidCallback? onChanged]) => _HairlinePainter(inset);
+  BoxPainter createBoxPainter([VoidCallback? onChanged]) => _HairlinePainter(inset, color);
 }
 
 class _HairlinePainter extends BoxPainter {
-  _HairlinePainter(this.inset);
+  _HairlinePainter(this.inset, this.color);
+
+  final Color color;
 
   final double inset;
 
@@ -871,7 +875,7 @@ class _HairlinePainter extends BoxPainter {
         size.width - inset,
         BiliMetrics.panelHairline,
       ),
-      Paint()..color = DownloadSheetTheme.hairline,
+      Paint()..color = color,
     );
   }
 }

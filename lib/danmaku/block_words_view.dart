@@ -227,9 +227,9 @@ class _BlockWordsViewState extends State<BlockWordsView> {
   Widget _input() {
     // What the field and its hint draw in (the theme's bodyLarge under ours); the hint is a Text so it takes a strut.
     final base = Theme.of(context).textTheme.bodyLarge!;
-    final field = base.merge(_style(BlockWordsTheme.fieldText, BlockWordsTheme.fieldInk));
+    final field = base.merge(_style(BlockWordsTheme.fieldText, BlockWordsTheme.colorsOf(context).fieldInk));
     final hint = field.merge(
-      _style(BlockWordsTheme.fieldText, BlockWordsTheme.grey, spacing: BlockWordsTheme.smallSpacing),
+      _style(BlockWordsTheme.fieldText, BlockWordsTheme.colorsOf(context).grey, spacing: BlockWordsTheme.smallSpacing),
     );
     return GestureDetector(
       onTap: _focus.requestFocus,
@@ -237,7 +237,7 @@ class _BlockWordsViewState extends State<BlockWordsView> {
         padding: const EdgeInsets.symmetric(horizontal: BlockWordsTheme.fieldPadX),
         alignment: Alignment.centerLeft,
         decoration: BoxDecoration(
-          color: BlockWordsTheme.fieldFill,
+          color: BlockWordsTheme.colorsOf(context).fieldFill,
           borderRadius: BorderRadius.circular(BlockWordsTheme.fieldRadius),
         ),
         child: TextField(
@@ -250,7 +250,7 @@ class _BlockWordsViewState extends State<BlockWordsView> {
           onSubmitted: (_) => _add(),
           cursorColor: BlockWordsTheme.pink,
           textAlignVertical: TextAlignVertical.center,
-          style: _style(BlockWordsTheme.fieldText, BlockWordsTheme.fieldInk),
+          style: _style(BlockWordsTheme.fieldText, BlockWordsTheme.colorsOf(context).fieldInk),
           strutStyle: BiliFonts.strut(field),
           decoration: InputDecoration(
             isCollapsed: true,
@@ -398,8 +398,8 @@ class _BlockWordsViewState extends State<BlockWordsView> {
             rule.filter,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: _style(BlockWordsTheme.chipText, BlockWordsTheme.grey),
-            strutStyle: BiliFonts.strutOf(context, _style(BlockWordsTheme.chipText, BlockWordsTheme.grey)),
+            style: _style(BlockWordsTheme.chipText, BlockWordsTheme.colorsOf(context).grey),
+            strutStyle: BiliFonts.strutOf(context, _style(BlockWordsTheme.chipText, BlockWordsTheme.colorsOf(context).grey)),
           ),
         ),
         Semantics(
@@ -411,11 +411,11 @@ class _BlockWordsViewState extends State<BlockWordsView> {
             key: ValueKey('block-rule-remove-${rule.id}'),
             behavior: HitTestBehavior.opaque,
             onTap: () => _remove(rule),
-            child: const Padding(
-              padding: EdgeInsets.only(left: BlockWordsTheme.chipGlyphGap, right: BlockWordsTheme.chipPadRight),
+            child: Padding(
+              padding: const EdgeInsets.only(left: BlockWordsTheme.chipGlyphGap, right: BlockWordsTheme.chipPadRight),
               child: SizedBox.square(
                 dimension: BlockWordsTheme.chipGlyph,
-                child: CustomPaint(painter: _CrossPainter.chip()),
+                child: CustomPaint(painter: _CrossPainter.chip(context)),
               ),
             ),
           ),
@@ -433,10 +433,10 @@ class _CrossPainter extends CustomPainter {
       color = BlockWordsTheme.text,
       cap = StrokeCap.round;
 
-  const _CrossPainter.chip()
+  _CrossPainter.chip(BuildContext context)
     : arm = BlockWordsTheme.chipGlyph / 2 - BlockWordsTheme.chipGlyphInset,
       stroke = BlockWordsTheme.chipStroke,
-      color = BlockWordsTheme.grey,
+      color = BlockWordsTheme.colorsOf(context).grey,
       cap = StrokeCap.butt;
 
   final double arm;

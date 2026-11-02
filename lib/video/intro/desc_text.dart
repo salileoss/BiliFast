@@ -111,8 +111,8 @@ class _DescriptionTextState extends State<DescriptionText> {
   late List<InlineSpan> _spans;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _spans = _build();
   }
 
@@ -159,7 +159,7 @@ class _DescriptionTextState extends State<DescriptionText> {
   }
 
   InlineSpan _span(RichRun run) {
-    const linked = TextStyle(color: BiliColors.link);
+    final linked = TextStyle(color: BiliColors.colorsOf(context).link);
     return switch (run) {
       TextRun(:final text) => TextSpan(text: text),
       EmoteRun(:final token) => TextSpan(text: token),

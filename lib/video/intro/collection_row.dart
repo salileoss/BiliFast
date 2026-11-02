@@ -26,7 +26,7 @@ class CollectionRow extends StatelessWidget {
     final titleStyle = TextStyle(
       fontFamily: BiliFonts.family,
       fontSize: IntroListTheme.collectionTitleText,
-      color: BiliColors.text,
+      color: BiliColors.colorsOf(context).text,
     );
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -47,7 +47,7 @@ class CollectionRow extends StatelessWidget {
             onTap: onOpen,
             child: Container(
               height: IntroListTheme.collectionHeight,
-              color: BiliColors.softGrey,
+              color: BiliColors.colorsOf(context).softGrey,
               padding: const EdgeInsets.only(
                 left: IntroListTheme.collectionLead,
                 right: IntroListTheme.collectionTrailing,
@@ -66,7 +66,7 @@ class CollectionRow extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: BiliMetrics.gutter),
-                    const PlayingBars(color: BiliColors.secondaryText),
+                    PlayingBars(color: BiliColors.colorsOf(context).secondaryText),
                     const SizedBox(width: IntroListTheme.collectionBarsGap),
                     Text(
                       place,
@@ -74,14 +74,14 @@ class CollectionRow extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: BiliFonts.family,
                         fontSize: IntroListTheme.collectionPlaceText,
-                        color: BiliColors.secondaryText,
+                        color: BiliColors.colorsOf(context).secondaryText,
                       ),
                     ),
                     const SizedBox(width: IntroListTheme.collectionChevronGap),
-                    const Chevron(
+                    Chevron(
                       size: Size(IntroListTheme.collectionChevronWidth, IntroListTheme.collectionChevronHeight),
                       stroke: IntroListTheme.chevronStroke,
-                      color: BiliColors.secondaryText,
+                      color: BiliColors.colorsOf(context).secondaryText,
                     ),
                   ],
                 ),

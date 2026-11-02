@@ -61,15 +61,15 @@ class _EmotePanelState extends State<EmotePanel> {
         children: [
           SizedBox(
             height: grid,
-            child: ColoredBox(color: ComposerTheme.panel, child: selected == null ? _state() : _content(selected)),
+            child: ColoredBox(color: ComposerTheme.colorsOf(context).panel, child: selected == null ? _state() : _content(selected)),
           ),
           SizedBox(
             height: ComposerTheme.tabHeight,
-            child: ColoredBox(color: ComposerTheme.tabBar, child: selected == null ? null : _tabs(selected)),
+            child: ColoredBox(color: ComposerTheme.colorsOf(context).tabBar, child: selected == null ? null : _tabs(selected)),
           ),
           SizedBox(
             height: widget.bottomInset,
-            child: const ColoredBox(color: ComposerTheme.tabBar),
+            child: ColoredBox(color: ComposerTheme.colorsOf(context).tabBar),
           ),
         ],
       ),
@@ -97,7 +97,7 @@ class _EmotePanelState extends State<EmotePanel> {
             style: TextStyle(
               fontFamily: BiliFonts.family,
               fontSize: ComposerTheme.sectionFont,
-              color: ComposerTheme.sectionTitle,
+              color: ComposerTheme.colorsOf(context).sectionTitle,
             ),
           ),
         ),
@@ -158,7 +158,7 @@ class _EmotePanelState extends State<EmotePanel> {
             style: TextStyle(
               fontFamily: BiliFonts.family,
               fontSize: ComposerTheme.sectionFont,
-              color: ComposerTheme.sectionTitle,
+              color: ComposerTheme.colorsOf(context).sectionTitle,
             ),
           ),
         ),
@@ -189,7 +189,7 @@ class _EmotePanelState extends State<EmotePanel> {
       final style = TextStyle(
         fontFamily: BiliFonts.family,
         fontSize: ComposerTheme.kaomojiFont,
-        color: ComposerTheme.kaomoji,
+        color: ComposerTheme.colorsOf(context).kaomoji,
       );
       picture = Center(
         child: Padding(
@@ -245,7 +245,7 @@ class _EmotePanelState extends State<EmotePanel> {
               child: Container(
                 width: ComposerTheme.tabWidth,
                 height: ComposerTheme.tabHeight,
-                color: package.id == selected.id ? ComposerTheme.tabSelected : null,
+                color: package.id == selected.id ? ComposerTheme.colorsOf(context).tabSelected : null,
                 alignment: Alignment.center,
                 child: _tabLabel(package),
               ),
@@ -266,7 +266,7 @@ class _EmotePanelState extends State<EmotePanel> {
     final style = TextStyle(
       fontFamily: BiliFonts.family,
       fontSize: ComposerTheme.kaomojiTabFont,
-      color: ComposerTheme.kaomojiTab,
+      color: ComposerTheme.colorsOf(context).kaomojiTab,
     );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: ComposerTheme.kaomojiTabPad),

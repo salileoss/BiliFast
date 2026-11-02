@@ -79,7 +79,7 @@ final class PanelFrame {
       column: true,
     ),
     // Portrait's ⋮ is the light sheet of 42 and 43, and 缓存 takes its place in the same frame.
-    PlayerPanel.more || PlayerPanel.download => const PanelFrame(
+    PlayerPanel.more || PlayerPanel.download => PanelFrame(
       width: BiliMetrics.panelMoreWidth,
       sheetHeight: DownloadSheetTheme.verticalHeight,
       light: true,
@@ -91,7 +91,7 @@ final class PanelFrame {
       light: true,
     ),
     // Portrait's 弹幕设置 is the light sheet of 40.
-    PlayerPanel.danmakuSettings => const PanelFrame(
+    PlayerPanel.danmakuSettings => PanelFrame(
       width: DanmakuPanelTheme.width,
       sheetHeight: DanmakuPanelTheme.sheetHeight,
       light: true,
@@ -383,7 +383,7 @@ class _PanelLayerState extends State<PanelLayer> with TickerProviderStateMixin {
           fontFamily: BiliFonts.family,
           fontFamilyFallback: BiliFonts.fallback,
           fontSize: BiliMetrics.panelTitleText,
-          color: light ? BiliColors.text : BiliColors.panelText,
+          color: light ? BiliColors.colorsOf(context).text : BiliColors.panelText,
           decoration: TextDecoration.none,
         ),
         child: PanelScope(
@@ -784,7 +784,8 @@ class _PanelLayerState extends State<PanelLayer> with TickerProviderStateMixin {
         child: _body(
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: frame.sheetColor,
+              color: BiliPalette.of(context).choose(frame.sheetColor,
+                  frame.sheetColor == BiliColors.card ? BiliPalette.of(context).surface : BiliPalette.of(context).raised),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(BiliMetrics.sheetRadius)),
             ),
             child: Column(
@@ -798,7 +799,7 @@ class _PanelLayerState extends State<PanelLayer> with TickerProviderStateMixin {
                       width: BiliMetrics.sheetGrabberWidth,
                       height: BiliMetrics.sheetGrabberHeight,
                       decoration: BoxDecoration(
-                        color: BiliColors.sheetGrabber,
+                        color: BiliColors.colorsOf(context).sheetGrabber,
                         borderRadius: BorderRadius.circular(BiliMetrics.sheetGrabberHeight / 2),
                       ),
                     ),

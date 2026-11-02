@@ -266,7 +266,7 @@ class _NameAndCounts extends StatelessWidget {
       height: PadBodyTheme.nameLine / PadBodyTheme.nameText,
       leadingDistribution: TextLeadingDistribution.even,
       letterSpacing: 0,
-      color: card?.isVip == true ? BiliColors.pink : IntroTheme.name,
+      color: card?.isVip == true ? BiliColors.colorsOf(context).pink : IntroTheme.colorsOf(context).name,
     );
     final countsStyle = TextStyle(
       fontFamily: BiliFonts.family,
@@ -274,7 +274,7 @@ class _NameAndCounts extends StatelessWidget {
       height: PadBodyTheme.fansLine / PadBodyTheme.fansText,
       leadingDistribution: TextLeadingDistribution.even,
       letterSpacing: 0,
-      color: BiliColors.secondaryText,
+      color: BiliColors.colorsOf(context).secondaryText,
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +382,7 @@ class PadDanmakuCapsule extends StatelessWidget {
     final style = TextStyle(
       fontFamily: BiliFonts.family,
       fontSize: PadBodyTheme.capsuleText,
-      color: BiliColors.secondaryText,
+      color: BiliColors.colorsOf(context).secondaryText,
       height: 1.2,
       letterSpacing: 0,
     );
@@ -394,10 +394,10 @@ class PadDanmakuCapsule extends StatelessWidget {
       width: on ? PadBodyTheme.capsuleWidth : PadBodyTheme.capsuleToggleOff,
       height: PadBodyTheme.capsuleHeight,
       clipBehavior: Clip.antiAlias,
-      decoration: const ShapeDecoration(color: BiliColors.softGrey, shape: StadiumBorder()),
-      foregroundDecoration: const ShapeDecoration(
+      decoration: ShapeDecoration(color: BiliColors.colorsOf(context).softGrey, shape: StadiumBorder()),
+      foregroundDecoration: ShapeDecoration(
         shape: StadiumBorder(
-          side: BorderSide(color: BiliColors.divider, width: PadBodyTheme.capsuleBorder),
+          side: BorderSide(color: BiliColors.colorsOf(context).divider, width: PadBodyTheme.capsuleBorder),
         ),
       ),
       child: Row(
@@ -453,7 +453,7 @@ class PadDanmakuCapsule extends StatelessWidget {
             duration: duration,
             curve: _curve,
             width: on ? PadBodyTheme.capsuleToggle : PadBodyTheme.capsuleToggleOff,
-            color: on ? BiliColors.card : BiliColors.softGrey,
+            color: on ? BiliColors.colorsOf(context).card : BiliColors.colorsOf(context).softGrey,
             child: Semantics(
               key: const ValueKey('danmaku-toggle'),
               button: true,
@@ -593,7 +593,7 @@ class _PadTitleBlockState extends State<PadTitleBlock> with SingleTickerProvider
     final animate = !MediaQuery.disableAnimationsOf(context);
     final title = _style(
       PadBodyTheme.titleText,
-      PadBodyTheme.titleInk,
+      PadBodyTheme.colorsOf(context).titleInk,
       line: PadBodyTheme.titleLine,
       weight: FontWeight.w500,
     );
@@ -649,7 +649,7 @@ class _PadTitleBlockState extends State<PadTitleBlock> with SingleTickerProvider
                 notice,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: _style(PadBodyTheme.metaText, BiliColors.secondaryText, line: PadBodyTheme.metaLine),
+                style: _style(PadBodyTheme.metaText, BiliColors.colorsOf(context).secondaryText, line: PadBodyTheme.metaLine),
               ),
             ),
           SizeTransition(
@@ -688,10 +688,10 @@ class _HonorTag extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: PadBodyTheme.honorPadding),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: BiliColors.softGrey,
+          color: BiliColors.colorsOf(context).softGrey,
           borderRadius: BorderRadius.circular(PadBodyTheme.honorHeight / 2),
         ),
-        child: Text('活动', style: _style(PadBodyTheme.honorText, BiliColors.pink, line: PadBodyTheme.honorHeight)),
+        child: Text('活动', style: _style(PadBodyTheme.honorText, BiliColors.colorsOf(context).pink, line: PadBodyTheme.honorHeight)),
       ),
     ),
   );
@@ -709,7 +709,7 @@ class _MetaLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = _style(PadBodyTheme.metaText, BiliColors.secondaryText, line: PadBodyTheme.metaLine);
+    final text = _style(PadBodyTheme.metaText, BiliColors.colorsOf(context).secondaryText, line: PadBodyTheme.metaLine);
     final strut = BiliFonts.strut(text);
     const icon = Size(PadBodyTheme.metaIconWidth, PadBodyTheme.metaIconHeight);
     const group = SizedBox(width: PadBodyTheme.metaGroupGap);
@@ -723,16 +723,16 @@ class _MetaLine extends StatelessWidget {
         child: Row(
           children: [
             const SizedBox(width: PadBodyTheme.metaLead),
-            const CustomPaint(
+            CustomPaint(
               size: icon,
-              painter: CountPainter(CountGlyph.views, color: BiliColors.secondaryText),
+              painter: CountPainter(CountGlyph.views, color: BiliColors.colorsOf(context).secondaryText),
             ),
             iconGap,
             Text(CountFormat.short(detail.stat.view), style: text, strutStyle: strut),
             group,
-            const CustomPaint(
+            CustomPaint(
               size: icon,
-              painter: CountPainter(CountGlyph.danmaku, color: BiliColors.secondaryText),
+              painter: CountPainter(CountGlyph.danmaku, color: BiliColors.colorsOf(context).secondaryText),
             ),
             iconGap,
             Text(CountFormat.short(detail.stat.danmaku), style: text, strutStyle: strut),
@@ -775,9 +775,9 @@ class _MetaLine extends StatelessWidget {
                       turns: expanded ? 0.5 : 0,
                       duration: animate ? IntroTheme.expandDuration : Duration.zero,
                       curve: Curves.easeOutCubic,
-                      child: const CustomPaint(
+                      child: CustomPaint(
                         size: Size(PadBodyTheme.toggleChevronWidth, PadBodyTheme.toggleChevronHeight),
-                        painter: _ChevronPainter(),
+                        painter: _ChevronPainter(palette: BiliPalette.of(context)),
                       ),
                     ),
                   ],
@@ -792,7 +792,8 @@ class _MetaLine extends StatelessWidget {
 }
 
 class _ChevronPainter extends CustomPainter {
-  const _ChevronPainter();
+  final BiliPalette palette;
+  const _ChevronPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -808,12 +809,12 @@ class _ChevronPainter extends CustomPainter {
         ..strokeWidth = IntroTheme.chevronStroke
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round
-        ..color = BiliColors.secondaryText,
+        ..color = BiliColorsColors(palette).secondaryText,
     );
   }
 
   @override
-  bool shouldRepaint(_ChevronPainter oldDelegate) => false;
+  bool shouldRepaint(_ChevronPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// 04's opened part: the description, then the plain tags as grey capsules.
@@ -839,7 +840,7 @@ class _Details extends StatelessWidget {
       for (final tag in tags)
         if (tag.kind == VideoTagKind.normal) tag,
     ];
-    final tagStyle = _style(PadBodyTheme.tagText, PadBodyTheme.tagInk, line: PadBodyTheme.tagHeight);
+    final tagStyle = _style(PadBodyTheme.tagText, PadBodyTheme.colorsOf(context).tagInk, line: PadBodyTheme.tagHeight);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -848,7 +849,7 @@ class _Details extends StatelessWidget {
           const SizedBox(height: PadBodyTheme.descGap),
           DescriptionText(
             runs: runs,
-            style: _style(PadBodyTheme.descText, BiliColors.secondaryText, line: PadBodyTheme.descLine),
+            style: _style(PadBodyTheme.descText, BiliColors.colorsOf(context).secondaryText, line: PadBodyTheme.descLine),
             onSeek: onSeek,
             onOpenVideo: onOpenVideo,
             onOpenLink: openLink,
@@ -865,7 +866,7 @@ class _Details extends StatelessWidget {
                   height: PadBodyTheme.tagHeight,
                   padding: const EdgeInsets.symmetric(horizontal: PadBodyTheme.tagPadding),
                   decoration: BoxDecoration(
-                    color: BiliColors.pageGrey,
+                    color: BiliColors.colorsOf(context).pageGrey,
                     borderRadius: BorderRadius.circular(PadBodyTheme.tagHeight / 2),
                   ),
                   child: Center(

@@ -61,13 +61,13 @@ class _Palette {
   final Color field;
   final Color pressed;
 
-  static const light = _Palette(
-    text: BiliColors.text,
-    secondary: BiliColors.secondaryText,
-    divider: BiliColors.divider,
-    ring: FavouriteTheme.ringLight,
-    field: BiliColors.softGrey,
-    pressed: BiliColors.pressedFill,
+  static _Palette light(BuildContext context) => _Palette(
+    text: BiliColors.colorsOf(context).text,
+    secondary: BiliColors.colorsOf(context).secondaryText,
+    divider: BiliColors.colorsOf(context).divider,
+    ring: FavouriteTheme.colorsOf(context).ringLight,
+    field: BiliColors.colorsOf(context).softGrey,
+    pressed: BiliColors.colorsOf(context).pressedFill,
   );
 
   static const dark = _Palette(
@@ -110,7 +110,7 @@ class _FavouriteSheetState extends State<FavouriteSheet> with SingleTickerProvid
     super.dispose();
   }
 
-  _Palette get _palette => widget.dark ? _Palette.dark : _Palette.light;
+  _Palette get _palette => widget.dark ? _Palette.dark : _Palette.light(context);
 
   Duration _time(int milliseconds) =>
       MediaQuery.disableAnimationsOf(context) ? Duration.zero : Duration(milliseconds: milliseconds);
@@ -230,8 +230,8 @@ class _FavouriteSheetState extends State<FavouriteSheet> with SingleTickerProvid
                 Transform.translate(offset: Offset(0, (1 - widget.motion.value) * hidden + _drag.value), child: child),
             child: _frame(
               child: DecoratedBox(
-                decoration: const BoxDecoration(
-                  color: BiliColors.card,
+                decoration: BoxDecoration(
+                  color: BiliColors.colorsOf(context).card,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(BiliMetrics.sheetRadius)),
                 ),
                 child: Column(
@@ -248,7 +248,7 @@ class _FavouriteSheetState extends State<FavouriteSheet> with SingleTickerProvid
                               width: BiliMetrics.sheetGrabberWidth,
                               height: BiliMetrics.sheetGrabberHeight,
                               decoration: BoxDecoration(
-                                color: BiliColors.sheetGrabber,
+                                color: BiliColors.colorsOf(context).sheetGrabber,
                                 borderRadius: BorderRadius.circular(BiliMetrics.sheetGrabberHeight / 2),
                               ),
                             ),
@@ -402,11 +402,11 @@ class _FavouriteSheetState extends State<FavouriteSheet> with SingleTickerProvid
     } else {
       final label = Row(
         children: [
-          const Icon(Icons.add, size: FavouriteTheme.plusIcon, color: BiliColors.pink),
+          Icon(Icons.add, size: FavouriteTheme.plusIcon, color: BiliColors.colorsOf(context).pink),
           const SizedBox(width: FavouriteTheme.plusGap),
           Text(
             '新建收藏夹',
-            style: TextStyle(fontFamily: BiliFonts.family, color: BiliColors.pink),
+            style: TextStyle(fontFamily: BiliFonts.family, color: BiliColors.colorsOf(context).pink),
           ),
         ],
       );
@@ -488,7 +488,7 @@ class _FavouriteSheetState extends State<FavouriteSheet> with SingleTickerProvid
                     inputFormatters: [LengthLimitingTextInputFormatter(FavouriteTheme.maxTitle)],
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => unawaited(_create()),
-                    cursorColor: BiliColors.pink,
+                    cursorColor: BiliColors.colorsOf(context).pink,
                     style: fieldStyle,
                     strutStyle: fieldStrut,
 
@@ -525,7 +525,7 @@ class _FavouriteSheetState extends State<FavouriteSheet> with SingleTickerProvid
                 _privateToggle(),
                 const Spacer(),
                 _formButton('取消', palette.secondary, _creating ? null : _cancelEditing),
-                _formButton('确定', BiliColors.pink, ready ? () => unawaited(_create()) : null, busy: _creating),
+                _formButton('确定', BiliColors.colorsOf(context).pink, ready ? () => unawaited(_create()) : null, busy: _creating),
               ],
             );
           },
@@ -675,7 +675,7 @@ class _FavouriteSheetState extends State<FavouriteSheet> with SingleTickerProvid
                 height: FavouriteTheme.retryHeight,
                 padding: const EdgeInsets.symmetric(horizontal: FavouriteTheme.retryPad),
                 decoration: BoxDecoration(
-                  border: Border.all(color: BiliColors.pink, width: FavouriteTheme.retryBorder),
+                  border: Border.all(color: BiliColors.colorsOf(context).pink, width: FavouriteTheme.retryBorder),
                   borderRadius: BorderRadius.circular(FavouriteTheme.retryHeight / 2),
                 ),
                 child: Center(
@@ -685,7 +685,7 @@ class _FavouriteSheetState extends State<FavouriteSheet> with SingleTickerProvid
                     style: TextStyle(
                       fontFamily: BiliFonts.family,
                       fontSize: FavouriteTheme.stateText,
-                      color: BiliColors.pink,
+                      color: BiliColors.colorsOf(context).pink,
                     ),
                   ),
                 ),
@@ -704,7 +704,7 @@ class _FavouriteSheetState extends State<FavouriteSheet> with SingleTickerProvid
     excludeSemantics: true,
     child: _Pressable(
       onTap: _done,
-      highlight: BiliColors.pressedFill,
+      highlight: BiliColors.colorsOf(context).pressedFill,
       radius: FavouriteTheme.doneHeight / 2,
       scale: true,
       child: Container(
@@ -712,7 +712,7 @@ class _FavouriteSheetState extends State<FavouriteSheet> with SingleTickerProvid
         height: FavouriteTheme.doneHeight,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: BiliColors.pink,
+          color: BiliColors.colorsOf(context).pink,
           borderRadius: BorderRadius.circular(FavouriteTheme.doneHeight / 2),
         ),
         child: Text(
@@ -841,13 +841,14 @@ class _Tick extends StatelessWidget {
     curve: Curves.easeOutBack,
     builder: (context, progress, _) => CustomPaint(
       size: const Size.square(FavouriteTheme.check),
-      painter: _TickPainter(progress: progress, ring: ring),
+      painter: _TickPainter(progress: progress, ring: ring, palette: BiliPalette.of(context)),
     ),
   );
 }
 
 class _TickPainter extends CustomPainter {
-  _TickPainter({required this.progress, required this.ring});
+  final BiliPalette palette;
+  _TickPainter({this.palette = const BiliPalette(Brightness.light), required this.progress, required this.ring});
 
   final double progress;
   final Color ring;
@@ -868,7 +869,7 @@ class _TickPainter extends CustomPainter {
       );
     }
     if (progress <= 0) return;
-    canvas.drawCircle(centre, radius * progress.clamp(0.0, 1.1), Paint()..color = BiliColors.pink);
+    canvas.drawCircle(centre, radius * progress.clamp(0.0, 1.1), Paint()..color = BiliColorsColors(palette).pink);
     final drawn = ((progress - 0.3) / 0.7).clamp(0.0, 1.0);
     if (drawn <= 0) return;
     final w = size.width;
@@ -887,7 +888,7 @@ class _TickPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_TickPainter old) => old.progress != progress || old.ring != ring;
+  bool shouldRepaint(_TickPainter old) => (old.progress != progress || old.ring != ring) || old.palette.brightness != palette.brightness;
 }
 
 /// The light sheet's switch: [PanelSwitch]'s shape on a grey track the white page can show.
@@ -907,7 +908,7 @@ class _LightSwitch extends StatelessWidget {
       height: BiliMetrics.panelSwitchHeight,
       padding: const EdgeInsets.all(inset),
       decoration: BoxDecoration(
-        color: on ? BiliColors.pink : FavouriteTheme.switchOffLight,
+        color: on ? BiliColors.colorsOf(context).pink : FavouriteTheme.colorsOf(context).switchOffLight,
         borderRadius: BorderRadius.circular(BiliMetrics.panelSwitchHeight / 2),
       ),
       child: AnimatedAlign(

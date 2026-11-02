@@ -149,7 +149,7 @@ class UpBadge extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: CommentRowTheme.upPadding),
     alignment: Alignment.center,
     decoration: BoxDecoration(
-      color: CommentRowTheme.upFill,
+      color: CommentRowTheme.colorsOf(context).upFill,
       borderRadius: BorderRadius.circular(CommentRowTheme.upRadius),
     ),
     child: Text(
@@ -173,7 +173,7 @@ class PinnedTag extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: CommentRowTheme.pinnedPadding),
     decoration: BoxDecoration(
-      border: Border.all(color: CommentRowTheme.pinnedInk, width: CommentRowTheme.pinnedBorder),
+      border: Border.all(color: CommentRowTheme.colorsOf(context).pinnedInk, width: CommentRowTheme.pinnedBorder),
       borderRadius: BorderRadius.circular(CommentRowTheme.pinnedRadius),
     ),
     child: Text(
@@ -183,7 +183,7 @@ class PinnedTag extends StatelessWidget {
         fontSize: CommentRowTheme.pinnedText,
         height: 1.3,
         leadingDistribution: TextLeadingDistribution.even,
-        color: CommentRowTheme.pinnedInk,
+        color: CommentRowTheme.colorsOf(context).pinnedInk,
       ),
     ),
   );
@@ -248,7 +248,7 @@ class VipMark extends StatelessWidget {
     padding: const EdgeInsets.all(CommentRowTheme.vipMarkRing),
     decoration: const BoxDecoration(color: CommentRowTheme.vipMarkRim, shape: BoxShape.circle),
     child: DecoratedBox(
-      decoration: const BoxDecoration(color: CommentRowTheme.vipMarkFill, shape: BoxShape.circle),
+      decoration: BoxDecoration(color: CommentRowTheme.colorsOf(context).vipMarkFill, shape: BoxShape.circle),
       child: Center(
         child: Text(
           '大',

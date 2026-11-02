@@ -1513,7 +1513,7 @@ class _VideoPageState extends State<VideoPage> with RouteAware, TickerProviderSt
             child: scaffold!,
           ),
           child: Scaffold(
-            backgroundColor: fullScreen ? BiliColors.videoBackground : BiliColors.card,
+            backgroundColor: fullScreen ? BiliColors.videoBackground : BiliColors.colorsOf(context).card,
             // The comment composer rides on the keyboard by itself, and the full-screen player keeps its size under it.
             resizeToAvoidBottomInset: false,
             body: PrimaryScrollController.none(
@@ -1934,11 +1934,11 @@ class _VideoPageState extends State<VideoPage> with RouteAware, TickerProviderSt
       bottom: PadCommentWriteBar.height,
     );
     final related = DecoratedBox(
-      decoration: const BoxDecoration(
-        color: BiliColors.card,
+      decoration: BoxDecoration(
+        color: BiliColors.colorsOf(context).card,
         border: Border(
-          left: BorderSide(color: PadPageTheme.ruleColour, width: PadPageTheme.rule),
-          top: BorderSide(color: PadPageTheme.ruleColour, width: PadPageTheme.rule),
+          left: BorderSide(color: PadPageTheme.colorsOf(context).ruleColour, width: PadPageTheme.rule),
+          top: BorderSide(color: PadPageTheme.colorsOf(context).ruleColour, width: PadPageTheme.rule),
         ),
       ),
       child: Padding(

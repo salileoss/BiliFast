@@ -349,7 +349,7 @@ class _CommentOverlaysState extends State<CommentOverlays> with TickerProviderSt
                 child: ExcludeSemantics(
                   excluding: _away,
                   child: ColoredBox(
-                    color: CommentOverlayTheme.threadFill,
+                    color: CommentOverlayTheme.colorsOf(context).threadFill,
                     child: MediaQuery.removePadding(
                       context: context,
                       removeTop: true,
@@ -424,7 +424,7 @@ class _DeleteConfirm extends StatelessWidget {
       fontFamily: BiliFonts.family,
       fontFamilyFallback: BiliFonts.fallback,
       fontSize: CommentOverlayTheme.alertButtonText,
-      color: CommentOverlayTheme.alertTitle,
+      color: CommentOverlayTheme.colorsOf(context).alertTitle,
       decoration: TextDecoration.none,
     ),
     child: Stack(
@@ -476,7 +476,7 @@ class _DeleteAlert extends StatelessWidget {
     width: CommentOverlayTheme.alertWidth,
     clipBehavior: Clip.antiAlias,
     decoration: BoxDecoration(
-      color: BiliColors.card,
+      color: BiliColors.colorsOf(context).card,
       borderRadius: BorderRadius.circular(CommentOverlayTheme.alertRadius),
     ),
     child: Column(
@@ -500,7 +500,7 @@ class _DeleteAlert extends StatelessWidget {
                   fontFamily: BiliFonts.family,
                   fontSize: CommentOverlayTheme.alertTitleText,
                   fontWeight: FontWeight.w500,
-                  color: CommentOverlayTheme.alertTitle,
+                  color: CommentOverlayTheme.colorsOf(context).alertTitle,
                 ),
               ),
               const SizedBox(height: CommentOverlayTheme.alertMessageGap),
@@ -510,26 +510,26 @@ class _DeleteAlert extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: BiliFonts.family,
                   fontSize: CommentOverlayTheme.alertMessageText,
-                  color: CommentOverlayTheme.alertMessage,
+                  color: CommentOverlayTheme.colorsOf(context).alertMessage,
                 ),
               ),
             ],
           ),
         ),
-        Container(height: BiliMetrics.panelHairline, color: BiliColors.divider),
+        Container(height: BiliMetrics.panelHairline, color: BiliColors.colorsOf(context).divider),
         SizedBox(
           height: CommentOverlayTheme.alertButtonHeight,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: _AlertButton(label: '取消', color: CommentOverlayTheme.alertCancel, onTap: onCancel),
+                child: _AlertButton(label: '取消', color: CommentOverlayTheme.colorsOf(context).alertCancel, onTap: onCancel),
               ),
-              Container(width: BiliMetrics.panelHairline, color: BiliColors.divider),
+              Container(width: BiliMetrics.panelHairline, color: BiliColors.colorsOf(context).divider),
               Expanded(
                 child: _AlertButton(
                   label: '删除',
-                  color: CommentOverlayTheme.alertDelete,
+                  color: CommentOverlayTheme.colorsOf(context).alertDelete,
                   onTap: onConfirm,
                   strong: true,
                 ),
@@ -576,7 +576,7 @@ class _AlertButtonState extends State<_AlertButton> {
       onTapCancel: () => _press(false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 120),
-        color: _down ? BiliColors.pressedFill : BiliColors.card,
+        color: _down ? BiliColors.colorsOf(context).pressedFill : BiliColors.colorsOf(context).card,
         alignment: Alignment.center,
         child: Text(
           widget.label,

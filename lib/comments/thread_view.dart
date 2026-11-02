@@ -64,7 +64,7 @@ class _ThreadViewState extends State<ThreadView> {
     final model = widget.model;
     final callbacks = widget.callbacks;
     return ColoredBox(
-      color: CommentListTheme.background,
+      color: CommentListTheme.colorsOf(context).background,
       child: ListenableBuilder(
         listenable: model,
         builder: (context, _) {
@@ -90,11 +90,11 @@ class _ThreadViewState extends State<ThreadView> {
                           showsDivider: false,
                         ),
                       ),
-                      const SliverToBoxAdapter(
+                      SliverToBoxAdapter(
                         child: SizedBox(
                           key: ValueKey('thread-band'),
                           height: CommentListTheme.bandHeight,
-                          child: ColoredBox(color: CommentListTheme.band),
+                          child: ColoredBox(color: CommentListTheme.colorsOf(context).band),
                         ),
                       ),
                       SliverToBoxAdapter(
@@ -153,10 +153,10 @@ class _Header extends StatelessWidget {
     key: const ValueKey('thread-header'),
     height: CommentListTheme.threadHeaderHeight,
     child: DecoratedBox(
-      decoration: const BoxDecoration(
-        color: CommentListTheme.background,
+      decoration: BoxDecoration(
+        color: CommentListTheme.colorsOf(context).background,
         border: Border(
-          bottom: BorderSide(color: CommentListTheme.rule, width: CommentListTheme.threadHairline),
+          bottom: BorderSide(color: CommentListTheme.colorsOf(context).rule, width: CommentListTheme.threadHairline),
         ),
       ),
       child: Row(
@@ -170,7 +170,7 @@ class _Header extends StatelessWidget {
               style: TextStyle(
                 fontFamily: BiliFonts.family,
                 fontSize: CommentListTheme.threadTitleText,
-                color: CommentListTheme.threadTitleInk,
+                color: CommentListTheme.colorsOf(context).threadTitleInk,
                 letterSpacing: CommentListTheme.threadTitleSpacing,
               ),
             ),
@@ -184,11 +184,11 @@ class _Header extends StatelessWidget {
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: onClose,
-              child: const SizedBox(
+              child: SizedBox(
                 width: CommentListTheme.closeBox,
                 height: CommentListTheme.threadHeaderHeight,
                 child: Center(
-                  child: CustomPaint(size: Size.square(CommentListTheme.close), painter: _CloseGlyphPainter()),
+                  child: CustomPaint(size: Size.square(CommentListTheme.close), painter: _CloseGlyphPainter(palette: BiliPalette.of(context))),
                 ),
               ),
             ),
@@ -201,12 +201,13 @@ class _Header extends StatelessWidget {
 }
 
 class _CloseGlyphPainter extends CustomPainter {
-  const _CloseGlyphPainter();
+  final BiliPalette palette;
+  const _CloseGlyphPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = CommentListTheme.closeInk
+      ..color = CommentListThemeColors(palette).closeInk
       ..strokeWidth = CommentListTheme.closeStroke
       ..strokeCap = StrokeCap.round
       ..isAntiAlias = true;
@@ -218,5 +219,5 @@ class _CloseGlyphPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_CloseGlyphPainter oldDelegate) => false;
+  bool shouldRepaint(_CloseGlyphPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }

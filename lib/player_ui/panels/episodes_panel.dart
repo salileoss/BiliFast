@@ -140,9 +140,9 @@ class _EpisodesPanelState extends State<EpisodesPanel> {
                   ),
                 if (season != null) ...[
                   const SizedBox(height: BiliMetrics.sheetFooterTop),
-                  const Text('内容到底啦', textAlign: TextAlign.center, style: _footer),
+                  Text('内容到底啦', textAlign: TextAlign.center, style: _footer),
                   const SizedBox(height: BiliMetrics.sheetFooterGap),
-                  const Text('仅展示本App中可查看的稿件', textAlign: TextAlign.center, style: _footer),
+                  Text('仅展示本App中可查看的稿件', textAlign: TextAlign.center, style: _footer),
                 ],
               ],
             ),
@@ -152,19 +152,19 @@ class _EpisodesPanelState extends State<EpisodesPanel> {
     );
   }
 
-  static const _footer = TextStyle(
+  TextStyle get _footer => TextStyle(
     fontSize: BiliMetrics.sheetFooterText,
     height: BiliMetrics.sheetLineHeight,
-    color: BiliColors.sheetHint,
+    color: BiliColors.colorsOf(context).sheetHint,
   );
 
-  static const _introStyle = TextStyle(
+  TextStyle get _introStyle => TextStyle(
     fontSize: BiliMetrics.sheetIntroText,
     height: BiliMetrics.sheetLineHeight,
-    color: BiliColors.secondaryText,
+    color: BiliColors.colorsOf(context).secondaryText,
   );
 
-  static const _more = TextStyle(color: BiliColors.text);
+  TextStyle get _more => TextStyle(color: BiliColors.colorsOf(context).text);
 
   /// The description with the share circle and 收藏 at the right of its first line, which keeps their height even
   /// with no description.
@@ -201,7 +201,7 @@ class _EpisodesPanelState extends State<EpisodesPanel> {
                 TextSpan(
                   children: [
                     TextSpan(text: '$intro '),
-                    const TextSpan(text: '收起', style: _more),
+                    TextSpan(text: '收起', style: _more),
                   ],
                 ),
                 style: _introStyle,
@@ -235,12 +235,12 @@ class _EpisodesPanelState extends State<EpisodesPanel> {
       height: BiliMetrics.sheetSectionHeight,
       child: Row(
         children: [
-          const Text(
+          Text(
             '选集',
             style: TextStyle(
               fontSize: BiliMetrics.sheetSectionText,
               height: BiliMetrics.sheetLineHeight,
-              color: BiliColors.text,
+              color: BiliColors.colorsOf(context).text,
             ),
           ),
           const Spacer(),
@@ -255,7 +255,7 @@ class _EpisodesPanelState extends State<EpisodesPanel> {
                 child: Row(
                   spacing: BiliMetrics.sheetOrderGap,
                   children: [
-                    const PanelGlyph(PanelGlyphKind.order, color: BiliColors.secondaryText),
+                    PanelGlyph(PanelGlyphKind.order, color: BiliColors.colorsOf(context).secondaryText),
                     Text(_reversed ? '倒序' : '正序', style: _introStyle),
                   ],
                 ),
@@ -294,14 +294,14 @@ class _SeasonActions extends StatelessWidget {
               : ListenableBuilder(
                   key: ObjectKey(actions),
                   listenable: actions,
-                  builder: (context, _) => _row(actions, still: still),
+                  builder: (context, _) => _row(context, actions, still: still),
                 ),
         );
       },
     );
   }
 
-  Widget _row(VideoActions actions, {required bool still}) {
+  Widget _row(BuildContext context, VideoActions actions, {required bool still}) {
     final on = actions.seasonFavourited ?? false;
     final label = on ? '已收藏' : '收藏';
     final colour = on ? VerticalActionTheme.sheetSubscribedLabel : VerticalActionTheme.sheetPillLabel;
@@ -316,12 +316,12 @@ class _SeasonActions extends StatelessWidget {
             width: VerticalActionTheme.sheetShare,
             height: VerticalActionTheme.sheetShare,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(color: BiliColors.pageGrey, shape: BoxShape.circle),
-            child: const ActionIcon(
+            decoration: BoxDecoration(color: BiliColors.colorsOf(context).pageGrey, shape: BoxShape.circle),
+            child: ActionIcon(
               ActionGlyph.share,
               solid: false,
               size: VerticalActionTheme.sheetShareGlyph,
-              color: BiliColors.text,
+              color: BiliColors.colorsOf(context).text,
             ),
           ),
         ),
@@ -410,11 +410,11 @@ class _CoverRow extends StatelessWidget {
   final bool divider;
   final VoidCallback onTap;
 
-  static TextStyle get _meta => TextStyle(
+  static TextStyle _meta(BuildContext context) => TextStyle(
     fontSize: BiliMetrics.sheetMetaText,
     height: BiliMetrics.sheetLineHeight,
     letterSpacing: BiliMetrics.sheetMetaSpacing,
-    color: BiliColors.secondaryText,
+    color: BiliColors.colorsOf(context).secondaryText,
   );
 
   @override
@@ -425,7 +425,7 @@ class _CoverRow extends StatelessWidget {
     final titleStyle = TextStyle(
       fontSize: BiliMetrics.sheetEpisodeTitleText,
       height: BiliMetrics.sheetEpisodeTitleLine / BiliMetrics.sheetEpisodeTitleText,
-      color: playing ? VerticalActionTheme.sheetPlaying : BiliColors.text,
+      color: playing ? VerticalActionTheme.sheetPlaying : BiliColors.colorsOf(context).text,
     );
     return Semantics(
       button: true,
@@ -436,7 +436,7 @@ class _CoverRow extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.only(left: BiliMetrics.gutter),
           padding: EdgeInsets.only(top: top, bottom: BiliMetrics.sheetRowPad, right: BiliMetrics.gutter),
-          decoration: divider ? const BoxDecoration(border: Border(top: _divider)) : null,
+          decoration: divider ? BoxDecoration(border: Border(top: _divider(context))) : null,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: BiliMetrics.sheetCoverGap,
@@ -518,8 +518,8 @@ class _CoverRow extends StatelessWidget {
                           BiliMetrics.sheetDateCentre,
                           Text(
                             EpisodesPanel.date(pubdate),
-                            style: _meta,
-                            strutStyle: BiliFonts.strutOf(context, _meta),
+                            style: _meta(context),
+                            strutStyle: BiliFonts.strutOf(context, _meta(context)),
                           ),
                         ),
                       _line(
@@ -527,13 +527,13 @@ class _CoverRow extends StatelessWidget {
                         Row(
                           children: [
                             const SizedBox(width: BiliMetrics.sheetCountLead),
-                            const PanelGlyph(PanelGlyphKind.views, color: BiliColors.secondaryText),
+                            PanelGlyph(PanelGlyphKind.views, color: BiliColors.colorsOf(context).secondaryText),
                             const SizedBox(width: BiliMetrics.sheetCountGap),
-                            _count(episode.views),
+                            _count(context, episode.views),
                             const SizedBox(width: BiliMetrics.sheetCountSpacing),
-                            const PanelGlyph(PanelGlyphKind.danmaku, color: BiliColors.secondaryText),
+                            PanelGlyph(PanelGlyphKind.danmaku, color: BiliColors.colorsOf(context).secondaryText),
                             const SizedBox(width: BiliMetrics.sheetCountGap),
-                            _count(episode.danmaku),
+                            _count(context, episode.danmaku),
                           ],
                         ),
                       ),
@@ -548,9 +548,9 @@ class _CoverRow extends StatelessWidget {
     );
   }
 
-  static Widget _count(int? count) => Transform.translate(
+  static Widget _count(BuildContext context, int? count) => Transform.translate(
     offset: Offset(0, BiliMetrics.sheetCountTextDrop),
-    child: Text(CountFormat.short(count ?? 0), style: _meta),
+    child: Text(CountFormat.short(count ?? 0), style: _meta(context)),
   );
 
   /// A line of text centred [centre] below the cover's top.
@@ -563,7 +563,7 @@ class _CoverRow extends StatelessWidget {
   );
 }
 
-const _divider = BorderSide(color: BiliColors.divider, width: BiliMetrics.panelHairline);
+BorderSide _divider(BuildContext context) => BorderSide(color: BiliColors.colorsOf(context).divider, width: BiliMetrics.panelHairline);
 
 /// A part: no cover, its title and duration.
 class _PartRow extends StatelessWidget {
@@ -576,7 +576,7 @@ class _PartRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final playing = episode.current;
-    final color = playing ? VerticalActionTheme.sheetPlaying : BiliColors.text;
+    final color = playing ? VerticalActionTheme.sheetPlaying : BiliColors.colorsOf(context).text;
     final titleStyle = TextStyle(fontSize: BiliMetrics.sheetEpisodeTitleText, color: color);
     final duration = episode.duration;
     return Semantics(
@@ -589,7 +589,7 @@ class _PartRow extends StatelessWidget {
           constraints: const BoxConstraints(minHeight: BiliMetrics.sheetRowHeight),
           margin: const EdgeInsets.only(left: BiliMetrics.gutter),
           padding: const EdgeInsets.only(right: BiliMetrics.gutter),
-          decoration: divider ? const BoxDecoration(border: Border(top: _divider)) : null,
+          decoration: divider ? BoxDecoration(border: Border(top: _divider(context))) : null,
           child: Row(
             children: [
               if (playing) ...[
@@ -609,7 +609,7 @@ class _PartRow extends StatelessWidget {
                 const SizedBox(width: BiliMetrics.rowGap),
                 Text(
                   TimeFormat.clock(duration.toDouble()),
-                  style: const TextStyle(fontSize: BiliMetrics.sheetMetaText, color: BiliColors.secondaryText),
+                  style: TextStyle(fontSize: BiliMetrics.sheetMetaText, color: BiliColors.colorsOf(context).secondaryText),
                 ),
               ],
             ],
@@ -627,7 +627,7 @@ class EpisodesSheetHeader extends StatelessWidget {
   final String title;
   final VoidCallback close;
 
-  static const _style = TextStyle(fontSize: BiliMetrics.sheetTitleText, color: BiliColors.text);
+  static TextStyle _style(BuildContext context) => TextStyle(fontSize: BiliMetrics.sheetTitleText, color: BiliColors.colorsOf(context).text);
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -644,8 +644,8 @@ class EpisodesSheetHeader extends StatelessWidget {
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: _style,
-              strutStyle: BiliFonts.strutOf(context, _style),
+              style: _style(context),
+              strutStyle: BiliFonts.strutOf(context, _style(context)),
             ),
           ),
           Semantics(
@@ -661,11 +661,11 @@ class EpisodesSheetHeader extends StatelessWidget {
                   child: Container(
                     width: BiliMetrics.sheetClose,
                     height: BiliMetrics.sheetClose,
-                    decoration: const BoxDecoration(color: BiliColors.pageGrey, shape: BoxShape.circle),
-                    child: const Icon(
+                    decoration: BoxDecoration(color: BiliColors.colorsOf(context).pageGrey, shape: BoxShape.circle),
+                    child: Icon(
                       Icons.close,
                       size: BiliMetrics.sheetCloseGlyph,
-                      color: BiliColors.sheetCloseGlyph,
+                      color: BiliColors.colorsOf(context).sheetCloseGlyph,
                     ),
                   ),
                 ),

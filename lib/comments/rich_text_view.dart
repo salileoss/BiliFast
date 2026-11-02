@@ -105,8 +105,8 @@ class _CommentTextState extends State<CommentText> {
   bool _hasEmote = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _spans = _build();
   }
 
@@ -157,7 +157,7 @@ class _CommentTextState extends State<CommentText> {
   List<InlineSpan> _build() {
     _disposeRecognizers();
     _hasEmote = widget.runs.any(_drawn);
-    const linked = TextStyle(color: CommentTextTheme.link);
+    final linked = TextStyle(color: CommentTextTheme.colorsOf(context).link);
     final fontSize = widget.style.fontSize ?? kDefaultFontSize;
     final lead = widget.marksReplyTarget ? replyLead(widget.runs) : null;
     final runs = lead?.rest ?? widget.runs;
@@ -166,7 +166,7 @@ class _CommentTextState extends State<CommentText> {
         const TextSpan(text: '回复 '),
         TextSpan(
           text: lead.name,
-          style: const TextStyle(color: CommentTextTheme.replyTarget),
+          style: TextStyle(color: CommentTextTheme.colorsOf(context).replyTarget),
         ),
         const TextSpan(text: ': '),
       ],

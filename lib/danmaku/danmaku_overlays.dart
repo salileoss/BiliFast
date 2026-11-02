@@ -221,7 +221,7 @@ class _DanmakuOverlaysState extends State<DanmakuOverlays> {
         : SizedBox(
             key: const ValueKey('danmaku-send-keyboard'),
             height: math.max(inset, media.viewPadding.bottom),
-            child: ColoredBox(color: dark ? DanmakuSendTheme.darkArea : DanmakuSendTheme.lightBar),
+            child: ColoredBox(color: dark ? DanmakuSendTheme.darkArea : DanmakuSendTheme.colorsOf(context).lightBar),
           );
     final dim = Semantics(
       button: true,

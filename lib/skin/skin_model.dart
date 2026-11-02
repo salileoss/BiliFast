@@ -5,9 +5,11 @@ import 'dart:io';
 import 'package:bili_core/api.dart';
 import 'package:bili_core/devlog.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show Brightness, ThemeMode;
 
 import '../app/app_environment.dart';
 import '../devtools/crash_log.dart';
+import '../shared/bili_palette.dart';
 import 'skin.dart';
 import 'skin_api.dart';
 import 'skin_loading.dart';
@@ -29,13 +31,20 @@ import 'skin_status_bar.dart';
 /// The 加载动画 worn with it (or alone) is [loading], kept by [SkinLoadingKeeper] in the folder's `loading`, asked,
 /// shown and hidden at the same moments.
 class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
-  SkinModel({required this._api, required this._environment, required this._folder, Logger? logger})
+  SkinModel({required this._api, required this._environment, required this._folder,
+    this.appearance, Logger? logger})
     : _logger = logger ?? Logger.shared;
 
   final SkinApi _api;
   final AppEnvironment _environment;
   final String? _folder;
   final Logger _logger;
+  final ValueListenable<ThemeMode>? appearance;
+  int _appearanceGeneration = 0;
+
+  BiliPalette get _palette => BiliPalette(appearance?.value == ThemeMode.dark ? Brightness.dark : Brightness.light);
+
+  static String _statusNameFor(BiliPalette palette) => palette.isDark ? '.status-dark.json' : _statusName;
 
   static const _currentName = 'current.json';
   static const _manifestName = '.skin.json';
@@ -100,6 +109,7 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
   Future<void> start() => _started ??= _start();
 
   Future<void> _start() async {
+    appearance?.addListener(_appearanceChanged);
     _account = _environment.account;
     _environment.addListener(_accountChanged);
     _environment.logins.addListener(_loginCompleted);
@@ -284,11 +294,13 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
 
   /// [skin] with the status bar measure kept in [version], when there is one of the current measure.
   Future<Skin> _withKeptStatus(Skin skin, Directory version) async {
+    final generation = _appearanceGeneration;
+    final statusName = _statusNameFor(_palette);
     try {
-      final file = File('${version.path}/$_statusName');
+      final file = File('${version.path}/$statusName');
       if (!await file.exists()) return skin;
       final json = jsonDecode(await file.readAsString());
-      if (json is! Map<String, Object?> || json['v'] != _statusMeasure) return skin;
+      if (generation != _appearanceGeneration || json is! Map<String, Object?> || json['v'] != _statusMeasure) return skin;
       double? luminance(String key) => switch (json[key]) {
         final num value => value.toDouble(),
         _ => null,
@@ -307,12 +319,13 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
     }
   }
 
-  Future<void> _keepStatus(SkinEquip equip, SkinStatusBar status) async {
+  Future<void> _keepStatus(SkinEquip equip, SkinStatusBar status, BiliPalette palette) async {
+    final statusName = _statusNameFor(palette);
     try {
       final version = _versionPath(await _root(), equip);
       // Deleted meanwhile, or being unpacked again.
       if (!await File('$version/$_manifestName').exists()) return;
-      final temporary = File('$version/$_statusName.tmp');
+      final temporary = File('$version/$statusName.tmp');
       await temporary.writeAsString(
         jsonEncode({
           'v': _statusMeasure,
@@ -323,7 +336,7 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
         }),
         flush: true,
       );
-      await _retried(() => temporary.rename('$version/$_statusName'));
+      await _retried(() => temporary.rename('$version/$statusName'));
     } on Exception catch (error) {
       _logger.warn(LogCategory.ui, 'skin status bar not kept', {'error': _describe(error)});
     }
@@ -516,15 +529,25 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
     if (skin.statusBar != null) {
       _logStatus(skin);
     } else {
-      _measuring = _measuring.then((_) => _measure(skin));
+      final generation = _appearanceGeneration;
+      final palette = _palette;
+      _measuring = _measuring.then((_) => _measure(skin, palette, generation));
     }
   }
 
-  Future<void> _measure(Skin skin) async {
-    if (_disposed) return;
+  /// Appearance changes affect transparent headers without changing the equipped package.
+  void _appearanceChanged() {
+    _appearanceGeneration++;
+    _statusLogged = null;
+    final skin = _value;
+    if (skin != null) _showDressed(skin.withStatusBar(null), from: 'appearance');
+  }
+
+  Future<void> _measure(Skin skin, BiliPalette palette, int generation) async {
+    if (_disposed || generation != _appearanceGeneration) return;
     final SkinStatusBar status;
     try {
-      status = await measureSkinStatusBar(skin);
+      status = await measureSkinStatusBar(skin, palette: palette);
     } on Exception catch (error) {
       _logger.warn(LogCategory.ui, 'skin status bar not measured', {'error': _describe(error)});
       return;
@@ -532,7 +555,7 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
       CrashLog.report(error, stack, source: 'skin status bar', logger: _logger);
       return;
     }
-    if (_disposed) return;
+    if (_disposed || generation != _appearanceGeneration) return;
     final measured = skin.withStatusBar(status);
     _logStatus(measured);
     final shown = _value;
@@ -546,7 +569,7 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
             measured.lightStatusMe(card: false) != shown.lightStatusMe(card: false))) {
       _show(shown.withStatusBar(status));
     }
-    await _exclusive(() => _keepStatus(skin.equip, status));
+    await _exclusive(() => _keepStatus(skin.equip, status, palette));
   }
 
   /// Once per skin as it changes: never a file's path.
@@ -631,6 +654,7 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
   void dispose() {
     _disposed = true;
     if (_started != null) {
+      appearance?.removeListener(_appearanceChanged);
       _environment.removeListener(_accountChanged);
       _environment.logins.removeListener(_loginCompleted);
       _loading.shown.removeListener(_loadingShown);

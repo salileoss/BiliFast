@@ -140,7 +140,7 @@ class VerifiedBadge extends StatelessWidget {
     width: IntroTheme.badge + IntroTheme.badgeRing * 2,
     height: IntroTheme.badge + IntroTheme.badgeRing * 2,
     padding: const EdgeInsets.all(IntroTheme.badgeRing),
-    decoration: const BoxDecoration(color: BiliColors.card, shape: BoxShape.circle),
+    decoration: BoxDecoration(color: BiliColors.colorsOf(context).card, shape: BoxShape.circle),
     child: CustomPaint(painter: _BoltPainter(color)),
   );
 }
@@ -184,7 +184,7 @@ class _NameAndCounts extends StatelessWidget {
       height: IntroTheme.nameLine / IntroTheme.nameText,
       leadingDistribution: TextLeadingDistribution.even,
       letterSpacing: IntroTheme.nameSpacing,
-      color: card?.isVip == true ? BiliColors.pink : IntroTheme.name,
+      color: card?.isVip == true ? BiliColors.colorsOf(context).pink : IntroTheme.colorsOf(context).name,
     );
     final countsStyle = TextStyle(
       fontFamily: BiliFonts.family,
@@ -192,7 +192,7 @@ class _NameAndCounts extends StatelessWidget {
       height: IntroTheme.fansLine / IntroTheme.fansText,
       leadingDistribution: TextLeadingDistribution.even,
       letterSpacing: IntroTheme.fansSpacing,
-      color: BiliColors.secondaryText,
+      color: BiliColors.colorsOf(context).secondaryText,
     );
     return Stack(
       clipBehavior: Clip.none,
@@ -245,12 +245,12 @@ class _StaffRow extends StatelessWidget {
     final nameStyle = style.copyWith(
       fontSize: IntroTheme.staffNameText,
       height: IntroTheme.staffLine / IntroTheme.staffNameText,
-      color: IntroTheme.name,
+      color: IntroTheme.colorsOf(context).name,
     );
     final roleStyle = style.copyWith(
       fontSize: IntroTheme.staffRoleText,
       height: IntroTheme.staffRoleLine / IntroTheme.staffRoleText,
-      color: BiliColors.secondaryText,
+      color: BiliColors.colorsOf(context).secondaryText,
     );
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,7 +355,7 @@ class _FollowPillState extends State<FollowPill> {
     final following = widget.following;
     final animate = !MediaQuery.disableAnimationsOf(context);
     final duration = animate ? const Duration(milliseconds: 220) : Duration.zero;
-    final ink = following ? IntroTheme.followedText : BiliColors.onPink;
+    final ink = following ? IntroTheme.colorsOf(context).followedText : BiliColors.onPink;
     final pad = widget.pad;
     final height = pad ? PadBodyTheme.followHeight : IntroTheme.followHeight;
     final plus = pad ? PadBodyTheme.followPlus : IntroTheme.followPlus;
@@ -389,7 +389,7 @@ class _FollowPillState extends State<FollowPill> {
             width: pad ? PadBodyTheme.followWidth : IntroTheme.followWidth,
             height: height,
             decoration: BoxDecoration(
-              color: following ? IntroTheme.followedFill : BiliColors.pink,
+              color: following ? IntroTheme.colorsOf(context).followedFill : BiliColors.colorsOf(context).pink,
               borderRadius: BorderRadius.circular(pad ? PadBodyTheme.followRadius : height / 2),
             ),
             alignment: Alignment.center,

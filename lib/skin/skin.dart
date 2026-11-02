@@ -93,7 +93,7 @@ final class Skin {
     };
   }
 
-  Skin withStatusBar(SkinStatusBar statusBar) => Skin(
+  Skin withStatusBar(SkinStatusBar? statusBar) => Skin(
     equip: equip,
     headBg: headBg,
     headTabBg: headTabBg,

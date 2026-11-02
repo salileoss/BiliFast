@@ -66,19 +66,19 @@ final class _Look {
       switchOff = BiliColors.panelTrackOff,
       knobShadow = null;
 
-  const _Look.light()
-    : card = DanmakuPanelTheme.lightCard,
-      square = DanmakuPanelTheme.lightSquare,
-      track = DanmakuPanelTheme.lightTrack,
-      fill = DanmakuPanelTheme.lightFill,
-      thumb = BiliColors.pink,
-      dot = BiliColors.pink,
-      hairline = DanmakuPanelTheme.lightHairline,
-      text = DanmakuPanelTheme.lightText,
-      value = DanmakuPanelTheme.lightText,
-      secondary = DanmakuPanelTheme.lightSecondary,
-      reset = DanmakuPanelTheme.lightReset,
-      switchOff = DanmakuPanelTheme.lightSwitchOff,
+  _Look.light(BuildContext context)
+    : card = DanmakuPanelTheme.colorsOf(context).lightCard,
+      square = DanmakuPanelTheme.colorsOf(context).lightSquare,
+      track = DanmakuPanelTheme.colorsOf(context).lightTrack,
+      fill = DanmakuPanelTheme.colorsOf(context).lightFill,
+      thumb = BiliColors.colorsOf(context).pink,
+      dot = BiliColors.colorsOf(context).pink,
+      hairline = DanmakuPanelTheme.colorsOf(context).lightHairline,
+      text = DanmakuPanelTheme.colorsOf(context).lightText,
+      value = DanmakuPanelTheme.colorsOf(context).lightText,
+      secondary = DanmakuPanelTheme.colorsOf(context).lightSecondary,
+      reset = DanmakuPanelTheme.colorsOf(context).lightReset,
+      switchOff = DanmakuPanelTheme.colorsOf(context).lightSwitchOff,
       knobShadow = DanmakuPanelTheme.lightKnobShadow;
 
   final Color card;
@@ -131,7 +131,7 @@ class _DanmakuSettingsPanelState extends State<DanmakuSettingsPanel> {
 
   bool get _light => widget.light;
 
-  _Look get _look => _light ? const _Look.light() : const _Look.dark();
+  _Look get _look => _light ? _Look.light(context) : const _Look.dark();
 
   @override
   Widget build(BuildContext context) {
@@ -834,7 +834,7 @@ class _TypeButton extends StatelessWidget {
                 borderRadius: BorderRadius.circular(DanmakuPanelTheme.squareRadius),
               ),
               alignment: Alignment.center,
-              child: DanmakuPanelGlyph(type.glyph, color: blocked ? BiliColors.pink : look.text, blocked: blocked),
+              child: DanmakuPanelGlyph(type.glyph, color: blocked ? BiliColors.colorsOf(context).pink : look.text, blocked: blocked),
             ),
           ),
           SizedBox(
@@ -942,7 +942,7 @@ class _Switch extends StatelessWidget {
       height: BiliMetrics.panelSwitchHeight,
       padding: const EdgeInsets.all(inset),
       decoration: BoxDecoration(
-        color: on ? BiliColors.pink : look.switchOff,
+        color: on ? BiliColors.colorsOf(context).pink : look.switchOff,
         borderRadius: BorderRadius.circular(BiliMetrics.panelSwitchHeight / 2),
       ),
       child: AnimatedAlign(
