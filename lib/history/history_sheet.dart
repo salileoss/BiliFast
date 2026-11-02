@@ -153,7 +153,7 @@ class _Sheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ColoredBox(
     key: const ValueKey('history-sheet'),
-    color: HistoryTheme.sheetFill,
+    color: HistoryTheme.colorsOf(context).sheetFill,
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -166,7 +166,7 @@ class _Sheet extends StatelessWidget {
                 left: HistoryTheme.sheetHeaderInset,
                 top: 0,
                 height: HistoryTheme.sheetHeaderHeight,
-                child: Center(child: _text('分享', HistoryTheme.sheetHeaderText, HistoryTheme.sheetHeaderInk)),
+                child: Center(child: _text('分享', HistoryTheme.sheetHeaderText, HistoryTheme.colorsOf(context).sheetHeaderInk)),
               ),
               Positioned(
                 left: HistoryTheme.sheetItemCentre - HistoryTheme.sheetItemWidth / 2,
@@ -181,11 +181,11 @@ class _Sheet extends StatelessWidget {
                       Container(
                         width: HistoryTheme.sheetCircle,
                         height: HistoryTheme.sheetCircle,
-                        decoration: const BoxDecoration(color: HistoryTheme.sheetCircleFill, shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: HistoryTheme.colorsOf(context).sheetCircleFill, shape: BoxShape.circle),
                         child: const CustomPaint(painter: HistorySharePainter()),
                       ),
                       const SizedBox(height: HistoryTheme.sheetLabelGap),
-                      _text('分享链接', HistoryTheme.sheetLabelText, HistoryTheme.sheetLabelInk),
+                      _text('分享链接', HistoryTheme.sheetLabelText, HistoryTheme.colorsOf(context).sheetLabelInk),
                     ],
                   ),
                 ),
@@ -193,9 +193,9 @@ class _Sheet extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(
+        SizedBox(
           height: HistoryTheme.sheetDivider,
-          child: ColoredBox(color: HistoryTheme.sheetDividerInk),
+          child: ColoredBox(color: HistoryTheme.colorsOf(context).sheetDividerInk),
         ),
         SizedBox(
           height: HistoryTheme.sheetDeleteHeight,
@@ -213,13 +213,13 @@ class _Sheet extends StatelessWidget {
                   child: Column(
                     children: [
                       const SizedBox(height: HistoryTheme.sheetTrashTop),
-                      const SizedBox(
+                      SizedBox(
                         width: HistoryTheme.sheetTrashWidth,
                         height: HistoryTheme.sheetTrashHeight,
-                        child: CustomPaint(painter: HistoryTrashPainter()),
+                        child: CustomPaint(painter: HistoryTrashPainter(colors: HistoryTheme.colorsOf(context))),
                       ),
                       const SizedBox(height: HistoryTheme.sheetDeleteLabelGap),
-                      _text('删除', HistoryTheme.sheetLabelText, HistoryTheme.sheetDeleteInk),
+                      _text('删除', HistoryTheme.sheetLabelText, HistoryTheme.colorsOf(context).sheetDeleteInk),
                     ],
                   ),
                 ),
@@ -227,9 +227,9 @@ class _Sheet extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(
+        SizedBox(
           height: HistoryTheme.sheetBand,
-          child: ColoredBox(color: HistoryTheme.sheetBandFill),
+          child: ColoredBox(color: HistoryTheme.colorsOf(context).sheetBandFill),
         ),
         _Button(
           key: const ValueKey('history-cancel'),
@@ -237,7 +237,7 @@ class _Sheet extends StatelessWidget {
           onTap: onCancel,
           child: SizedBox(
             height: HistoryTheme.sheetCancelHeight,
-            child: Center(child: _text('取消', HistoryTheme.sheetCancelText, HistoryTheme.sheetCancelInk)),
+            child: Center(child: _text('取消', HistoryTheme.sheetCancelText, HistoryTheme.colorsOf(context).sheetCancelInk)),
           ),
         ),
         SizedBox(height: MediaQuery.paddingOf(context).bottom),

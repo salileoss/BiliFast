@@ -238,13 +238,13 @@ class _FavouritesPageState extends State<FavouritesPage> {
         child: page!,
       ),
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.dark,
+        value: BiliPalette.of(context).isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         // Pushed on a plain page route with no Material above it, the words would otherwise inherit the app's
         // fallback style, a synthetic w900.
         child: DefaultTextStyle(
-          style: favStyle(FavouritesTheme.stateText, BiliColors.text),
+          style: favStyle(FavouritesTheme.stateText, BiliColors.colorsOf(context).text),
           child: ColoredBox(
-            color: BiliColors.card,
+            color: BiliColors.colorsOf(context).card,
             child: Stack(
               children: [
                 Column(
@@ -260,9 +260,9 @@ class _FavouritesPageState extends State<FavouritesPage> {
                       onLayout: _toggleLayout,
                       onSoon: _soon,
                     ),
-                    const SizedBox(
+                    SizedBox(
                       height: FavouritesTheme.headerHairline,
-                      child: ColoredBox(color: FavouritesTheme.headerHairlineInk),
+                      child: ColoredBox(color: FavouritesTheme.colorsOf(context).headerHairlineInk),
                     ),
                     Expanded(
                       child: switch (_chip) {
@@ -284,7 +284,7 @@ class _FavouritesPageState extends State<FavouritesPage> {
   }
 
   Widget _foldersView(FavouriteFoldersModel model) => ColoredBox(
-    color: FavouritesTheme.page,
+    color: FavouritesTheme.colorsOf(context).page,
     child: ListenableBuilder(
       listenable: model,
       builder: (context, _) {
@@ -399,7 +399,7 @@ class _Bar extends StatelessWidget {
     Widget tab(String key, String label, double middle, {required bool chosen, VoidCallback? onTap}) {
       final style = favStyle(
         FavouritesTheme.tabText,
-        chosen ? FavouritesTheme.tabChosenInk : FavouritesTheme.tabInk,
+        chosen ? FavouritesTheme.colorsOf(context).tabChosenInk : FavouritesTheme.colorsOf(context).tabInk,
         line: FavouritesTheme.tabLine,
       );
       final words = Center(
@@ -440,9 +440,9 @@ class _Bar extends StatelessWidget {
             width: FavouritesTheme.tabBarWidth,
             top: FavouritesTheme.barHeight / 2 + FavouritesTheme.tabBarCentreBelow - FavouritesTheme.tabBarHeight / 2,
             height: FavouritesTheme.tabBarHeight,
-            child: const DecoratedBox(
+            child: DecoratedBox(
               decoration: BoxDecoration(
-                color: FavouritesTheme.tabChosenInk,
+                color: FavouritesTheme.colorsOf(context).tabChosenInk,
                 borderRadius: BorderRadius.all(Radius.circular(FavouritesTheme.tabBarRadius)),
               ),
             ),
@@ -478,7 +478,7 @@ class _ChipRow extends StatelessWidget {
       final chosen = value == chip;
       final style = favStyle(
         FavouritesTheme.chipText,
-        chosen ? FavouritesTheme.chipChosenInk : FavouritesTheme.chipInk,
+        chosen ? FavouritesTheme.colorsOf(context).chipChosenInk : FavouritesTheme.colorsOf(context).chipInk,
         line: FavouritesTheme.chipLine,
       );
       return FavTap(
@@ -516,11 +516,11 @@ class _ChipRow extends StatelessWidget {
       ),
     );
 
-    const search = FavGlyphIcon(
+    final search = FavGlyphIcon(
       FavGlyph.search,
       width: FavouritesTheme.toolSearch,
       height: FavouritesTheme.toolSearch,
-      color: FavouritesTheme.toolInk,
+      color: FavouritesTheme.colorsOf(context).toolInk,
     );
     final tools = switch (chip) {
       FavouritesChip.folders => [
@@ -528,28 +528,28 @@ class _ChipRow extends StatelessWidget {
         tool(
           'fav-tool-new',
           '新建收藏夹',
-          const FavGlyphIcon(
+          FavGlyphIcon(
             FavGlyph.plus,
             width: FavouritesTheme.toolPlus,
             height: FavouritesTheme.toolPlus,
-            color: FavouritesTheme.toolInk,
+            color: FavouritesTheme.colorsOf(context).toolInk,
           ),
           onTap: onNew,
         ),
         tool('fav-tool-layout', '切换布局', switch (layout) {
-          FavouritesLayout.cards => const FavGlyphIcon(
+          FavouritesLayout.cards => FavGlyphIcon(
             FavGlyph.layout,
             key: ValueKey('fav-layout-cards'),
             width: FavouritesTheme.toolLayoutWidth,
             height: FavouritesTheme.toolLayoutHeight,
-            color: FavouritesTheme.toolInk,
+            color: FavouritesTheme.colorsOf(context).toolInk,
           ),
-          FavouritesLayout.list => const FavGlyphIcon(
+          FavouritesLayout.list => FavGlyphIcon(
             FavGlyph.layoutList,
             key: ValueKey('fav-layout-list'),
             width: FavouritesTheme.toolLayoutListWidth,
             height: FavouritesTheme.toolLayoutListHeight,
-            color: FavouritesTheme.toolInk,
+            color: FavouritesTheme.colorsOf(context).toolInk,
           ),
         }, onTap: onLayout),
       ],
@@ -558,11 +558,11 @@ class _ChipRow extends StatelessWidget {
         tool(
           'fav-tool-select',
           '批量管理',
-          const FavGlyphIcon(
+          FavGlyphIcon(
             FavGlyph.select,
             width: FavouritesTheme.toolListWidth,
             height: FavouritesTheme.toolListHeight,
-            color: FavouritesTheme.toolInk,
+            color: FavouritesTheme.colorsOf(context).toolInk,
           ),
         ),
       ],
@@ -639,18 +639,18 @@ class _FolderCardState extends State<_FolderCard> {
     final titled = folder.count > 0;
     final title = favStyle(
       FavouritesTheme.cardTitleText,
-      FavouritesTheme.cardTitleInk,
+      FavouritesTheme.colorsOf(context).cardTitleInk,
       line: FavouritesTheme.cardTitleLine,
       weight: FavouritesTheme.cardTitleWeight,
     );
     final count = favStyle(
       FavouritesTheme.cardCountText,
-      FavouritesTheme.cardCountInk,
+      FavouritesTheme.colorsOf(context).cardCountInk,
       line: FavouritesTheme.cardTitleLine,
     );
     final tileTitle = favStyle(
       FavouritesTheme.tileTitleText,
-      FavouritesTheme.tileTitleInk,
+      FavouritesTheme.colorsOf(context).tileTitleInk,
       line: FavouritesTheme.tileTitleLine,
     );
     final countText = FavouriteFormat.cardCount(folder.count);
@@ -662,8 +662,8 @@ class _FolderCardState extends State<_FolderCard> {
             FavouritesTheme.tilesTop +
             FavouritesTheme.tileHeight +
             (titled ? FavouritesTheme.cardBottomTitled : FavouritesTheme.cardBottom),
-        decoration: const BoxDecoration(
-          color: FavouritesTheme.cardFill,
+        decoration: BoxDecoration(
+          color: FavouritesTheme.colorsOf(context).cardFill,
           borderRadius: BorderRadius.all(Radius.circular(FavouritesTheme.cardRadius)),
         ),
         child: Stack(
@@ -685,28 +685,28 @@ class _FolderCardState extends State<_FolderCard> {
                     ),
                   ),
                   if (folder.isPrivate) ...[
-                    const FavGlyphIcon(
+                    FavGlyphIcon(
                       FavGlyph.lock,
                       key: ValueKey('fav-card-lock'),
                       width: FavouritesTheme.lockWidth,
                       height: FavouritesTheme.lockHeight,
-                      color: FavouritesTheme.cardCountInk,
+                      color: FavouritesTheme.colorsOf(context).cardCountInk,
                       stroke: FavouritesTheme.lockStroke,
                     ),
                     const SizedBox(width: FavouritesTheme.lockGap),
-                    const DecoratedBox(
-                      decoration: BoxDecoration(color: FavouritesTheme.cardCountInk, shape: BoxShape.circle),
+                    DecoratedBox(
+                      decoration: BoxDecoration(color: FavouritesTheme.colorsOf(context).cardCountInk, shape: BoxShape.circle),
                       child: SizedBox.square(dimension: FavouritesTheme.dotSize),
                     ),
                     const SizedBox(width: FavouritesTheme.dotGap),
                   ],
                   Text(countText, style: count, strutStyle: BiliFonts.strut(count)),
                   const SizedBox(width: FavouritesTheme.chevronGap),
-                  const FavGlyphIcon(
+                  FavGlyphIcon(
                     FavGlyph.chevron,
                     width: FavouritesTheme.chevronWidth,
                     height: FavouritesTheme.chevronHeight,
-                    color: FavouritesTheme.chevronInk,
+                    color: FavouritesTheme.colorsOf(context).chevronInk,
                     stroke: FavouritesTheme.chevronStroke,
                   ),
                 ],
@@ -777,7 +777,7 @@ class _Tile extends StatelessWidget {
         width: FavouritesTheme.tileWidth,
         height: FavouritesTheme.tileHeight,
         child: ColoredBox(
-          color: FavouritesTheme.tileEmpty,
+          color: FavouritesTheme.colorsOf(context).tileEmpty,
           child: cover.isEmpty
               ? null
               : RemoteImage(
@@ -805,13 +805,13 @@ class _FolderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = favStyle(
       FavouritesTheme.cardTitleText,
-      FavouritesTheme.cardTitleInk,
+      FavouritesTheme.colorsOf(context).cardTitleInk,
       line: FavouritesTheme.cardTitleLine,
       weight: FavouritesTheme.cardTitleWeight,
     );
     final count = favStyle(
       FavouritesTheme.cardCountText,
-      FavouritesTheme.cardCountInk,
+      FavouritesTheme.colorsOf(context).cardCountInk,
       line: FavouritesTheme.cardTitleLine,
     );
     final countText = FavouriteFormat.cardCount(folder.count);
@@ -828,8 +828,8 @@ class _FolderRow extends StatelessWidget {
               label: '${folder.title}，${folder.isPrivate ? '私密，' : ''}$countText',
               onTap: onOpen,
               child: DecoratedBox(
-                decoration: const BoxDecoration(
-                  color: FavouritesTheme.cardFill,
+                decoration: BoxDecoration(
+                  color: FavouritesTheme.colorsOf(context).cardFill,
                   borderRadius: BorderRadius.all(Radius.circular(FavouritesTheme.cardRadius)),
                 ),
                 child: Stack(
@@ -842,7 +842,7 @@ class _FolderRow extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(FavouritesTheme.tileRadius),
                         child: ColoredBox(
-                          color: FavouritesTheme.tileEmpty,
+                          color: FavouritesTheme.colorsOf(context).tileEmpty,
                           child: cover.isEmpty
                               ? null
                               : RemoteImage(
@@ -876,17 +876,17 @@ class _FolderRow extends StatelessWidget {
                         children: [
                           if (folder.isPrivate) ...[
                             const SizedBox(width: FavouritesTheme.rowLockInset),
-                            const FavGlyphIcon(
+                            FavGlyphIcon(
                               FavGlyph.lock,
                               key: ValueKey('fav-row-lock'),
                               width: FavouritesTheme.lockWidth,
                               height: FavouritesTheme.lockHeight,
-                              color: FavouritesTheme.cardCountInk,
+                              color: FavouritesTheme.colorsOf(context).cardCountInk,
                               stroke: FavouritesTheme.lockStroke,
                             ),
                             const SizedBox(width: FavouritesTheme.lockGap),
-                            const DecoratedBox(
-                              decoration: BoxDecoration(color: FavouritesTheme.cardCountInk, shape: BoxShape.circle),
+                            DecoratedBox(
+                              decoration: BoxDecoration(color: FavouritesTheme.colorsOf(context).cardCountInk, shape: BoxShape.circle),
                               child: SizedBox.square(dimension: FavouritesTheme.dotSize),
                             ),
                             const SizedBox(width: FavouritesTheme.dotGap),
@@ -929,7 +929,7 @@ class _PlayPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = favStyle(
       FavouritesTheme.playText,
-      on ? FavouritesTheme.playInk : FavouritesTheme.playInkOff,
+      on ? FavouritesTheme.colorsOf(context).playInk : FavouritesTheme.colorsOf(context).playInkOff,
       line: FavouritesTheme.playLine,
     );
     return Container(
@@ -937,7 +937,7 @@ class _PlayPill extends StatelessWidget {
       height: FavouritesTheme.playHeight,
       padding: const EdgeInsets.only(left: FavouritesTheme.playPadLeft),
       decoration: ShapeDecoration(
-        color: on ? FavouritesTheme.playFill : FavouritesTheme.playFillOff,
+        color: on ? FavouritesTheme.colorsOf(context).playFill : FavouritesTheme.colorsOf(context).playFillOff,
         shape: const StadiumBorder(),
       ),
       child: Row(
@@ -946,7 +946,7 @@ class _PlayPill extends StatelessWidget {
             FavGlyph.play,
             width: FavouritesTheme.playGlyphWidth,
             height: FavouritesTheme.playGlyphHeight,
-            color: on ? FavouritesTheme.playInk : FavouritesTheme.playGlyphOff,
+            color: on ? FavouritesTheme.colorsOf(context).playInk : FavouritesTheme.colorsOf(context).playGlyphOff,
           ),
           const SizedBox(width: FavouritesTheme.playGap),
           Text('播放', style: style, strutStyle: BiliFonts.strut(style)),
@@ -964,7 +964,7 @@ class _NewFolder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = favStyle(FavouritesTheme.newText, FavouritesTheme.newInk, line: FavouritesTheme.newLine);
+    final style = favStyle(FavouritesTheme.newText, FavouritesTheme.colorsOf(context).newInk, line: FavouritesTheme.newLine);
     return Padding(
       padding: const EdgeInsets.only(top: FavouritesTheme.newGap, bottom: FavouritesTheme.newBottom),
       child: Center(
@@ -975,19 +975,19 @@ class _NewFolder extends StatelessWidget {
           child: Container(
             height: FavouritesTheme.newHeight,
             padding: const EdgeInsets.only(left: FavouritesTheme.newPadLeft, right: FavouritesTheme.newPadRight),
-            decoration: const ShapeDecoration(
+            decoration: ShapeDecoration(
               shape: StadiumBorder(
-                side: BorderSide(color: FavouritesTheme.newRimInk, width: FavouritesTheme.newRim),
+                side: BorderSide(color: FavouritesTheme.colorsOf(context).newRimInk, width: FavouritesTheme.newRim),
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const FavGlyphIcon(
+                FavGlyphIcon(
                   FavGlyph.plus,
                   width: FavouritesTheme.newPlus,
                   height: FavouritesTheme.newPlus,
-                  color: FavouritesTheme.newInk,
+                  color: FavouritesTheme.colorsOf(context).newInk,
                   stroke: FavouritesTheme.newPlusStroke,
                 ),
                 const SizedBox(width: FavouritesTheme.newPlusGap),

@@ -15,13 +15,20 @@ final class OfflineBarLook {
 
   static const stock = OfflineBarLook(fill: _T.bar, ink: _T.barInk, lightStatus: false);
 
-  factory OfflineBarLook.of(Skin? skin) {
+  factory OfflineBarLook.of(Skin? skin, {BuildContext? context}) {
+    final colors = context == null ? null : _T.colorsOf(context);
     final page = skin?.equip.colors.colorSecondPage;
-    if (skin == null || skin.equip.primaryOnly || page == null) return stock;
+    if (skin == null || skin.equip.primaryOnly || page == null) {
+      return context == null ? stock : OfflineBarLook(
+        fill: colors!.bar,
+        ink: colors.barInk,
+        lightStatus: BiliPalette.of(context).isDark,
+      );
+    }
     final fill = Color(page);
     return OfflineBarLook(
       fill: fill,
-      ink: skin.color ?? (skin.lightText ? _T.barLightInk : _T.barInk),
+      ink: skin.color ?? (skin.lightText ? _T.barLightInk : colors?.barInk ?? _T.barInk),
       lightStatus: SkinStatusBar.whiteOverColor(fill),
     );
   }
@@ -218,8 +225,8 @@ class OfflineSearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
-    final text = offlineStyle(_T.fieldText, _T.fieldInk, line: _T.fieldLine);
-    final hint = text.copyWith(color: _T.fieldHint);
+    final text = offlineStyle(_T.fieldText, _T.colorsOf(context).fieldInk, line: _T.fieldLine);
+    final hint = text.copyWith(color: _T.colorsOf(context).fieldHint);
     return ColoredBox(
       key: const ValueKey('offline-search-bar'),
       color: look.fill,
@@ -236,13 +243,13 @@ class OfflineSearchBar extends StatelessWidget {
                 onTap: focus.requestFocus,
                 child: DecoratedBox(
                   key: const ValueKey('offline-search-field-box'),
-                  decoration: const ShapeDecoration(color: _T.field, shape: StadiumBorder()),
+                  decoration: ShapeDecoration(color: _T.colorsOf(context).field, shape: StadiumBorder()),
                   child: Stack(
                     children: [
                       Positioned(
                         left: _T.fieldGlyphCentre - _T.fieldGlyph / 2,
                         top: _T.fieldHeight / 2 + _T.fieldGlyphDrop - _T.fieldGlyph / 2,
-                        child: const SearchGlyphIcon(SearchGlyph.magnifier, size: _T.fieldGlyph, color: _T.fieldHint),
+                        child: SearchGlyphIcon(SearchGlyph.magnifier, size: _T.fieldGlyph, color: _T.colorsOf(context).fieldHint),
                       ),
                       Positioned(
                         left: _T.fieldTextLeft,
@@ -251,6 +258,7 @@ class OfflineSearchBar extends StatelessWidget {
                         bottom: 0,
                         child: Center(
                           child: TextField(
+                            keyboardAppearance: BiliPalette.of(context).brightness,
                             key: const ValueKey('offline-search-field'),
                             controller: field,
                             focusNode: focus,
@@ -259,7 +267,7 @@ class OfflineSearchBar extends StatelessWidget {
                             enableSuggestions: false,
                             textInputAction: TextInputAction.search,
                             contextMenuBuilder: _editMenu,
-                            cursorColor: _T.caret,
+                            cursorColor: _T.colorsOf(context).caret,
                             onChanged: onChanged,
                             style: text,
                             strutStyle: BiliFonts.strut(text),
@@ -296,11 +304,11 @@ class OfflineSearchBar extends StatelessWidget {
                                     key: const ValueKey('offline-search-clear'),
                                     behavior: HitTestBehavior.opaque,
                                     onTap: onClear,
-                                    child: const Center(
+                                    child: Center(
                                       child: SearchGlyphIcon(
                                         SearchGlyph.clear,
                                         size: _T.clearGlyph,
-                                        color: _T.clearInk,
+                                        color: _T.colorsOf(context).clearInk,
                                       ),
                                     ),
                                   ),

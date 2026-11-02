@@ -158,11 +158,11 @@ class _FolderPageState extends State<FolderPage> {
         child: page!,
       ),
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.dark,
+        value: BiliPalette.of(context).isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         child: DefaultTextStyle(
-          style: favStyle(FavouritesTheme.stateText, BiliColors.text),
+          style: favStyle(FavouritesTheme.stateText, BiliColors.colorsOf(context).text),
           child: ColoredBox(
-            color: BiliColors.card,
+            color: BiliColors.colorsOf(context).card,
             child: Stack(
               children: [
                 Column(
@@ -258,11 +258,11 @@ class _FolderBar extends StatelessWidget {
             'fav-folder-search',
             '搜索',
             FavouritesTheme.folderSearchRight,
-            const FavGlyphIcon(
+            FavGlyphIcon(
               FavGlyph.search,
               width: FavouritesTheme.folderSearch,
               height: FavouritesTheme.folderSearch,
-              color: FavouritesTheme.folderBarInk,
+              color: FavouritesTheme.colorsOf(context).folderBarInk,
               stroke: FavouritesTheme.folderBarStroke,
             ),
           ),
@@ -270,11 +270,11 @@ class _FolderBar extends StatelessWidget {
             'fav-folder-select',
             '批量管理',
             FavouritesTheme.folderSelectRight,
-            const FavGlyphIcon(
+            FavGlyphIcon(
               FavGlyph.select,
               width: FavouritesTheme.folderSelectWidth,
               height: FavouritesTheme.folderSelectHeight,
-              color: FavouritesTheme.folderBarInk,
+              color: FavouritesTheme.colorsOf(context).folderBarInk,
               stroke: FavouritesTheme.folderBarStroke,
             ),
           ),
@@ -282,11 +282,11 @@ class _FolderBar extends StatelessWidget {
             'fav-folder-more',
             '更多',
             FavouritesTheme.folderMoreRight,
-            const FavGlyphIcon(
+            FavGlyphIcon(
               FavGlyph.more,
               width: FavouritesTheme.folderMoreDot,
               height: FavouritesTheme.folderMoreDot + FavouritesTheme.folderMorePitch * 2,
-              color: FavouritesTheme.folderBarInk,
+              color: FavouritesTheme.colorsOf(context).folderBarInk,
             ),
           ),
         ],
@@ -306,15 +306,15 @@ class _FolderHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = favStyle(FavouritesTheme.folderTitleText, BiliColors.text, line: FavouritesTheme.folderTitleLine);
+    final title = favStyle(FavouritesTheme.folderTitleText, BiliColors.colorsOf(context).text, line: FavouritesTheme.folderTitleLine);
     final meta = favStyle(
       FavouritesTheme.folderMetaText,
-      FavouritesTheme.folderMetaInk,
+      FavouritesTheme.colorsOf(context).folderMetaInk,
       line: FavouritesTheme.folderMetaLine,
     );
     final label = favStyle(
       FavouritesTheme.folderActionText,
-      FavouritesTheme.folderActionLabelInk,
+      FavouritesTheme.colorsOf(context).folderActionLabelInk,
       line: FavouritesTheme.folderActionLine,
     );
     final textRight = FavouritesTheme.folderActionRights.first + FavouritesTheme.folderActionWidth / 2;
@@ -379,11 +379,11 @@ class _FolderHeader extends StatelessWidget {
             0,
             '点赞',
             'fav-folder-like',
-            const ActionIcon(
+            ActionIcon(
               ActionGlyph.like,
               solid: true,
               size: FavouritesTheme.folderLikeInk / ActionIcon.inkShare,
-              color: FavouritesTheme.folderActionInk,
+              color: FavouritesTheme.colorsOf(context).folderActionInk,
             ),
             onSoon,
           ),
@@ -393,11 +393,11 @@ class _FolderHeader extends StatelessWidget {
             'fav-folder-favourite',
             Transform.translate(
               offset: const Offset(0, FavouritesTheme.folderAddDrop),
-              child: const FavGlyphIcon(
+              child: FavGlyphIcon(
                 FavGlyph.folderAdd,
                 width: FavouritesTheme.folderAddWidth,
                 height: FavouritesTheme.folderAddHeight,
-                color: FavouritesTheme.folderActionFaint,
+                color: FavouritesTheme.colorsOf(context).folderActionFaint,
                 stroke: FavouritesTheme.folderAddStroke,
               ),
             ),
@@ -407,11 +407,11 @@ class _FolderHeader extends StatelessWidget {
             2,
             '分享',
             'fav-folder-share',
-            const ActionIcon(
+            ActionIcon(
               ActionGlyph.share,
               solid: true,
               size: FavouritesTheme.folderShareInk / ActionIcon.inkShare,
-              color: FavouritesTheme.folderActionInk,
+              color: FavouritesTheme.colorsOf(context).folderActionInk,
             ),
             onShare,
           ),

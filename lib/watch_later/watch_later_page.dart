@@ -195,13 +195,13 @@ class _WatchLaterPageState extends State<WatchLaterPage> {
         child: page!,
       ),
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.dark,
+        value: BiliPalette.of(context).isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         // Pushed on a plain page route with no Material above it, the words would otherwise inherit the app's
         // fallback style, a synthetic w900.
         child: DefaultTextStyle(
-          style: watchLaterStyle(WatchLaterTheme.stateText, WatchLaterTheme.ink),
+          style: watchLaterStyle(WatchLaterTheme.stateText, WatchLaterTheme.colorsOf(context).ink),
           child: ColoredBox(
-            color: BiliColors.card,
+            color: BiliColors.colorsOf(context).card,
             child: Stack(
               children: [
                 ListenableBuilder(
@@ -212,14 +212,14 @@ class _WatchLaterPageState extends State<WatchLaterPage> {
                       SizedBox(height: top),
                       _Bar(editing: model.editing, active: model.editing || model.hasRows, onManage: _manage),
                       _Strip(model: model, onPlayAll: _playAll),
-                      const SizedBox(
+                      SizedBox(
                         height: WatchLaterTheme.listGap,
                         child: Align(
                           alignment: Alignment.topCenter,
                           child: SizedBox(
                             height: WatchLaterTheme.stripHairline,
                             width: double.infinity,
-                            child: ColoredBox(color: WatchLaterTheme.hairlineInk),
+                            child: ColoredBox(color: WatchLaterTheme.colorsOf(context).hairlineInk),
                           ),
                         ),
                       ),
@@ -353,7 +353,7 @@ class _Bar extends StatelessWidget {
     final label = editing ? '取消管理' : '管理';
     final manage = watchLaterStyle(
       WatchLaterTheme.manageText,
-      active ? WatchLaterTheme.grey : WatchLaterTheme.greyOff,
+      active ? WatchLaterTheme.colorsOf(context).grey : WatchLaterTheme.colorsOf(context).greyOff,
       line: WatchLaterTheme.barHeight,
     );
     void back() => unawaited(Navigator.of(context).maybePop());
@@ -368,7 +368,7 @@ class _Bar extends StatelessWidget {
               '稍后再看',
               style: watchLaterStyle(
                 WatchLaterTheme.titleText,
-                WatchLaterTheme.ink,
+                WatchLaterTheme.colorsOf(context).ink,
                 weight: WatchLaterTheme.titleWeight,
               ),
             ),
@@ -387,7 +387,7 @@ class _Bar extends StatelessWidget {
                 key: const ValueKey('later-back'),
                 behavior: HitTestBehavior.opaque,
                 onTap: back,
-                child: const CustomPaint(painter: WatchLaterBackPainter()),
+                child: CustomPaint(painter: WatchLaterBackPainter(colors: WatchLaterTheme.colorsOf(context))),
               ),
             ),
           ),
@@ -438,8 +438,8 @@ class _Strip extends StatelessWidget {
   Widget build(BuildContext context) {
     final editing = model.editing;
     final active = !editing && model.hasRows;
-    final sortInk = active ? WatchLaterTheme.grey : WatchLaterTheme.greyOff;
-    final playInk = active ? BiliColors.pink : WatchLaterTheme.pinkOff;
+    final sortInk = active ? WatchLaterTheme.colorsOf(context).grey : WatchLaterTheme.colorsOf(context).greyOff;
+    final playInk = active ? BiliColors.colorsOf(context).pink : WatchLaterTheme.colorsOf(context).pinkOff;
     const line = WatchLaterTheme.stripCentre * 2;
     final sort = watchLaterStyle(WatchLaterTheme.sortText, sortInk, line: line);
     final play = watchLaterStyle(WatchLaterTheme.playText, playInk, line: line);
@@ -547,9 +547,9 @@ class _Chip extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color ink;
     if (chosen) {
-      ink = editing ? WatchLaterTheme.pinkOff : BiliColors.pink;
+      ink = editing ? WatchLaterTheme.colorsOf(context).pinkOff : BiliColors.colorsOf(context).pink;
     } else {
-      ink = editing ? WatchLaterTheme.greyOff : WatchLaterTheme.grey;
+      ink = editing ? WatchLaterTheme.colorsOf(context).greyOff : WatchLaterTheme.colorsOf(context).grey;
     }
     final style = watchLaterStyle(
       WatchLaterTheme.chipText,
@@ -572,7 +572,7 @@ class _Chip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: WatchLaterTheme.chipPadX),
           decoration: chosen
               ? BoxDecoration(
-                  color: editing ? WatchLaterTheme.chipChosenFillOff : WatchLaterTheme.chipChosenFill,
+                  color: editing ? WatchLaterTheme.colorsOf(context).chipChosenFillOff : WatchLaterTheme.colorsOf(context).chipChosenFill,
                   borderRadius: BorderRadius.circular(WatchLaterTheme.chipRadius),
                 )
               : null,
@@ -597,7 +597,7 @@ class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = watchLaterStyle(WatchLaterTheme.noteText, WatchLaterTheme.noteInk, line: WatchLaterTheme.noteLine);
+    final style = watchLaterStyle(WatchLaterTheme.noteText, WatchLaterTheme.colorsOf(context).noteInk, line: WatchLaterTheme.noteLine);
     final Widget child;
     final error = this.error;
     if (error != null && !loading) {
@@ -616,7 +616,7 @@ class _Footer extends StatelessWidget {
                 TextSpan(text: '$error，', style: style),
                 TextSpan(
                   text: '点击重试',
-                  style: style.copyWith(color: BiliColors.link),
+                  style: style.copyWith(color: BiliColors.colorsOf(context).link),
                 ),
               ],
             ),
@@ -657,7 +657,7 @@ class _Empty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = watchLaterStyle(WatchLaterTheme.emptyText, WatchLaterTheme.emptyInk, line: WatchLaterTheme.noteLine);
+    final style = watchLaterStyle(WatchLaterTheme.emptyText, WatchLaterTheme.colorsOf(context).emptyInk, line: WatchLaterTheme.noteLine);
     return Stack(
       key: const ValueKey('later-empty'),
       children: [

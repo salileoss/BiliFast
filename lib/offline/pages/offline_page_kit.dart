@@ -43,10 +43,10 @@ Widget offlineScaffold({
   child: ValueListenableBuilder<Skin?>(
     valueListenable: skin,
     builder: (context, skin, _) {
-      final look = OfflineBarLook.of(skin);
+      final look = OfflineBarLook.of(skin, context: context);
       return AnnotatedRegion<SystemUiOverlayStyle>(
         value: look.lightStatus ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-        child: Scaffold(backgroundColor: OfflineListTheme.page, resizeToAvoidBottomInset: false, body: builder(look)),
+        child: Scaffold(backgroundColor: OfflineListTheme.colorsOf(context).page, resizeToAvoidBottomInset: false, body: builder(look)),
       );
     },
   ),

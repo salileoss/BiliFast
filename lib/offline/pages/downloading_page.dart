@@ -184,8 +184,8 @@ class _Strip extends StatelessWidget {
       builder: (context, value) {
         final (running, concurrency) = value;
         final label = running ? '全部暂停' : '全部开始';
-        final words = offlineStyle(_T.allText, _T.ink, line: _T.allHeight);
-        final count = offlineStyle(_T.countText, _T.countInk, line: _T.allHeight);
+        final words = offlineStyle(_T.allText, _T.colorsOf(context).ink, line: _T.allHeight);
+        final count = offlineStyle(_T.countText, _T.colorsOf(context).countInk, line: _T.allHeight);
         return Stack(
           children: [
             Positioned(
@@ -203,7 +203,7 @@ class _Strip extends StatelessWidget {
                   onTap: onAll,
                   child: Container(
                     padding: const EdgeInsets.only(left: _T.allPadLeft, right: _T.allPadRight),
-                    decoration: const ShapeDecoration(color: _T.allFill, shape: StadiumBorder()),
+                    decoration: ShapeDecoration(color: _T.colorsOf(context).allFill, shape: StadiumBorder()),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

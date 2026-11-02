@@ -144,13 +144,13 @@ class _WatchHistoryPageState extends State<WatchHistoryPage> {
         child: page!,
       ),
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.dark,
+        value: BiliPalette.of(context).isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         // Pushed on a plain page route with no Material above it, the words would otherwise inherit the app's
         // fallback style, a synthetic w900.
         child: DefaultTextStyle(
-          style: _style(HistoryTheme.stateText, BiliColors.text),
+          style: _style(HistoryTheme.stateText, BiliColors.colorsOf(context).text),
           child: ColoredBox(
-            color: BiliColors.card,
+            color: BiliColors.colorsOf(context).card,
             child: Stack(
               children: [
                 Column(
@@ -158,9 +158,9 @@ class _WatchHistoryPageState extends State<WatchHistoryPage> {
                   children: [
                     SizedBox(height: top),
                     const _TitleBar(),
-                    const SizedBox(
+                    SizedBox(
                       height: HistoryTheme.barHairline,
-                      child: ColoredBox(color: HistoryTheme.divider),
+                      child: ColoredBox(color: HistoryTheme.colorsOf(context).divider),
                     ),
                     Expanded(
                       child: ListenableBuilder(listenable: model, builder: (context, _) => _body(model)),
@@ -265,7 +265,7 @@ class _TitleBar extends StatelessWidget {
       children: [
         Transform.translate(
           offset: Offset(0, HistoryTheme.titleDrop),
-          child: Text('历史记录', style: _style(HistoryTheme.titleText, BiliColors.text, weight: HistoryTheme.titleWeight)),
+          child: Text('历史记录', style: _style(HistoryTheme.titleText, BiliColors.colorsOf(context).text, weight: HistoryTheme.titleWeight)),
         ),
         Positioned(
           left: HistoryTheme.backTipX + HistoryTheme.backWidth / 2 - HistoryTheme.backTarget / 2,
@@ -281,7 +281,7 @@ class _TitleBar extends StatelessWidget {
               key: const ValueKey('history-back'),
               behavior: HitTestBehavior.opaque,
               onTap: () => unawaited(Navigator.of(context).maybePop()),
-              child: const CustomPaint(painter: HistoryBackPainter()),
+              child: CustomPaint(painter: HistoryBackPainter(colors: HistoryTheme.colorsOf(context))),
             ),
           ),
         ),
@@ -303,12 +303,12 @@ class _SectionHeader extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => ColoredBox(
-    color: BiliColors.card,
+    color: BiliColors.colorsOf(context).card,
     child: Padding(
       padding: EdgeInsets.only(left: HistoryTheme.headerInset, top: HistoryTheme.headerTextTop),
       child: Align(
         alignment: Alignment.topLeft,
-        child: Text(title, style: _style(HistoryTheme.headerText, BiliColors.text, height: 1)),
+        child: Text(title, style: _style(HistoryTheme.headerText, BiliColors.colorsOf(context).text, height: 1)),
       ),
     ),
   );
@@ -340,7 +340,7 @@ class _HistoryRow extends StatelessWidget {
     const metaRoom = HistoryTheme.moreCentreRight + HistoryTheme.moreTarget / 2;
     final titleStyle = _style(
       HistoryTheme.rowTitleText,
-      HistoryTheme.rowTitle,
+      HistoryTheme.colorsOf(context).rowTitle,
       height: HistoryTheme.rowTitleLine / HistoryTheme.rowTitleText,
     );
     return SizedBox(
@@ -406,17 +406,17 @@ class _HistoryRow extends StatelessWidget {
                 key: ValueKey('history-more-${item.id}'),
                 behavior: HitTestBehavior.opaque,
                 onTap: onMore,
-                child: const CustomPaint(painter: HistoryMorePainter()),
+                child: CustomPaint(painter: HistoryMorePainter(colors: HistoryTheme.colorsOf(context))),
               ),
             ),
           ),
           if (!last)
-            const Positioned(
+            Positioned(
               left: HistoryTheme.gutter,
               right: 0,
               bottom: 0,
               height: HistoryTheme.hairline,
-              child: ColoredBox(color: HistoryTheme.divider),
+              child: ColoredBox(color: HistoryTheme.colorsOf(context).divider),
             ),
         ],
       ),
@@ -435,7 +435,7 @@ class _MetaLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = _style(
       HistoryTheme.metaText,
-      HistoryTheme.meta,
+      HistoryTheme.colorsOf(context).meta,
       height: HistoryTheme.metaLine / HistoryTheme.metaText,
     ).copyWith(letterSpacing: spacing);
     return SizedBox(
@@ -521,7 +521,7 @@ class _StateText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      Text(text, textAlign: TextAlign.center, style: _style(HistoryTheme.stateText, HistoryTheme.stateInk));
+      Text(text, textAlign: TextAlign.center, style: _style(HistoryTheme.stateText, HistoryTheme.colorsOf(context).stateInk));
 }
 
 class _PinkButton extends StatelessWidget {
@@ -552,7 +552,7 @@ class _PinkButton extends StatelessWidget {
       child: Container(
         height: height,
         padding: EdgeInsets.symmetric(horizontal: padX),
-        decoration: const ShapeDecoration(color: BiliColors.pink, shape: StadiumBorder()),
+        decoration: ShapeDecoration(color: BiliColors.colorsOf(context).pink, shape: StadiumBorder()),
         child: Center(
           widthFactor: 1,
           child: Text(label, style: _style(text, BiliColors.onPink, weight: HistoryTheme.buttonWeight)),
@@ -630,7 +630,7 @@ class _Footer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const padding = EdgeInsets.symmetric(vertical: HistoryTheme.footerPad);
-    final style = _style(HistoryTheme.footerText, HistoryTheme.footerInk);
+    final style = _style(HistoryTheme.footerText, HistoryTheme.colorsOf(context).footerInk);
     if (error != null && !loading) {
       return Semantics(
         key: const ValueKey('history-footer-retry'),
@@ -649,7 +649,7 @@ class _Footer extends StatelessWidget {
                   TextSpan(text: '加载失败，', style: style),
                   TextSpan(
                     text: '点击重试',
-                    style: style.copyWith(color: BiliColors.link),
+                    style: style.copyWith(color: BiliColors.colorsOf(context).link),
                   ),
                 ],
               ),

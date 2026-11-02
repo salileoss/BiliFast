@@ -142,7 +142,7 @@ class FavouriteVideoRow extends StatelessWidget {
     const metaRoom = FavouritesTheme.moreCentreRight + FavouritesTheme.moreTarget / 2;
     final titleStyle = favStyle(
       FavouritesTheme.rowTitleText,
-      FavouritesTheme.rowTitleInk,
+      FavouritesTheme.colorsOf(context).rowTitleInk,
       line: FavouritesTheme.rowTitleLine,
     );
     final length = row.length.isEmpty ? '' : '，${row.length}';
@@ -190,15 +190,15 @@ class FavouriteVideoRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _MetaLine(children: [_glyph(const HistoryUpGlyph()), _metaText(row.ownerName)]),
+                  _MetaLine(children: [_glyph(const HistoryUpGlyph()), _metaText(context, row.ownerName)]),
                   const SizedBox(height: FavouritesTheme.metaGap),
                   _MetaLine(
                     children: [
-                      _glyph(_count(CountGlyph.views)),
-                      _metaText(row.plays, flexible: false, lift: FavouritesTheme.countLift),
+                      _glyph(_count(context, CountGlyph.views)),
+                      _metaText(context, row.plays, flexible: false, lift: FavouritesTheme.countLift),
                       const SizedBox(width: FavouritesTheme.countGap),
-                      _glyph(_count(CountGlyph.danmaku)),
-                      _metaText(row.danmaku, lift: FavouritesTheme.countLift),
+                      _glyph(_count(context, CountGlyph.danmaku)),
+                      _metaText(context, row.danmaku, lift: FavouritesTheme.countLift),
                     ],
                   ),
                 ],
@@ -222,24 +222,24 @@ class FavouriteVideoRow extends StatelessWidget {
             ),
           ),
           if (!last)
-            const Positioned(
+            Positioned(
               left: FavouritesTheme.gutter,
               right: 0,
               bottom: 0,
               height: FavouritesTheme.hairline,
-              child: ColoredBox(color: FavouritesTheme.divider),
+              child: ColoredBox(color: FavouritesTheme.colorsOf(context).divider),
             ),
         ],
       ),
     );
   }
 
-  static Widget _count(CountGlyph glyph) => Center(
+  static Widget _count(BuildContext context, CountGlyph glyph) => Center(
     child: Transform.translate(
       offset: const Offset(0, -FavouritesTheme.countGlyphLift),
       child: CustomPaint(
         size: const Size(FavouritesTheme.countGlyphWidth, FavouritesTheme.countGlyphHeight),
-        painter: CountPainter(glyph, color: FavouritesTheme.metaInk),
+        painter: CountPainter(glyph, color: FavouritesTheme.colorsOf(context).metaInk),
       ),
     ),
   );
@@ -249,8 +249,8 @@ class FavouriteVideoRow extends StatelessWidget {
     child: SizedBox(width: FavouritesTheme.glyphBox, height: FavouritesTheme.metaLine, child: glyph),
   );
 
-  static Widget _metaText(String text, {bool flexible = true, double lift = 0}) {
-    final style = favStyle(FavouritesTheme.metaText, FavouritesTheme.metaInk, line: FavouritesTheme.metaLine);
+  static Widget _metaText(BuildContext context, String text, {bool flexible = true, double lift = 0}) {
+    final style = favStyle(FavouritesTheme.metaText, FavouritesTheme.colorsOf(context).metaInk, line: FavouritesTheme.metaLine);
     final words = Transform.translate(
       offset: Offset(0, -lift),
       child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: style, strutStyle: BiliFonts.strut(style)),
@@ -283,7 +283,7 @@ class _Cover extends StatelessWidget {
     child: Stack(
       fit: StackFit.expand,
       children: [
-        const ColoredBox(color: FavouritesTheme.coverEmpty),
+        ColoredBox(color: FavouritesTheme.colorsOf(context).coverEmpty),
         if (row.cover.isNotEmpty)
           RemoteImage(
             row.cover,
@@ -335,7 +335,7 @@ class FavStateText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      Text(text, textAlign: TextAlign.center, style: favStyle(FavouritesTheme.stateText, FavouritesTheme.stateInk));
+      Text(text, textAlign: TextAlign.center, style: favStyle(FavouritesTheme.stateText, FavouritesTheme.colorsOf(context).stateInk));
 }
 
 class _PinkButton extends StatelessWidget {
@@ -361,7 +361,7 @@ class _PinkButton extends StatelessWidget {
     child: Container(
       height: height,
       padding: EdgeInsets.symmetric(horizontal: padX),
-      decoration: const ShapeDecoration(color: BiliColors.pink, shape: StadiumBorder()),
+      decoration: ShapeDecoration(color: BiliColors.colorsOf(context).pink, shape: StadiumBorder()),
       child: Center(
         widthFactor: 1,
         child: Text(label, style: favStyle(text, BiliColors.onPink, weight: FavouritesTheme.buttonWeight)),
@@ -444,7 +444,7 @@ class _Footer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const padding = EdgeInsets.symmetric(vertical: FavouritesTheme.footerPad);
-    final style = favStyle(FavouritesTheme.footerText, FavouritesTheme.footerInk);
+    final style = favStyle(FavouritesTheme.footerText, FavouritesTheme.colorsOf(context).footerInk);
     if (error != null && !loading) {
       return FavTap(
         key: ValueKey('$keyPrefix-footer-retry'),
@@ -458,7 +458,7 @@ class _Footer extends StatelessWidget {
                 TextSpan(text: '加载失败，', style: style),
                 TextSpan(
                   text: '点击重试',
-                  style: style.copyWith(color: BiliColors.link),
+                  style: style.copyWith(color: BiliColors.colorsOf(context).link),
                 ),
               ],
             ),
@@ -468,7 +468,7 @@ class _Footer extends StatelessWidget {
       );
     }
     if (isEnd && !loading) {
-      final end = favStyle(FavouritesTheme.endText, FavouritesTheme.endInk, line: FavouritesTheme.endLine);
+      final end = favStyle(FavouritesTheme.endText, FavouritesTheme.colorsOf(context).endInk, line: FavouritesTheme.endLine);
       return Padding(
         padding: const EdgeInsets.only(top: FavouritesTheme.endTop, bottom: FavouritesTheme.endBottom),
         child: Text(

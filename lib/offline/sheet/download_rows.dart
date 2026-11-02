@@ -48,7 +48,7 @@ class DownloadRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: DownloadSheetTheme.card,
+          color: DownloadSheetTheme.colorsOf(context).card,
           borderRadius: BorderRadius.circular(DownloadSheetTheme.cardRadius),
         ),
         child: cover == null ? _titleRow(context, size) : _coverRow(context, cover, size),
@@ -56,7 +56,7 @@ class DownloadRow extends StatelessWidget {
     );
   }
 
-  Widget _corner(String? size) => Row(
+  Widget _corner(BuildContext context, String? size) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
       if (size != null) ...[
@@ -64,7 +64,7 @@ class DownloadRow extends StatelessWidget {
           size,
           key: const ValueKey('download-size'),
           maxLines: 1,
-          style: const TextStyle(fontSize: DownloadSheetTheme.sizeText, height: 1, color: BiliColors.secondaryText),
+          style: TextStyle(fontSize: DownloadSheetTheme.sizeText, height: 1, color: BiliColors.colorsOf(context).secondaryText),
         ),
         const SizedBox(width: DownloadSheetTheme.sizeGap),
       ],
@@ -72,10 +72,10 @@ class DownloadRow extends StatelessWidget {
     ],
   );
 
-  TextStyle get _titleStyle => TextStyle(
+  TextStyle _titleStyle(BuildContext context) => TextStyle(
     fontSize: DownloadSheetTheme.titleText,
     height: DownloadSheetTheme.titleLine / DownloadSheetTheme.titleText,
-    color: entry.current ? DownloadSheetTheme.playing : BiliColors.text,
+    color: entry.current ? DownloadSheetTheme.colorsOf(context).playing : BiliColors.colorsOf(context).text,
   );
 
   InlineSpan _title() => TextSpan(
@@ -108,13 +108,13 @@ class DownloadRow extends StatelessWidget {
                 _title(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: _titleStyle,
-                strutStyle: BiliFonts.strutOf(context, _titleStyle),
+                style: _titleStyle(context),
+                strutStyle: BiliFonts.strutOf(context, _titleStyle(context)),
               ),
             ),
           ),
         ),
-        Positioned(right: DownloadSheetTheme.markInset, bottom: DownloadSheetTheme.markInset, child: _corner(size)),
+        Positioned(right: DownloadSheetTheme.markInset, bottom: DownloadSheetTheme.markInset, child: _corner(context, size)),
       ],
     ),
   );
@@ -179,11 +179,11 @@ class DownloadRow extends StatelessWidget {
                       _title(),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: _titleStyle,
-                      strutStyle: BiliFonts.strutOf(context, _titleStyle),
+                      style: _titleStyle(context),
+                      strutStyle: BiliFonts.strutOf(context, _titleStyle(context)),
                     ),
                   ),
-                  Positioned(right: 0, bottom: 0, child: _corner(size)),
+                  Positioned(right: 0, bottom: 0, child: _corner(context, size)),
                 ],
               ),
             ),

@@ -135,7 +135,7 @@ class RemoteImage extends StatelessWidget {
       image = LayoutBuilder(builder: (context, constraints) => _image(context, source, constraints.biggest));
     }
     final under = placeholder;
-    if (under == null) return instead != null ? image : ColoredBox(color: BiliColors.pageGrey, child: image);
+    if (under == null) return instead != null ? image : ColoredBox(color: BiliColors.colorsOf(context).pageGrey, child: image);
     return Stack(fit: StackFit.expand, children: [under, image]);
   }
 

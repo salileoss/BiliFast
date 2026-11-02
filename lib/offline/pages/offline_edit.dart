@@ -69,8 +69,8 @@ class OfflineEditBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final select = offlineStyle(_T.editText, _T.selectAllInk, line: _T.editBarHeight);
-    final delete = offlineStyle(_T.editText, _T.deleteInk, line: _T.editBarHeight);
+    final select = offlineStyle(_T.editText, _T.colorsOf(context).selectAllInk, line: _T.editBarHeight);
+    final delete = offlineStyle(_T.editText, _T.colorsOf(context).deleteInk, line: _T.editBarHeight);
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
       child: SizedBox(
@@ -135,7 +135,7 @@ class OfflineDeleteConfirm extends StatelessWidget {
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final title = offlineStyle(_T.confirmTitleText, _T.ink, weight: _T.confirmTitleWeight);
+    final title = offlineStyle(_T.confirmTitleText, _T.colorsOf(context).ink, weight: _T.confirmTitleWeight);
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: reduceMotion ? Duration.zero : _T.confirmMotion,
@@ -169,7 +169,7 @@ class OfflineDeleteConfirm extends StatelessWidget {
                   width: _T.confirmWidth,
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
-                    color: BiliColors.card,
+                    color: BiliColors.colorsOf(context).card,
                     borderRadius: BorderRadius.circular(_T.confirmRadius),
                   ),
                   child: Column(
@@ -185,9 +185,9 @@ class OfflineDeleteConfirm extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(
+                      SizedBox(
                         height: _T.confirmRule,
-                        child: ColoredBox(color: _T.confirmRuleInk),
+                        child: ColoredBox(color: _T.colorsOf(context).confirmRuleInk),
                       ),
                       SizedBox(
                         height: _T.confirmButtonHeight,
@@ -197,7 +197,7 @@ class OfflineDeleteConfirm extends StatelessWidget {
                             Expanded(
                               child: _ConfirmButton(
                                 label: '取消',
-                                color: _T.confirmCancel,
+                                color: _T.colorsOf(context).confirmCancel,
                                 inset: const EdgeInsets.only(right: _T.confirmButtonSpread),
                                 onTap: onCancel,
                               ),
@@ -205,7 +205,7 @@ class OfflineDeleteConfirm extends StatelessWidget {
                             Expanded(
                               child: _ConfirmButton(
                                 label: '确认',
-                                color: _T.confirmAction,
+                                color: _T.colorsOf(context).confirmAction,
                                 inset: const EdgeInsets.only(left: _T.confirmButtonSpread),
                                 onTap: onConfirm,
                               ),
@@ -260,7 +260,7 @@ class _ConfirmButtonState extends State<_ConfirmButton> {
       onTapUp: (_) => _press(false),
       onTapCancel: () => _press(false),
       child: ColoredBox(
-        color: _down ? _T.confirmPressed : BiliColors.card,
+        color: _down ? _T.colorsOf(context).confirmPressed : BiliColors.colorsOf(context).card,
         child: Padding(
           padding: widget.inset,
           child: Center(child: offlineLine(widget.label, offlineStyle(_T.confirmButtonText, widget.color))),

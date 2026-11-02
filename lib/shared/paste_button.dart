@@ -30,7 +30,7 @@ class PasteButton extends StatelessWidget {
       onPressed: enabled ? _read : null,
       tooltip: '粘贴',
       visualDensity: VisualDensity.compact,
-      icon: const Icon(Icons.content_paste_rounded, size: BiliMetrics.iconSize, color: BiliColors.pink),
+      icon: Icon(Icons.content_paste_rounded, size: BiliMetrics.iconSize, color: BiliColors.colorsOf(context).pink),
     );
   }
 }
@@ -58,6 +58,7 @@ class _NativePasteControlState extends State<_NativePasteControl> {
 
   void _created(int id) {
     if (!mounted) return;
+    _channel?.setMethodCallHandler(null);
     _channel = MethodChannel('${_NativePasteControl.viewType}/$id')..setMethodCallHandler(_handle);
   }
 
@@ -89,9 +90,10 @@ class _NativePasteControlState extends State<_NativePasteControl> {
       width: BiliMetrics.pasteControlWidth,
       height: BiliMetrics.pasteControlHeight,
       child: UiKitView(
+        key: ValueKey(BiliPalette.of(context).brightness),
         viewType: _NativePasteControl.viewType,
         creationParams: <String, Object?>{
-          'fill': BiliColors.pink.toARGB32(),
+          'fill': BiliColors.colorsOf(context).pink.toARGB32(),
           'glyph': BiliColors.onPink.toARGB32(),
         },
         creationParamsCodec: const StandardMessageCodec(),

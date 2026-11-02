@@ -192,7 +192,7 @@ class _DownloadSheetState extends State<DownloadSheet> {
                 ),
               ],
               if (collection)
-                const SizedBox(
+                SizedBox(
                   height: DownloadSheetTheme.footerCentre + DownloadSheetTheme.footerBottom,
                   child: Stack(
                     children: [
@@ -201,7 +201,7 @@ class _DownloadSheetState extends State<DownloadSheet> {
                         right: 0,
                         top: DownloadSheetTheme.footerCentre - _line / 2,
                         height: _line,
-                        child: Center(child: Text('内容到底啦', style: _footer)),
+                        child: Center(child: Text('内容到底啦', style: _footer(context))),
                       ),
                     ],
                   ),
@@ -221,7 +221,7 @@ class _DownloadSheetState extends State<DownloadSheet> {
     );
   }
 
-  static const _footer = TextStyle(fontSize: BiliMetrics.sheetFooterText, color: BiliColors.sheetHint);
+  static TextStyle _footer(BuildContext context) => TextStyle(fontSize: BiliMetrics.sheetFooterText, color: BiliColors.colorsOf(context).sheetHint);
 }
 
 /// A box a line of the sheet's small text is centred in.
@@ -234,8 +234,8 @@ class _Header extends StatelessWidget {
   final String name;
   final VoidCallback? onTap;
 
-  static const _label = TextStyle(fontSize: DownloadSheetTheme.headerText, color: DownloadSheetTheme.grey);
-  static const _name = TextStyle(fontSize: DownloadSheetTheme.headerText, color: BiliColors.text);
+  static TextStyle _label(BuildContext context) => TextStyle(fontSize: DownloadSheetTheme.headerText, color: DownloadSheetTheme.colorsOf(context).grey);
+  static TextStyle _name(BuildContext context) => TextStyle(fontSize: DownloadSheetTheme.headerText, color: BiliColors.colorsOf(context).text);
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -255,13 +255,13 @@ class _Header extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('画质', style: _label, strutStyle: BiliFonts.strutOf(context, _label)),
+                  Text('画质', style: _label(context), strutStyle: BiliFonts.strutOf(context, _label(context))),
                   const SizedBox(width: DownloadSheetTheme.headerGap),
-                  Text(name, style: _name, strutStyle: BiliFonts.strutOf(context, _name)),
+                  Text(name, style: _name(context), strutStyle: BiliFonts.strutOf(context, _name(context))),
                   const SizedBox(width: DownloadSheetTheme.headerChevronGap),
-                  const CustomPaint(
+                  CustomPaint(
                     size: Size(DownloadSheetTheme.headerChevronWidth, DownloadSheetTheme.headerChevronHeight),
-                    painter: _ChevronPainter(),
+                    painter: _ChevronPainter(BiliColors.colorsOf(context).text),
                   ),
                 ],
               ),
@@ -274,7 +274,9 @@ class _Header extends StatelessWidget {
 }
 
 class _ChevronPainter extends CustomPainter {
-  const _ChevronPainter();
+  const _ChevronPainter(this.color);
+
+  final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -285,7 +287,7 @@ class _ChevronPainter extends CustomPainter {
         ..lineTo(size.width / 2, size.height - half)
         ..lineTo(size.width - half, half),
       Paint()
-        ..color = BiliColors.text
+        ..color = color
         ..style = PaintingStyle.stroke
         ..strokeWidth = half * 2
         ..strokeCap = StrokeCap.round
@@ -294,7 +296,7 @@ class _ChevronPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_ChevronPainter oldDelegate) => false;
+  bool shouldRepaint(_ChevronPainter oldDelegate) => oldDelegate.color != color;
 }
 
 /// The white bar (141): 缓存全部 | 查看缓存 (its red dot while something is new) over 已使用 X / 剩余 Y.
@@ -315,12 +317,12 @@ class _Bar extends StatelessWidget {
   final VoidCallback queueAll;
   final VoidCallback openList;
 
-  static const _button = TextStyle(fontSize: DownloadSheetTheme.barButtonText, color: BiliColors.text);
-  static const _label = TextStyle(fontSize: DownloadSheetTheme.barSpaceText, color: BiliColors.secondaryText);
-  static const _value = TextStyle(
+  static TextStyle _button(BuildContext context) => TextStyle(fontSize: DownloadSheetTheme.barButtonText, color: BiliColors.colorsOf(context).text);
+  static TextStyle _label(BuildContext context) => TextStyle(fontSize: DownloadSheetTheme.barSpaceText, color: BiliColors.colorsOf(context).secondaryText);
+  static TextStyle _value(BuildContext context) => TextStyle(
     fontSize: DownloadSheetTheme.barSpaceValueText,
     fontWeight: DownloadSheetTheme.barSpaceValueWeight,
-    color: BiliColors.text,
+    color: BiliColors.colorsOf(context).text,
   );
 
   Widget _half(BuildContext context, String key, String title, VoidCallback onTap, {bool dot = false}) => Expanded(
@@ -334,7 +336,7 @@ class _Bar extends StatelessWidget {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              Text(title, style: _button, strutStyle: BiliFonts.strutOf(context, _button)),
+              Text(title, style: _button(context), strutStyle: BiliFonts.strutOf(context, _button(context))),
               if (dot)
                 Positioned(
                   key: const ValueKey('download-unseen'),
@@ -346,7 +348,7 @@ class _Bar extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: DownloadSheetTheme.dot,
                       shape: BoxShape.circle,
-                      border: Border.all(color: DownloadSheetTheme.card, width: DownloadSheetTheme.dotRing),
+                      border: Border.all(color: DownloadSheetTheme.colorsOf(context).card, width: DownloadSheetTheme.dotRing),
                     ),
                   ),
                 ),
@@ -363,21 +365,21 @@ class _Bar extends StatelessWidget {
       key: const ValueKey('download-space'),
       TextSpan(
         children: [
-          const TextSpan(text: '已使用 ', style: _label),
-          TextSpan(text: DownloadSheet.space(used), style: _value),
-          const TextSpan(text: ' / ', style: _label),
-          const TextSpan(text: '剩余 ', style: _label),
-          TextSpan(text: DownloadSheet.space(free), style: _value),
+          TextSpan(text: '已使用 ', style: _label(context)),
+          TextSpan(text: DownloadSheet.space(used), style: _value(context)),
+          TextSpan(text: ' / ', style: _label(context)),
+          TextSpan(text: '剩余 ', style: _label(context)),
+          TextSpan(text: DownloadSheet.space(free), style: _value(context)),
         ],
       ),
-      strutStyle: BiliFonts.strutOf(context, _label),
+      strutStyle: BiliFonts.strutOf(context, _label(context)),
     );
     return Container(
       height: DownloadSheetTheme.barHeight + bottom,
-      decoration: const BoxDecoration(
-        color: DownloadSheetTheme.card,
+      decoration: BoxDecoration(
+        color: DownloadSheetTheme.colorsOf(context).card,
         border: Border(
-          top: BorderSide(color: DownloadSheetTheme.hairline, width: BiliMetrics.panelHairline),
+          top: BorderSide(color: DownloadSheetTheme.colorsOf(context).hairline, width: BiliMetrics.panelHairline),
         ),
       ),
       child: Stack(
@@ -393,7 +395,7 @@ class _Bar extends StatelessWidget {
                 Container(
                   width: BiliMetrics.panelHairline,
                   height: DownloadSheetTheme.barDivider,
-                  color: DownloadSheetTheme.hairline,
+                  color: DownloadSheetTheme.colorsOf(context).hairline,
                 ),
                 _half(context, 'download-open-list', '查看缓存', openList, dot: unseen),
               ],

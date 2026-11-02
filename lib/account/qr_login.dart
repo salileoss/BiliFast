@@ -282,7 +282,7 @@ class _QrLoginState extends State<QrLogin> {
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-    color: LoginTheme.page,
+    color: LoginTheme.colorsOf(context).page,
     child: Center(
       child: Padding(
         padding: const EdgeInsets.all(LoginTheme.inset),
@@ -313,6 +313,7 @@ class _QrLoginState extends State<QrLogin> {
           data: _model.url ?? '',
           size: LoginTheme.qrSize,
           padding: const EdgeInsets.all(LoginTheme.qrQuietZone),
+          // Keep standard dark modules on a light quiet zone for scanning.
           backgroundColor: LoginTheme.qrBackground,
           errorCorrectionLevel: QrErrorCorrectLevel.M,
           eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: LoginTheme.qrModule),
@@ -343,7 +344,7 @@ class _QrLoginState extends State<QrLogin> {
       text,
       key: const ValueKey('qr-login-message'),
       textAlign: TextAlign.center,
-      style: LoginTheme.messageStyle,
+      style: LoginTheme.messageStyle.copyWith(color: LoginTheme.colorsOf(context).message),
       strutStyle: BiliFonts.strutOf(context, LoginTheme.messageStyle),
     ),
   );
@@ -371,8 +372,8 @@ class _Button extends StatelessWidget {
         height: LoginTheme.retryHeight,
         padding: const EdgeInsets.symmetric(horizontal: LoginTheme.retryPadX),
         alignment: Alignment.center,
-        decoration: const ShapeDecoration(
-          shape: StadiumBorder(side: BorderSide(color: LoginTheme.retry)),
+        decoration: ShapeDecoration(
+          shape: StadiumBorder(side: BorderSide(color: LoginTheme.colorsOf(context).retry)),
         ),
         child: Text(label, style: LoginTheme.retryStyle),
       ),

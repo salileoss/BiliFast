@@ -31,9 +31,9 @@ class GlassPanel extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: BiliMetrics.glassBlur, sigmaY: BiliMetrics.glassBlur),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: BiliColors.glassFill,
+              color: BiliColors.colorsOf(context).glassFill,
               borderRadius: radius,
-              border: Border.all(color: BiliColors.glassBorder, width: BiliMetrics.glassHairline),
+              border: Border.all(color: BiliColors.colorsOf(context).glassBorder, width: BiliMetrics.glassHairline),
             ),
             child: SizedBox(width: width, child: child),
           ),
@@ -56,9 +56,9 @@ class MenuRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = onTap == null ? BiliColors.secondaryText : BiliColors.text;
+    final color = onTap == null ? BiliColors.colorsOf(context).secondaryText : BiliColors.colorsOf(context).text;
     final titleStyle = TextStyle(fontSize: BiliMetrics.bodyText, color: color);
-    const noteStyle = TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.secondaryText);
+    final noteStyle = TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.colorsOf(context).secondaryText);
     return MergeSemantics(
       child: Semantics(
         button: true,
@@ -120,7 +120,7 @@ class _PressHighlightState extends State<PressHighlight> {
       onTap: widget.onTap,
       child: DecoratedBox(
         position: DecorationPosition.foreground,
-        decoration: BoxDecoration(color: _pressed ? BiliColors.pressedFill : null),
+        decoration: BoxDecoration(color: _pressed ? BiliColors.colorsOf(context).pressedFill : null),
         child: widget.child,
       ),
     );

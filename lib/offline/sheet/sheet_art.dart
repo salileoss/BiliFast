@@ -15,18 +15,18 @@ abstract final class SheetArt {
 
 /// [asset] tinted [color], [width] wide at its own shape.
 class SheetIcon extends StatelessWidget {
-  const SheetIcon(this.asset, {super.key, required this.width, this.color = DownloadSheetTheme.ink});
+  const SheetIcon(this.asset, {super.key, required this.width, this.color});
 
   final String asset;
   final double width;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) => Image.asset(
     asset,
     width: width,
     fit: BoxFit.contain,
-    color: color,
+    color: color ?? DownloadSheetTheme.colorsOf(context).ink,
     colorBlendMode: BlendMode.srcIn,
     filterQuality: FilterQuality.medium,
     excludeFromSemantics: true,

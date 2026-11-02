@@ -106,13 +106,15 @@ class AllGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      CustomPaint(size: const Size(_T.allGlyphWidth, _T.allHeight), painter: _AllPainter(paused));
+      CustomPaint(size: const Size(_T.allGlyphWidth, _T.allHeight), painter: _AllPainter(paused, colors: _T.colorsOf(context)));
 }
 
 class _AllPainter extends CustomPainter {
-  const _AllPainter(this.play);
+  const _AllPainter(this.play, {this.colors});
 
   final bool play;
+
+  final OfflineListThemeColors? colors;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -127,11 +129,11 @@ class _AllPainter extends CustomPainter {
         ..lineTo(r, middle + half - r)
         ..close();
       canvas
-        ..drawPath(path, _fill(_T.allGlyph))
-        ..drawPath(path, _line(_T.allGlyph, r * 2));
+        ..drawPath(path, _fill((colors?.allGlyph ?? _T.allGlyph)))
+        ..drawPath(path, _line((colors?.allGlyph ?? _T.allGlyph), r * 2));
       return;
     }
-    final paint = _fill(_T.allGlyph);
+    final paint = _fill((colors?.allGlyph ?? _T.allGlyph));
     const radius = Radius.circular(_T.pauseBar / 2);
     for (final left in const [0.0, _T.allGlyphWidth - _T.pauseBar]) {
       canvas.drawRRect(
@@ -142,7 +144,7 @@ class _AllPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_AllPainter oldDelegate) => oldDelegate.play != play;
+  bool shouldRepaint(_AllPainter oldDelegate) => oldDelegate.colors != colors || oldDelegate.play != play;
 }
 
 /// 同时缓存数量's ⌄.
@@ -151,11 +153,13 @@ class ChevronGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      const CustomPaint(size: Size(_T.chevronWidth, _T.chevronHeight), painter: _ChevronPainter());
+      CustomPaint(size: Size(_T.chevronWidth, _T.chevronHeight), painter: _ChevronPainter(colors: _T.colorsOf(context)));
 }
 
 class _ChevronPainter extends CustomPainter {
-  const _ChevronPainter();
+  const _ChevronPainter({this.colors});
+
+  final OfflineListThemeColors? colors;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -165,12 +169,12 @@ class _ChevronPainter extends CustomPainter {
         ..moveTo(inset, inset)
         ..lineTo(size.width / 2, size.height - inset)
         ..lineTo(size.width - inset, inset),
-      _line(_T.countInk, _T.chevronStroke),
+      _line((colors?.countInk ?? _T.countInk), _T.chevronStroke),
     );
   }
 
   @override
-  bool shouldRepaint(_ChevronPainter oldDelegate) => false;
+  bool shouldRepaint(_ChevronPainter oldDelegate) => oldDelegate.colors != colors;
 }
 
 /// A 合集's stack on its cover (155): a filled rhombus over two open ones.
@@ -222,24 +226,26 @@ class OfflineChoiceCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      CustomPaint(size: const Size.square(_T.circle), painter: _CirclePainter(chosen));
+      CustomPaint(size: const Size.square(_T.circle), painter: _CirclePainter(chosen, colors: _T.colorsOf(context)));
 }
 
 class _CirclePainter extends CustomPainter {
-  const _CirclePainter(this.chosen);
+  const _CirclePainter(this.chosen, {this.colors});
 
   final bool chosen;
+
+  final OfflineListThemeColors? colors;
 
   @override
   void paint(Canvas canvas, Size size) {
     final centre = size.center(Offset.zero);
     final radius = size.width / 2;
     if (!chosen) {
-      canvas.drawCircle(centre, radius - _T.circleStroke / 2, _line(_T.circleRing, _T.circleStroke));
+      canvas.drawCircle(centre, radius - _T.circleStroke / 2, _line((colors?.circleRing ?? _T.circleRing), _T.circleStroke));
       return;
     }
     canvas
-      ..drawCircle(centre, radius, _fill(_T.circleChosen))
+      ..drawCircle(centre, radius, _fill((colors?.circleChosen ?? _T.circleChosen)))
       ..drawPath(
         Path()
           ..moveTo(centre.dx - 5.0, centre.dy + 0.2)
@@ -250,5 +256,5 @@ class _CirclePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_CirclePainter oldDelegate) => oldDelegate.chosen != chosen;
+  bool shouldRepaint(_CirclePainter oldDelegate) => oldDelegate.colors != colors || oldDelegate.chosen != chosen;
 }

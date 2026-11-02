@@ -294,7 +294,7 @@ class _PlayerTestPageState extends State<PlayerTestPage> with WidgetsBindingObse
   Widget _page(BuildContext context) {
     final controller = _controller;
     return Scaffold(
-      backgroundColor: BiliColors.pageGrey,
+      backgroundColor: BiliColors.colorsOf(context).pageGrey,
       body: SafeArea(
         top: false,
         child: ListenableBuilder(
@@ -345,8 +345,8 @@ class _PlayerTestPageState extends State<PlayerTestPage> with WidgetsBindingObse
                         onCrash: _confirmCrash,
                       ),
                       const SizedBox(height: DevToolsTheme.footnoteGap),
-                      const Text('在电脑上运行 uv run tools/logserver.py，手机和电脑连同一个 Wi-Fi。',
-                          style: TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.secondaryText)),
+                      Text('在电脑上运行 uv run tools/logserver.py，手机和电脑连同一个 Wi-Fi。',
+                          style: TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.colorsOf(context).secondaryText)),
                     ],
                     if (_speedTest case final runner? when !_speedTestStopped) ...[
                       const SizedBox(height: BiliMetrics.sectionGap),
@@ -371,7 +371,7 @@ class _PlayerTestPageState extends State<PlayerTestPage> with WidgetsBindingObse
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.disabled) && states.contains(WidgetState.selected)
-              ? BiliColors.divider
+              ? BiliColors.colorsOf(context).divider
               : null,
         ),
       ),
@@ -401,7 +401,7 @@ class _PlayerTestPageState extends State<PlayerTestPage> with WidgetsBindingObse
               ? '已授权 · 剩 ${expiresAt.difference(DateTime.now()).inDays} 天'
               : '未授权',
           key: const ValueKey('app-auth-state'),
-          style: const TextStyle(fontSize: AppAuthTheme.statusText, color: AppAuthTheme.status),
+          style: TextStyle(fontSize: AppAuthTheme.statusText, color: AppAuthTheme.colorsOf(context).status),
         ),
         const SizedBox(width: BiliMetrics.rowGap),
         OutlinedButton(
@@ -447,7 +447,7 @@ class _PlayerTestPageState extends State<PlayerTestPage> with WidgetsBindingObse
       if (video != null)
         Text(
           (video.pages.length > 1 && page != null) ? '${video.title} · P${page.page} ${page.part}' : video.title,
-          style: const TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.text, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.colorsOf(context).text, fontWeight: FontWeight.w600),
         ),
       if (controller.phase == PlaybackPhase.failed && controller.video != null) ...[
         const SizedBox(height: BiliMetrics.rowGap),
@@ -457,7 +457,7 @@ class _PlayerTestPageState extends State<PlayerTestPage> with WidgetsBindingObse
       ],
       if (controller.phase == PlaybackPhase.failed && controller.playerFailure != null)
         Text('播放器：${controller.playerFailure}',
-            style: const TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.secondaryText)),
+            style: TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.colorsOf(context).secondaryText)),
       const SizedBox(height: BiliMetrics.rowGap),
       Text(
         [
@@ -465,7 +465,7 @@ class _PlayerTestPageState extends State<PlayerTestPage> with WidgetsBindingObse
           if (playing != null) playing.line(qualityName: controller.qualityName(playing.quality)),
           if (controller.pictureInPicture) '小窗中',
         ].join(' · '),
-        style: const TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.secondaryText),
+        style: TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.colorsOf(context).secondaryText),
       ),
       const SizedBox(height: BiliMetrics.sectionGap),
       _Card(children: [
@@ -486,7 +486,7 @@ class _PlayerTestPageState extends State<PlayerTestPage> with WidgetsBindingObse
           label: '显示统计',
           trailing: Switch.adaptive(
             key: const ValueKey('stats-switch'),
-            activeTrackColor: BiliColors.pink,
+            activeTrackColor: BiliColors.colorsOf(context).pink,
             value: _showStats,
             onChanged: (on) => setState(() => _showStats = on),
           ),
@@ -495,7 +495,7 @@ class _PlayerTestPageState extends State<PlayerTestPage> with WidgetsBindingObse
           label: controller.danmaku.closed ? '弹幕（UP 主已关闭）' : '弹幕',
           trailing: Switch.adaptive(
             key: const ValueKey('danmaku-switch'),
-            activeTrackColor: BiliColors.pink,
+            activeTrackColor: BiliColors.colorsOf(context).pink,
             value: _danmakuEnabled,
             onChanged: (on) => setState(() => _danmakuEnabled = on),
           ),
@@ -513,7 +513,7 @@ class _PlayerTestPageState extends State<PlayerTestPage> with WidgetsBindingObse
       if (controller.qualities.isNotEmpty) ...[
         const SizedBox(height: BiliMetrics.sectionGap),
         _Card(children: [
-          const Text('清晰度', style: TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.text)),
+          Text('清晰度', style: TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.colorsOf(context).text)),
           const SizedBox(height: BiliMetrics.rowGap),
           Wrap(
             spacing: BiliMetrics.rowGap,
@@ -549,11 +549,11 @@ class _AccountBar extends StatelessWidget {
         Container(
           width: BiliMetrics.avatarSize,
           height: BiliMetrics.avatarSize,
-          decoration: const BoxDecoration(color: BiliColors.pinkTint, shape: BoxShape.circle),
+          decoration: BoxDecoration(color: BiliColors.colorsOf(context).pinkTint, shape: BoxShape.circle),
           alignment: Alignment.center,
           child: Text(
             account is LoggedIn && label.isNotEmpty ? label.characters.first : '?',
-            style: const TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.pink, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.colorsOf(context).pink, fontWeight: FontWeight.w600),
           ),
         ),
         const SizedBox(width: BiliMetrics.rowGap),
@@ -562,7 +562,7 @@ class _AccountBar extends StatelessWidget {
             label,
             key: const ValueKey('account-name'),
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: BiliMetrics.titleText, color: BiliColors.text, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: BiliMetrics.titleText, color: BiliColors.colorsOf(context).text, fontWeight: FontWeight.w600),
           ),
         ),
         if (account is LoggedIn && account.vip) ...[
@@ -582,10 +582,10 @@ class _Tag extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
         decoration: BoxDecoration(
-            color: BiliColors.pinkTint, borderRadius: BorderRadius.circular(BiliMetrics.cardRadius)),
+            color: BiliColors.colorsOf(context).pinkTint, borderRadius: BorderRadius.circular(BiliMetrics.cardRadius)),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: BiliMetrics.tagPadding, vertical: BiliMetrics.tagVerticalPadding),
-          child: Text(text, style: const TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.pink)),
+          child: Text(text, style: TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.colorsOf(context).pink)),
         ),
       );
 }
@@ -609,12 +609,12 @@ class _LinkBar extends StatelessWidget {
                 controller: link,
                 textInputAction: TextInputAction.go,
                 onSubmitted: (_) => onPlay(),
-                style: const TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.text),
+                style: TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.colorsOf(context).text),
                 decoration: InputDecoration(
                   hintText: '粘贴链接或BV号',
-                  hintStyle: const TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.secondaryText),
+                  hintStyle: TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.colorsOf(context).secondaryText),
                   filled: true,
-                  fillColor: BiliColors.card,
+                  fillColor: BiliColors.colorsOf(context).card,
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(horizontal: BiliMetrics.gutter),
                   border: OutlineInputBorder(
@@ -629,7 +629,7 @@ class _LinkBar extends StatelessWidget {
               key: const ValueKey('play-button'),
               onPressed: ready ? onPlay : null,
               style: FilledButton.styleFrom(
-                backgroundColor: BiliColors.pink,
+                backgroundColor: BiliColors.colorsOf(context).pink,
                 foregroundColor: BiliColors.onPink,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BiliMetrics.cardRadius)),
               ),
@@ -666,7 +666,7 @@ class _Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(color: BiliColors.card, borderRadius: BorderRadius.circular(BiliMetrics.cardRadius)),
+        decoration: BoxDecoration(color: BiliColors.colorsOf(context).card, borderRadius: BorderRadius.circular(BiliMetrics.cardRadius)),
         child: Padding(
           padding: const EdgeInsets.all(BiliMetrics.gutter),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
@@ -686,7 +686,7 @@ class _Row extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Text(label, style: const TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.text)),
+              child: Text(label, style: TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.colorsOf(context).text)),
             ),
             trailing,
           ],
@@ -723,7 +723,7 @@ class _LogSection extends StatelessWidget {
             label: '发送日志到电脑',
             trailing: Switch.adaptive(
               key: const ValueKey('log-switch'),
-              activeTrackColor: BiliColors.pink,
+              activeTrackColor: BiliColors.colorsOf(context).pink,
               value: logs.enabled,
               onChanged: logs.setEnabled,
             ),
@@ -739,11 +739,11 @@ class _LogSection extends StatelessWidget {
                     controller: address,
                     keyboardType: TextInputType.url,
                     onSubmitted: logs.setManual,
-                    style: const TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.text),
-                    decoration: const InputDecoration(
+                    style: TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.colorsOf(context).text),
+                    decoration: InputDecoration(
                       isDense: true,
                       hintText: '或手动输入 IP:端口（默认 ${LogServerEndpoint.defaultPort}）',
-                      hintStyle: TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.secondaryText),
+                      hintStyle: TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.colorsOf(context).secondaryText),
                     ),
                   ),
                 ),
@@ -758,7 +758,7 @@ class _LogSection extends StatelessWidget {
           const SizedBox(height: BiliMetrics.rowGap),
           Text(logs.status,
               key: const ValueKey('log-status'),
-              style: const TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.secondaryText)),
+              style: TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.colorsOf(context).secondaryText)),
           const SizedBox(height: BiliMetrics.rowGap),
           _Row(
             label: '导出日志（最近 20 MB）',
@@ -805,13 +805,13 @@ class _ServerTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(server.name, style: const TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.text)),
+                  Text(server.name, style: TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.colorsOf(context).text)),
                   Text('${server.host}:${server.port}',
-                      style: const TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.secondaryText)),
+                      style: TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.colorsOf(context).secondaryText)),
                 ],
               ),
             ),
-            if (selected) const Icon(Icons.check, color: BiliColors.pink, size: BiliMetrics.iconSize),
+            if (selected) Icon(Icons.check, color: BiliColors.colorsOf(context).pink, size: BiliMetrics.iconSize),
           ],
         ),
       ),
@@ -826,7 +826,7 @@ class _SpeedTestSection extends StatelessWidget {
   final TextEditingController links;
   final VoidCallback onStart;
 
-  static const _secondary = TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.secondaryText);
+  static TextStyle _secondary(BuildContext context) => TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.colorsOf(context).secondaryText);
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -848,7 +848,7 @@ class _SpeedTestSection extends StatelessWidget {
                       key: const ValueKey('speedtest-start'),
                       onPressed: onStart,
                       style: FilledButton.styleFrom(
-                          backgroundColor: BiliColors.pink, foregroundColor: BiliColors.onPink),
+                          backgroundColor: BiliColors.colorsOf(context).pink, foregroundColor: BiliColors.onPink),
                       child: const Text('开始测试'),
                     ),
             ),
@@ -859,30 +859,30 @@ class _SpeedTestSection extends StatelessWidget {
               minLines: 2,
               maxLines: 5,
               keyboardType: TextInputType.multiline,
-              style: const TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.text),
-              decoration: const InputDecoration(
+              style: TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.colorsOf(context).text),
+              decoration: InputDecoration(
                 isDense: true,
                 hintText: '每行一个链接，留空则用电脑上的计划或当前视频',
-                hintStyle: _secondary,
+                hintStyle: _secondary(context),
               ),
             ),
             const SizedBox(height: BiliMetrics.rowGap),
-            if (status.isNotEmpty) Text(status, key: const ValueKey('speedtest-status'), style: _secondary),
+            if (status.isNotEmpty) Text(status, key: const ValueKey('speedtest-status'), style: _secondary(context)),
             if (error != null)
               Text(error,
                   key: const ValueKey('speedtest-error'),
                   style: const TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.failure)),
-            for (final note in runner.notes) Text(note, style: _secondary),
+            for (final note in runner.notes) Text(note, style: _secondary(context)),
             for (final failed in runner.results.where((pass) => pass.failed))
-              Text('第 ${failed.pass} 次（${failed.variant}）失败：${failed.failure ?? ''}', style: _secondary),
+              Text('第 ${failed.pass} 次（${failed.variant}）失败：${failed.failure ?? ''}', style: _secondary(context)),
             if (groups.isNotEmpty) ...[
               const SizedBox(height: BiliMetrics.rowGap),
               _SpeedTestTable(groups: groups),
               const SizedBox(height: BiliMetrics.rowGap),
-              const Text(
+              Text(
                   '时间为秒（中位数），跳转超时按 15 秒计；卡顿为各次合计；内存为峰值 MB；'
                   '冷 = 每个视频的第一次（CDN 还没缓存），热 = 之后各次',
-                  style: _secondary),
+                  style: _secondary(context)),
             ],
           ]);
         },
@@ -907,8 +907,8 @@ class _SpeedTestTable extends StatelessWidget {
 
   final List<GroupSummary> groups;
 
-  static const _style = TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.text);
-  static const _header = TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.secondaryText);
+  static TextStyle _style(BuildContext context) => TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.colorsOf(context).text);
+  static TextStyle _header(BuildContext context) => TextStyle(fontSize: BiliMetrics.smallText, color: BiliColors.colorsOf(context).secondaryText);
 
   @override
   Widget build(BuildContext context) => Table(
@@ -916,7 +916,7 @@ class _SpeedTestTable extends StatelessWidget {
         defaultColumnWidth: const IntrinsicColumnWidth(),
         columnWidths: const {2: FlexColumnWidth()},
         children: [
-          _row(const ['', '首帧', '跳转 中位/P90/最慢', '回跳', '卡顿', '内存'], _header),
+          _row(const ['', '首帧', '跳转 中位/P90/最慢', '回跳', '卡顿', '内存'], _header(context)),
           for (final group in groups)
             _row([
               '${group.variant} ${_quality(group.quality)} ${group.cold ? '冷' : '热'} ×${group.passes}',
@@ -925,19 +925,19 @@ class _SpeedTestTable extends StatelessWidget {
               _seconds(group.backMedianMs),
               '${group.stalls}',
               '${group.rssMaxMB}',
-            ], _style),
+            ], _style(context)),
           for (final delta in GroupDelta.of(groups))
             TableRow(children: [
               _cell(
                   '${delta.other.variant}−${delta.base.variant} ${_quality(delta.base.quality)} '
                   '${delta.base.cold ? '冷' : '热'}',
-                  _style),
-              _cell(_signed(delta.firstFrameMs), _better(delta.firstFrameMs)),
+                  _style(context)),
+              _cell(_signed(delta.firstFrameMs), _better(context, delta.firstFrameMs)),
               _cell([delta.seekMedianMs, delta.seekP90Ms, delta.seekMaxMs].map(_signed).join('/'),
-                  _better(delta.seekMedianMs)),
-              _cell(_signed(delta.backMedianMs), _better(delta.backMedianMs)),
-              _cell(_signedCount(delta.stalls), _better(delta.stalls.toDouble())),
-              _cell(_signedCount(delta.rssMaxMB), _better(delta.rssMaxMB.toDouble())),
+                  _better(context, delta.seekMedianMs)),
+              _cell(_signed(delta.backMedianMs), _better(context, delta.backMedianMs)),
+              _cell(_signedCount(delta.stalls), _better(context, delta.stalls.toDouble())),
+              _cell(_signedCount(delta.rssMaxMB), _better(context, delta.rssMaxMB.toDouble())),
             ]),
         ],
       );
@@ -961,10 +961,10 @@ class _SpeedTestTable extends StatelessWidget {
   static String _signedCount(int value) => value < 0 ? '−${-value}' : '+$value';
 
   /// Lower is better in every column.
-  static TextStyle _better(double? difference) => TextStyle(
+  static TextStyle _better(BuildContext context, double? difference) => TextStyle(
         fontSize: BiliMetrics.smallText,
         color: difference == null || difference == 0
-            ? BiliColors.text
+            ? BiliColors.colorsOf(context).text
             : (difference < 0 ? BiliColors.faster : BiliColors.slower),
       );
 }
@@ -977,7 +977,7 @@ class _Bar extends StatelessWidget {
   Widget build(BuildContext context) {
     void back() => unawaited(Navigator.of(context).maybePop());
     return ColoredBox(
-      color: SettingsTheme.bar,
+      color: SettingsTheme.colorsOf(context).bar,
       child: Padding(
         padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
         child: SizedBox(
@@ -992,7 +992,7 @@ class _Bar extends StatelessWidget {
                     fontFamily: BiliFonts.family,
                     fontSize: SettingsTheme.barTitleText,
                     fontWeight: SettingsTheme.barTitleWeight,
-                    color: SettingsTheme.barTitle,
+                    color: SettingsTheme.colorsOf(context).barTitle,
                   ),
                 ),
               ),
@@ -1013,10 +1013,10 @@ class _Bar extends StatelessWidget {
                     child: Center(
                       child: Transform.flip(
                         flipX: true,
-                        child: const Chevron(
+                        child: Chevron(
                           size: Size(SettingsTheme.backGlyphWidth, SettingsTheme.backGlyphHeight),
                           stroke: SettingsTheme.backStroke,
-                          color: SettingsTheme.backGlyph,
+                          color: SettingsTheme.colorsOf(context).backGlyph,
                         ),
                       ),
                     ),

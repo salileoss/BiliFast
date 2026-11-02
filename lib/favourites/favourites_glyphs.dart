@@ -260,7 +260,7 @@ class FavGlyphPainter extends CustomPainter {
       _fill,
     );
     final plus = Paint()
-      ..color = BiliColors.card
+      ..color = BiliColors.onPink
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round;

@@ -39,7 +39,7 @@ class WatchLaterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final title = watchLaterStyle(WatchLaterTheme.titleLineText, WatchLaterTheme.ink, line: WatchLaterTheme.titleLine);
+    final title = watchLaterStyle(WatchLaterTheme.titleLineText, WatchLaterTheme.colorsOf(context).ink, line: WatchLaterTheme.titleLine);
     final tap = editing ? onToggle : onOpen;
     final plays = CountFormat.short(item.play);
     final danmaku = CountFormat.short(item.danmaku);
@@ -145,7 +145,7 @@ class WatchLaterRow extends StatelessWidget {
                 child: Opacity(
                   opacity: 1 - t,
                   child: editing
-                      ? const CustomPaint(painter: WatchLaterMorePainter())
+                      ? CustomPaint(painter: WatchLaterMorePainter(colors: WatchLaterTheme.colorsOf(context)))
                       : Semantics(
                           button: true,
                           label: '更多操作',
@@ -155,7 +155,7 @@ class WatchLaterRow extends StatelessWidget {
                             key: ValueKey('later-more-${item.bvid}'),
                             behavior: HitTestBehavior.opaque,
                             onTap: onMore,
-                            child: const CustomPaint(painter: WatchLaterMorePainter()),
+                            child: CustomPaint(painter: WatchLaterMorePainter(colors: WatchLaterTheme.colorsOf(context))),
                           ),
                         ),
                 ),
@@ -176,7 +176,7 @@ class _Count extends StatelessWidget {
   Widget build(BuildContext context) => Center(
     child: CustomPaint(
       size: const Size(WatchLaterTheme.countGlyphWidth, WatchLaterTheme.countGlyphHeight),
-      painter: CountPainter(glyph, color: WatchLaterTheme.metaInk),
+      painter: CountPainter(glyph, color: WatchLaterTheme.colorsOf(context).metaInk),
     ),
   );
 }
@@ -190,7 +190,7 @@ class _Meta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = watchLaterStyle(WatchLaterTheme.metaText, WatchLaterTheme.metaInk, line: WatchLaterTheme.metaLine);
+    final style = watchLaterStyle(WatchLaterTheme.metaText, WatchLaterTheme.colorsOf(context).metaInk, line: WatchLaterTheme.metaLine);
     final words = Text(
       text,
       maxLines: 1,
@@ -228,7 +228,7 @@ class _Cover extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           if (item.cover.isEmpty)
-            const ColoredBox(color: WatchLaterTheme.coverPlaceholder)
+            ColoredBox(color: WatchLaterTheme.colorsOf(context).coverPlaceholder)
           else
             RemoteImage(
               item.cover,

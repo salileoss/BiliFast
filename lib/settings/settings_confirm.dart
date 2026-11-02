@@ -29,7 +29,7 @@ class SettingsConfirm extends StatelessWidget {
     style: TextStyle(
       fontFamily: BiliFonts.family,
       fontFamilyFallback: BiliFonts.fallback,
-      color: SettingsTheme.confirmTitle,
+      color: SettingsTheme.colorsOf(context).confirmTitle,
       decoration: TextDecoration.none,
     ),
     child: Stack(
@@ -92,7 +92,7 @@ class _Alert extends StatelessWidget {
       width: SettingsTheme.confirmWidth,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: SettingsTheme.confirm,
+        color: SettingsTheme.colorsOf(context).confirm,
         borderRadius: BorderRadius.circular(SettingsTheme.confirmRadius),
       ),
       child: Column(
@@ -118,7 +118,7 @@ class _Alert extends StatelessWidget {
                     fontSize: SettingsTheme.confirmTitleText,
                     height: SettingsTheme.confirmTitleLine / SettingsTheme.confirmTitleText,
                     fontWeight: SettingsTheme.confirmTitleWeight,
-                    color: SettingsTheme.confirmTitle,
+                    color: SettingsTheme.colorsOf(context).confirmTitle,
                   ),
                 ),
                 if (message != null) ...[
@@ -130,24 +130,24 @@ class _Alert extends StatelessWidget {
                       fontFamily: BiliFonts.family,
                       fontSize: SettingsTheme.confirmMessageText,
                       height: SettingsTheme.confirmMessageLine / SettingsTheme.confirmMessageText,
-                      color: SettingsTheme.confirmMessage,
+                      color: SettingsTheme.colorsOf(context).confirmMessage,
                     ),
                   ),
                 ],
               ],
             ),
           ),
-          Container(height: SettingsTheme.confirmRule, color: SettingsTheme.confirmRuleColor),
+          Container(height: SettingsTheme.confirmRule, color: SettingsTheme.colorsOf(context).confirmRuleColor),
           SizedBox(
             height: SettingsTheme.confirmButtonHeight,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  child: _Button(label: '取消', color: SettingsTheme.confirmCancel, onTap: onCancel),
+                  child: _Button(label: '取消', color: SettingsTheme.colorsOf(context).confirmCancel, onTap: onCancel),
                 ),
                 Expanded(
-                  child: _Button(label: action, color: SettingsTheme.confirmAction, onTap: onConfirm),
+                  child: _Button(label: action, color: SettingsTheme.colorsOf(context).confirmAction, onTap: onConfirm),
                 ),
               ],
             ),
@@ -191,7 +191,7 @@ class _ButtonState extends State<_Button> {
       onTapCancel: () => _press(false),
       child: AnimatedContainer(
         duration: SettingsTheme.confirmPressMotion,
-        color: _down ? SettingsTheme.confirmPressed : SettingsTheme.confirm,
+        color: _down ? SettingsTheme.colorsOf(context).confirmPressed : SettingsTheme.colorsOf(context).confirm,
         alignment: Alignment.center,
         child: Text(
           widget.label,

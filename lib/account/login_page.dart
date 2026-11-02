@@ -25,14 +25,14 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: LoginTheme.page,
+    backgroundColor: LoginTheme.colorsOf(context).page,
     appBar: AppBar(
-      backgroundColor: LoginTheme.bar,
-      surfaceTintColor: LoginTheme.bar,
+      backgroundColor: LoginTheme.colorsOf(context).bar,
+      surfaceTintColor: LoginTheme.colorsOf(context).bar,
       centerTitle: true,
       automaticallyImplyLeading: false,
       leading: _CloseButton(onTap: () => Navigator.of(context).pop(false)),
-      title: Text('登录', style: LoginTheme.titleStyle),
+      title: Text('登录', style: LoginTheme.titleStyle.copyWith(color: LoginTheme.colorsOf(context).title)),
     ),
     body: Platform.isIOS
         ? _WebLogin(
@@ -45,7 +45,8 @@ class _LoginPageState extends State<LoginPage> {
             onLoggedIn: () => Navigator.of(context).pop(true),
           )
         : Center(
-            child: Text('请在手机上登录', key: const ValueKey('login-on-phone'), style: LoginTheme.messageStyle),
+            child: Text('请在手机上登录', key: const ValueKey('login-on-phone'),
+                style: LoginTheme.messageStyle.copyWith(color: LoginTheme.colorsOf(context).message)),
           ),
   );
 }
@@ -65,9 +66,9 @@ class _CloseButton extends StatelessWidget {
       key: const ValueKey('login-close'),
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: const SizedBox.square(
+      child: SizedBox.square(
         dimension: LoginTheme.closeTarget,
-        child: Icon(Icons.close, size: LoginTheme.closeIcon, color: LoginTheme.close),
+        child: Icon(Icons.close, size: LoginTheme.closeIcon, color: LoginTheme.colorsOf(context).close),
       ),
     ),
   );
@@ -93,6 +94,18 @@ class _WebLoginState extends State<_WebLogin> {
   final _web = WebViewController();
   late final _flow = LoginFlow(environment: widget.environment, load: _load, onLoggedIn: widget.onLoggedIn);
   var _loading = true;
+  Color? _background;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final background = LoginTheme.colorsOf(context).page;
+    if (_background == background) return;
+    _background = background;
+    unawaited(_web.setBackgroundColor(background).catchError((Object error) {
+      Logger.shared.warn(LogCategory.ui, 'login background not updated', {'error': '${error.runtimeType}'});
+    }));
+  }
 
   @override
   void initState() {
@@ -176,7 +189,7 @@ class _WebLoginState extends State<_WebLogin> {
         children: [
           WebViewWidget(controller: _web),
           if (cover != null)
-            ColoredBox(color: LoginTheme.page, child: Center(child: cover))
+            ColoredBox(color: LoginTheme.colorsOf(context).page, child: Center(child: cover))
           else if (_loading)
             const Center(child: CupertinoActivityIndicator(radius: LoginTheme.spinnerRadius)),
         ],
@@ -310,7 +323,7 @@ class _Retry extends StatelessWidget {
         Text(
           message,
           textAlign: TextAlign.center,
-          style: LoginTheme.messageStyle,
+          style: LoginTheme.messageStyle.copyWith(color: LoginTheme.colorsOf(context).message),
           strutStyle: BiliFonts.strutOf(context, LoginTheme.messageStyle),
         ),
         const SizedBox(height: LoginTheme.gap),
@@ -322,7 +335,7 @@ class _Retry extends StatelessWidget {
             height: LoginTheme.retryHeight,
             padding: const EdgeInsets.symmetric(horizontal: LoginTheme.retryPadX),
             alignment: Alignment.center,
-            decoration: const ShapeDecoration(shape: StadiumBorder(side: BorderSide(color: LoginTheme.retry))),
+            decoration: ShapeDecoration(shape: StadiumBorder(side: BorderSide(color: LoginTheme.colorsOf(context).retry))),
             child: Text('重试', style: LoginTheme.retryStyle),
           ),
         ),

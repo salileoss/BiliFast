@@ -58,13 +58,13 @@ class _QualityPickerState extends State<QualityPicker> with SingleTickerProvider
     });
   }
 
-  static const _size = TextStyle(fontSize: DownloadSheetTheme.detailText, color: BiliColors.secondaryText);
+  static TextStyle _size(BuildContext context) => TextStyle(fontSize: DownloadSheetTheme.detailText, color: BiliColors.colorsOf(context).secondaryText);
 
   Widget _row(BuildContext context, QualityOption option, {required bool last}) {
     final chosen = option.id == widget.selected;
     final style = TextStyle(
       fontSize: DownloadSheetTheme.rowText,
-      color: chosen ? BiliColors.pink : BiliColors.text,
+      color: chosen ? BiliColors.colorsOf(context).pink : BiliColors.colorsOf(context).text,
       fontWeight: chosen ? FontWeight.w600 : FontWeight.w400,
     );
     final name = QualityNames.full(qn: option.id, serverText: option.name);
@@ -80,9 +80,9 @@ class _QualityPickerState extends State<QualityPicker> with SingleTickerProvider
         padding: const EdgeInsets.only(right: DownloadSheetTheme.pickerRowLead),
         decoration: last
             ? null
-            : const BoxDecoration(
+            : BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: DownloadSheetTheme.hairline, width: BiliMetrics.panelHairline),
+                  bottom: BorderSide(color: DownloadSheetTheme.colorsOf(context).hairline, width: BiliMetrics.panelHairline),
                 ),
               ),
         child: Row(
@@ -101,7 +101,7 @@ class _QualityPickerState extends State<QualityPicker> with SingleTickerProvider
                 ],
               ),
             ),
-            if (size != null) Text('约 ${formatBytes(size)}', key: const ValueKey('download-quality-size'), style: _size),
+            if (size != null) Text('约 ${formatBytes(size)}', key: const ValueKey('download-quality-size'), style: _size(context)),
           ],
         ),
       ),
@@ -151,8 +151,8 @@ class _QualityPickerState extends State<QualityPicker> with SingleTickerProvider
                   behavior: HitTestBehavior.opaque,
                   onTap: () {},
                   child: DecoratedBox(
-                    decoration: const BoxDecoration(
-                      color: DownloadSheetTheme.sheet,
+                    decoration: BoxDecoration(
+                      color: DownloadSheetTheme.colorsOf(context).sheet,
                       borderRadius: BorderRadius.vertical(top: Radius.circular(BiliMetrics.sheetRadius)),
                     ),
                     child: Column(
@@ -165,7 +165,7 @@ class _QualityPickerState extends State<QualityPicker> with SingleTickerProvider
                             width: BiliMetrics.sheetGrabberWidth,
                             height: BiliMetrics.sheetGrabberHeight,
                             decoration: BoxDecoration(
-                              color: BiliColors.sheetGrabber,
+                              color: BiliColors.colorsOf(context).sheetGrabber,
                               borderRadius: BorderRadius.circular(BiliMetrics.sheetGrabberHeight / 2),
                             ),
                           ),
@@ -177,7 +177,7 @@ class _QualityPickerState extends State<QualityPicker> with SingleTickerProvider
                             child: Container(
                               margin: const EdgeInsets.symmetric(horizontal: DownloadSheetTheme.cardInset),
                               decoration: BoxDecoration(
-                                color: DownloadSheetTheme.card,
+                                color: DownloadSheetTheme.colorsOf(context).card,
                                 borderRadius: BorderRadius.circular(DownloadSheetTheme.cardRadius),
                               ),
                               child: Column(
@@ -214,7 +214,7 @@ class _VipTag extends StatelessWidget {
     alignment: Alignment.center,
     padding: const EdgeInsets.symmetric(horizontal: BiliMetrics.panelBadgePad),
     decoration: BoxDecoration(
-      color: BiliColors.pink,
+      color: BiliColors.colorsOf(context).pink,
       borderRadius: BorderRadius.circular(BiliMetrics.panelBadgeHeight / 2),
     ),
     child: Text('大会员', style: _style, strutStyle: BiliFonts.strutOf(context, _style)),

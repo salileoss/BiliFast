@@ -110,7 +110,7 @@ class LoadingTvState extends StatelessWidget {
       fontFamily: BiliFonts.family,
       fontFamilyFallback: BiliFonts.fallback,
       fontSize: LoadingTvTheme.stateText,
-      color: LoadingTvTheme.stateInk,
+      color: LoadingTvTheme.colorsOf(context).stateInk,
       letterSpacing: 0,
       decoration: TextDecoration.none,
     );

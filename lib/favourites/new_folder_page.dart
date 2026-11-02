@@ -220,13 +220,13 @@ class _NewFolderPageState extends State<NewFolderPage> {
         child: page!,
       ),
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.dark,
+        value: BiliPalette.of(context).isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         child: Material(
           type: MaterialType.transparency,
           child: DefaultTextStyle(
-            style: favStyle(FavouritesTheme.formText, FavouritesTheme.formInk),
+            style: favStyle(FavouritesTheme.formText, FavouritesTheme.colorsOf(context).formInk),
             child: ColoredBox(
-              color: FavouritesTheme.newPage,
+              color: FavouritesTheme.colorsOf(context).newPage,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -237,7 +237,7 @@ class _NewFolderPageState extends State<NewFolderPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         ColoredBox(
-                          color: FavouritesTheme.newGroupFill,
+                          color: FavouritesTheme.colorsOf(context).newGroupFill,
                           child: Padding(
                             padding: EdgeInsets.only(top: top),
                             child: _bar(),
@@ -269,7 +269,7 @@ class _NewFolderPageState extends State<NewFolderPage> {
   Widget _bar() {
     final title = favStyle(
       FavouritesTheme.newTitleText,
-      FavouritesTheme.formInk,
+      FavouritesTheme.colorsOf(context).formInk,
       line: FavouritesTheme.newTitleLine,
       weight: FavouritesTheme.newTitleWeight,
     );
@@ -305,7 +305,7 @@ class _NewFolderPageState extends State<NewFolderPage> {
                 final ready = _ready;
                 final style = favStyle(
                   FavouritesTheme.newDoneText,
-                  ready ? FavouritesTheme.newDoneInk : FavouritesTheme.newDoneOffInk,
+                  ready ? FavouritesTheme.colorsOf(context).newDoneInk : FavouritesTheme.colorsOf(context).newDoneOffInk,
                   line: FavouritesTheme.newTitleLine,
                 );
                 return Semantics(
@@ -335,7 +335,7 @@ class _NewFolderPageState extends State<NewFolderPage> {
   }
 
   Widget _label(String text, {bool required = false}) {
-    final style = favStyle(FavouritesTheme.formText, FavouritesTheme.formInk, line: FavouritesTheme.formLine);
+    final style = favStyle(FavouritesTheme.formText, FavouritesTheme.colorsOf(context).formInk, line: FavouritesTheme.formLine);
     return _lifted(
       Text.rich(
         TextSpan(
@@ -364,10 +364,11 @@ class _NewFolderPageState extends State<NewFolderPage> {
     required int max,
     bool multiline = false,
   }) {
-    final style = favStyle(FavouritesTheme.formText, FavouritesTheme.formInk, line: FavouritesTheme.formLine);
+    final style = favStyle(FavouritesTheme.formText, FavouritesTheme.colorsOf(context).formInk, line: FavouritesTheme.formLine);
     // A TextField's text starts from the theme's bodyLarge, not the inherited style.
     final strut = BiliFonts.strut(Theme.of(context).textTheme.bodyLarge?.merge(style) ?? style);
     return TextField(
+      keyboardAppearance: BiliPalette.of(context).brightness,
       key: ValueKey(key),
       controller: controller,
       inputFormatters: [LengthLimitingTextInputFormatter(max)],
@@ -376,14 +377,14 @@ class _NewFolderPageState extends State<NewFolderPage> {
       textAlignVertical: multiline ? TextAlignVertical.top : TextAlignVertical.center,
       keyboardType: multiline ? TextInputType.multiline : TextInputType.text,
       textInputAction: multiline ? TextInputAction.newline : TextInputAction.done,
-      cursorColor: BiliColors.pink,
+      cursorColor: BiliColors.colorsOf(context).pink,
       style: style,
       strutStyle: strut,
       decoration: InputDecoration(
         isCollapsed: true,
         border: InputBorder.none,
         hintText: hint,
-        hintStyle: favStyle(FavouritesTheme.formText, FavouritesTheme.newHintInk, line: FavouritesTheme.formLine),
+        hintStyle: favStyle(FavouritesTheme.formText, FavouritesTheme.colorsOf(context).newHintInk, line: FavouritesTheme.formLine),
       ),
     );
   }
@@ -402,7 +403,7 @@ class _NewFolderPageState extends State<NewFolderPage> {
         child: SizedBox(
           height: FavouritesTheme.newCoverHeight,
           child: ColoredBox(
-            color: FavouritesTheme.newGroupFill,
+            color: FavouritesTheme.colorsOf(context).newGroupFill,
             child: Stack(
               children: [
                 Positioned(
@@ -419,14 +420,14 @@ class _NewFolderPageState extends State<NewFolderPage> {
                     height: FavouritesTheme.newThumbHeight,
                     child: _Thumbnail(key: const ValueKey('fav-new-cover-thumb'), bytes: bytes, busy: _uploading),
                   ),
-                const Positioned(
+                Positioned(
                   right: FavouritesTheme.chevronRight,
                   top: (FavouritesTheme.newCoverHeight - FavouritesTheme.chevronHeight) / 2,
                   child: FavGlyphIcon(
                     FavGlyph.chevron,
                     width: FavouritesTheme.chevronWidth,
                     height: FavouritesTheme.chevronHeight,
-                    color: FavouritesTheme.newChevronInk,
+                    color: FavouritesTheme.colorsOf(context).newChevronInk,
                     stroke: FavouritesTheme.chevronStroke,
                   ),
                 ),
@@ -439,7 +440,7 @@ class _NewFolderPageState extends State<NewFolderPage> {
   }
 
   Widget _titleRow() => ColoredBox(
-    color: FavouritesTheme.newGroupFill,
+    color: FavouritesTheme.colorsOf(context).newGroupFill,
     child: SizedBox(
       height: FavouritesTheme.newRowHeight,
       child: Row(
@@ -465,7 +466,7 @@ class _NewFolderPageState extends State<NewFolderPage> {
   );
 
   Widget _introGroup() => ColoredBox(
-    color: FavouritesTheme.newGroupFill,
+    color: FavouritesTheme.colorsOf(context).newGroupFill,
     child: SizedBox(
       height: FavouritesTheme.newIntroHeight,
       child: Stack(
@@ -494,7 +495,7 @@ class _NewFolderPageState extends State<NewFolderPage> {
   );
 
   Widget _publicRow() => ColoredBox(
-    color: FavouritesTheme.newGroupFill,
+    color: FavouritesTheme.colorsOf(context).newGroupFill,
     child: SizedBox(
       height: FavouritesTheme.newRowHeight,
       child: Row(
@@ -507,7 +508,7 @@ class _NewFolderPageState extends State<NewFolderPage> {
               child: CupertinoSwitch(
                 key: const ValueKey('fav-new-public'),
                 value: _public,
-                activeTrackColor: FavouritesTheme.newSwitchOn,
+                activeTrackColor: FavouritesTheme.colorsOf(context).newSwitchOn,
                 onChanged: (on) => setState(() => _public = on),
               ),
             ),
@@ -541,7 +542,7 @@ class _Thumbnail extends StatelessWidget {
             cacheWidth: pixels,
             gaplessPlayback: true,
             excludeFromSemantics: true,
-            errorBuilder: (context, error, stack) => const ColoredBox(color: FavouritesTheme.tileEmpty),
+            errorBuilder: (context, error, stack) => ColoredBox(color: FavouritesTheme.colorsOf(context).tileEmpty),
           ),
           if (busy)
             const ColoredBox(
@@ -658,16 +659,16 @@ class _CoverSheetState extends State<_CoverSheet> with SingleTickerProviderState
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _group(FavouritesTheme.coverSheetFill, [
+                        _group(FavouritesTheme.colorsOf(context).coverSheetFill, [
                           _button('fav-new-cover-album', '从相册选择', () => widget.onChoose(ImageSource.gallery)),
-                          const SizedBox(
+                          SizedBox(
                             height: FavouritesTheme.coverSheetHairline,
-                            child: ColoredBox(color: FavouritesTheme.coverSheetHairlineInk),
+                            child: ColoredBox(color: FavouritesTheme.colorsOf(context).coverSheetHairlineInk),
                           ),
                           _button('fav-new-cover-camera', '拍照', () => widget.onChoose(ImageSource.camera)),
                         ]),
                         const SizedBox(height: FavouritesTheme.coverSheetGap),
-                        _group(FavouritesTheme.coverSheetCancelFill, [
+                        _group(FavouritesTheme.colorsOf(context).coverSheetCancelFill, [
                           _button('fav-new-cover-cancel', '取消', _close, weight: FavouritesTheme.coverSheetCancelWeight),
                         ]),
                       ],

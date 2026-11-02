@@ -9,15 +9,15 @@ class CoverPlaceholder extends StatelessWidget {
   static const asset = 'assets/images/loading/cover_placeholder.png';
 
   @override
-  Widget build(BuildContext context) => const ColoredBox(
-    color: CoverPlaceholderTheme.fill,
+  Widget build(BuildContext context) => ColoredBox(
+    color: CoverPlaceholderTheme.colorsOf(context).fill,
     child: Center(
       child: Image(
         image: AssetImage(asset),
         width: CoverPlaceholderTheme.width,
         height: CoverPlaceholderTheme.height,
         fit: BoxFit.contain,
-        color: CoverPlaceholderTheme.ink,
+        color: CoverPlaceholderTheme.colorsOf(context).ink,
         colorBlendMode: BlendMode.srcIn,
         filterQuality: FilterQuality.medium,
         excludeFromSemantics: true,

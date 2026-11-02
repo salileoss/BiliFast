@@ -12,7 +12,9 @@ Paint _stroke(Color color, double width) => Paint()
 
 /// The title bar's ‹, centred in its touch box.
 class HistoryBackPainter extends CustomPainter {
-  const HistoryBackPainter();
+  const HistoryBackPainter({this.colors});
+
+  final HistoryThemeColors? colors;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -22,28 +24,30 @@ class HistoryBackPainter extends CustomPainter {
       ..moveTo(centre.dx + half, centre.dy - HistoryTheme.backHalfHeight)
       ..lineTo(centre.dx - half, centre.dy)
       ..lineTo(centre.dx + half, centre.dy + HistoryTheme.backHalfHeight);
-    canvas.drawPath(path, _stroke(HistoryTheme.back, HistoryTheme.backStroke));
+    canvas.drawPath(path, _stroke((colors?.back ?? HistoryTheme.back), HistoryTheme.backStroke));
   }
 
   @override
-  bool shouldRepaint(HistoryBackPainter oldDelegate) => false;
+  bool shouldRepaint(HistoryBackPainter oldDelegate) => oldDelegate.colors != colors;
 }
 
 /// A row's ⋮, centred in its touch box.
 class HistoryMorePainter extends CustomPainter {
-  const HistoryMorePainter();
+  const HistoryMorePainter({this.colors});
+
+  final HistoryThemeColors? colors;
 
   @override
   void paint(Canvas canvas, Size size) {
     final centre = size.center(Offset.zero);
-    final paint = Paint()..color = HistoryTheme.more;
+    final paint = Paint()..color = (colors?.more ?? HistoryTheme.more);
     for (final step in const [-1, 0, 1]) {
       canvas.drawCircle(centre.translate(0, step * HistoryTheme.morePitch), HistoryTheme.moreDot / 2, paint);
     }
   }
 
   @override
-  bool shouldRepaint(HistoryMorePainter oldDelegate) => false;
+  bool shouldRepaint(HistoryMorePainter oldDelegate) => oldDelegate.colors != colors;
 }
 
 /// The outlined UP before the uploader's name (45).
@@ -51,16 +55,18 @@ class HistoryUpGlyph extends StatelessWidget {
   const HistoryUpGlyph({super.key});
 
   @override
-  Widget build(BuildContext context) => const CustomPaint(painter: _UpPainter());
+  Widget build(BuildContext context) => CustomPaint(painter: _UpPainter(colors: HistoryTheme.colorsOf(context)));
 }
 
 class _UpPainter extends CustomPainter {
-  const _UpPainter();
+  const _UpPainter({this.colors});
+
+  final HistoryThemeColors? colors;
 
   @override
   void paint(Canvas canvas, Size size) {
     const stroke = HistoryTheme.glyphStroke;
-    final paint = _stroke(HistoryTheme.meta, stroke);
+    final paint = _stroke((colors?.meta ?? HistoryTheme.meta), stroke);
     final frame = Rect.fromCenter(
       center: size.center(const Offset(0, HistoryTheme.upDrop)),
       width: HistoryTheme.upWidth - stroke,
@@ -102,7 +108,7 @@ class _UpPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_UpPainter oldDelegate) => false;
+  bool shouldRepaint(_UpPainter oldDelegate) => oldDelegate.colors != colors;
 }
 
 /// Where the video was watched: a phone, or a PC's screen on its stand for everything else (45, 47).
@@ -114,20 +120,22 @@ class HistoryDeviceGlyph extends StatelessWidget {
   @override
   Widget build(BuildContext context) => CustomPaint(
     key: ValueKey('history-device-${kind == HistoryDeviceKind.phone ? 'phone' : 'pc'}'),
-    painter: _DevicePainter(phone: kind == HistoryDeviceKind.phone),
+    painter: _DevicePainter(phone: kind == HistoryDeviceKind.phone, colors: HistoryTheme.colorsOf(context)),
   );
 }
 
 class _DevicePainter extends CustomPainter {
-  const _DevicePainter({required this.phone});
+  const _DevicePainter({required this.phone, this.colors});
 
   final bool phone;
+
+  final HistoryThemeColors? colors;
 
   @override
   void paint(Canvas canvas, Size size) {
     const stroke = HistoryTheme.glyphStroke;
-    final paint = _stroke(HistoryTheme.meta, stroke);
-    final fill = Paint()..color = HistoryTheme.meta;
+    final paint = _stroke((colors?.meta ?? HistoryTheme.meta), stroke);
+    final fill = Paint()..color = (colors?.meta ?? HistoryTheme.meta);
     final centre = size.center(Offset.zero);
     if (phone) {
       final body = Rect.fromCenter(
@@ -179,7 +187,7 @@ class _DevicePainter extends CustomPainter {
     canvas.drawRRect(RRect.fromRectAndRadius(screen, const Radius.circular(HistoryTheme.pcRadius - stroke / 2)), paint);
     final base = top + height - stroke / 2;
     canvas
-      ..drawLine(Offset(centre.dx, screen.bottom), Offset(centre.dx, base), _stroke(HistoryTheme.meta, HistoryTheme.pcStandStroke))
+      ..drawLine(Offset(centre.dx, screen.bottom), Offset(centre.dx, base), _stroke((colors?.meta ?? HistoryTheme.meta), HistoryTheme.pcStandStroke))
       ..drawLine(
         Offset(centre.dx - (HistoryTheme.pcBaseWidth - stroke) / 2, base),
         Offset(centre.dx + (HistoryTheme.pcBaseWidth - stroke) / 2, base),
@@ -188,19 +196,21 @@ class _DevicePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DevicePainter oldDelegate) => oldDelegate.phone != phone;
+  bool shouldRepaint(_DevicePainter oldDelegate) => oldDelegate.colors != colors || oldDelegate.phone != phone;
 }
 
 /// 48's 删除: a bin with its lid and handle, two lines inside.
 class HistoryTrashPainter extends CustomPainter {
-  const HistoryTrashPainter();
+  const HistoryTrashPainter({this.colors});
+
+  final HistoryThemeColors? colors;
 
   @override
   void paint(Canvas canvas, Size size) {
     // Drawn on a 29.4 × 28 grid measured off 48, centred in [size].
     canvas.save();
     canvas.translate((size.width - 29.4) / 2, (size.height - 28) / 2);
-    final paint = _stroke(HistoryTheme.sheetDeleteInk, HistoryTheme.sheetTrashStroke);
+    final paint = _stroke((colors?.sheetDeleteInk ?? HistoryTheme.sheetDeleteInk), HistoryTheme.sheetTrashStroke);
     canvas
       ..drawLine(const Offset(2.4, 6.6), const Offset(27, 6.6), paint)
       ..drawPath(
@@ -229,7 +239,7 @@ class HistoryTrashPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(HistoryTrashPainter oldDelegate) => false;
+  bool shouldRepaint(HistoryTrashPainter oldDelegate) => oldDelegate.colors != colors;
 }
 
 /// The share button's glyph: an arrow rising out of an open box, as iOS draws share.

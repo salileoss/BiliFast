@@ -48,7 +48,7 @@ class _NodePageState extends State<NodePage> {
                         children: [
                           Expanded(child: SettingsRow.titleText(choice.label)),
                           if (choice == _choice)
-                            const Icon(Icons.check, size: BiliMetrics.fontCheck, color: BiliColors.pink),
+                            Icon(Icons.check, size: BiliMetrics.fontCheck, color: BiliColors.colorsOf(context).pink),
                         ],
                       ),
                     ),

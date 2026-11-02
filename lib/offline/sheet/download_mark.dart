@@ -24,10 +24,10 @@ class DownloadMark extends StatelessWidget {
       );
     }
     final (track, arc) = switch (item?.state) {
-      null || OfflineState.done => (DownloadSheetTheme.markTrack, null),
+      null || OfflineState.done => (DownloadSheetTheme.colorsOf(context).markTrack, null),
       OfflineState.failed => (DownloadSheetTheme.markFailed, null),
-      OfflineState.paused => (DownloadSheetTheme.markTrack, BiliColors.secondaryText),
-      OfflineState.waiting || OfflineState.downloading => (DownloadSheetTheme.markTrack, DownloadSheetTheme.playing),
+      OfflineState.paused => (DownloadSheetTheme.colorsOf(context).markTrack, BiliColors.colorsOf(context).secondaryText),
+      OfflineState.waiting || OfflineState.downloading => (DownloadSheetTheme.colorsOf(context).markTrack, DownloadSheetTheme.colorsOf(context).playing),
     };
     return TweenAnimationBuilder<double>(
       tween: Tween(end: item?.progress ?? 0),

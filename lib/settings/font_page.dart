@@ -99,7 +99,7 @@ class _FontPageState extends State<FontPage> {
                           fonts.imported == null ? '导入字体' : '导入其他字体',
                           style: TextStyle(
                             fontSize: BiliMetrics.bodyText,
-                            color: _importing ? BiliColors.secondaryText : BiliColors.pink,
+                            color: _importing ? BiliColors.colorsOf(context).secondaryText : BiliColors.colorsOf(context).pink,
                           ),
                         ),
                       ),
@@ -132,8 +132,8 @@ class _FontRow extends StatelessWidget {
         this.family ?? Typography.material2021(platform: Theme.of(context).platform).black.bodyMedium?.fontFamily;
     // The PingFang strut fits only the system font's row; the others draw in a font of their own.
     final system = family == BiliFonts.system;
-    final nameStyle = TextStyle(fontFamily: family, fontSize: BiliMetrics.bodyText, color: BiliColors.text);
-    final sampleStyle = TextStyle(fontFamily: family, fontSize: BiliMetrics.smallText, color: BiliColors.secondaryText);
+    final nameStyle = TextStyle(fontFamily: family, fontSize: BiliMetrics.bodyText, color: BiliColors.colorsOf(context).text);
+    final sampleStyle = TextStyle(fontFamily: family, fontSize: BiliMetrics.smallText, color: BiliColors.colorsOf(context).secondaryText);
     return MergeSemantics(
       child: Semantics(
         button: true,
@@ -173,7 +173,7 @@ class _FontRow extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (selected) const Icon(Icons.check, size: BiliMetrics.fontCheck, color: BiliColors.pink),
+                if (selected) Icon(Icons.check, size: BiliMetrics.fontCheck, color: BiliColors.colorsOf(context).pink),
               ],
             ),
           ),

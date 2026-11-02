@@ -192,21 +192,21 @@ class _ActionPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: WatchLaterTheme.sheetFill,
+      decoration: BoxDecoration(
+        color: WatchLaterTheme.colorsOf(context).sheetFill,
         borderRadius: BorderRadius.vertical(top: Radius.circular(WatchLaterTheme.sheetRadius)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const _Grabber(color: WatchLaterTheme.grabberInk),
+          _Grabber(color: WatchLaterTheme.colorsOf(context).grabberInk),
           const SizedBox(height: WatchLaterTheme.groupTop - WatchLaterTheme.grabberTop - WatchLaterTheme.grabberHeight),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: WatchLaterTheme.groupInset),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(WatchLaterTheme.groupRadius),
               child: ColoredBox(
-                color: WatchLaterTheme.groupFill,
+                color: WatchLaterTheme.colorsOf(context).groupFill,
                 child: Column(
                   children: [
                     for (final (index, row) in rows.indexed) _ActionRow(action: row, last: index == rows.length - 1),
@@ -265,7 +265,7 @@ class _ActionRowState extends State<_ActionRow> {
     const textLeft = WatchLaterTheme.actionTextLeft - WatchLaterTheme.groupInset;
     final style = watchLaterStyle(
       WatchLaterTheme.actionText,
-      WatchLaterTheme.ink,
+      WatchLaterTheme.colorsOf(context).ink,
       line: WatchLaterTheme.actionRowHeight,
       weight: WatchLaterTheme.actionWeight,
     );
@@ -300,12 +300,12 @@ class _ActionRowState extends State<_ActionRow> {
                   child: Text(action.label, maxLines: 1, style: style, strutStyle: BiliFonts.strut(style)),
                 ),
                 if (!widget.last)
-                  const Positioned(
+                  Positioned(
                     left: textLeft,
                     right: 0,
                     bottom: 0,
                     height: WatchLaterTheme.actionHairline,
-                    child: ColoredBox(color: WatchLaterTheme.actionHairlineInk),
+                    child: ColoredBox(color: WatchLaterTheme.colorsOf(context).actionHairlineInk),
                   ),
               ],
             ),
@@ -377,8 +377,8 @@ class _FolderPanelState extends State<_FolderPanel> {
   Widget build(BuildContext context) {
     final height = math.min(WatchLaterTheme.folderSheetHeight, MediaQuery.sizeOf(context).height);
     const headerLine = WatchLaterTheme.folderHeaderCentre * 2;
-    final title = watchLaterStyle(WatchLaterTheme.folderTitleText, WatchLaterTheme.ink, line: headerLine);
-    final add = watchLaterStyle(WatchLaterTheme.folderNewText, WatchLaterTheme.grey, line: headerLine);
+    final title = watchLaterStyle(WatchLaterTheme.folderTitleText, WatchLaterTheme.colorsOf(context).ink, line: headerLine);
+    final add = watchLaterStyle(WatchLaterTheme.folderNewText, WatchLaterTheme.colorsOf(context).grey, line: headerLine);
     final folders = _folders;
     final error = _error;
     final Widget list;
@@ -409,13 +409,13 @@ class _FolderPanelState extends State<_FolderPanel> {
     }
     return Container(
       height: height,
-      decoration: const BoxDecoration(
-        color: WatchLaterTheme.folderSheetFill,
+      decoration: BoxDecoration(
+        color: WatchLaterTheme.colorsOf(context).folderSheetFill,
         borderRadius: BorderRadius.vertical(top: Radius.circular(WatchLaterTheme.sheetRadius)),
       ),
       child: Stack(
         children: [
-          const Positioned(left: 0, right: 0, top: 0, child: _Grabber(color: WatchLaterTheme.folderGrabberInk)),
+          Positioned(left: 0, right: 0, top: 0, child: _Grabber(color: WatchLaterTheme.colorsOf(context).folderGrabberInk)),
           const Positioned(
             left: WatchLaterTheme.folderIconLeft,
             top: WatchLaterTheme.folderIconTop,
@@ -472,8 +472,8 @@ class _FolderRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const nameLine = WatchLaterTheme.folderNameCentre * 2;
-    final name = watchLaterStyle(WatchLaterTheme.folderNameText, WatchLaterTheme.ink, line: nameLine);
-    final metaStyle = watchLaterStyle(WatchLaterTheme.folderMetaText, WatchLaterTheme.grey, line: nameLine);
+    final name = watchLaterStyle(WatchLaterTheme.folderNameText, WatchLaterTheme.colorsOf(context).ink, line: nameLine);
+    final metaStyle = watchLaterStyle(WatchLaterTheme.folderMetaText, WatchLaterTheme.colorsOf(context).grey, line: nameLine);
     final words = meta(folder);
     return Semantics(
       button: true,
@@ -509,12 +509,12 @@ class _FolderRow extends StatelessWidget {
                 child: Text(words, maxLines: 1, style: metaStyle, strutStyle: BiliFonts.strut(metaStyle)),
               ),
               if (!first)
-                const Positioned(
+                Positioned(
                   left: WatchLaterTheme.gutter,
                   right: WatchLaterTheme.gutter,
                   top: 0,
                   height: WatchLaterTheme.folderHairline,
-                  child: ColoredBox(color: WatchLaterTheme.hairlineInk),
+                  child: ColoredBox(color: WatchLaterTheme.colorsOf(context).hairlineInk),
                 ),
             ],
           ),
@@ -554,12 +554,12 @@ class EditBar extends StatelessWidget {
     final any = chosen > 0;
     final actionStyle = watchLaterStyle(
       WatchLaterTheme.editText,
-      any ? WatchLaterTheme.grey : WatchLaterTheme.editActionOff,
+      any ? WatchLaterTheme.colorsOf(context).grey : WatchLaterTheme.colorsOf(context).editActionOff,
       line: WatchLaterTheme.editBarHeight,
     );
     final allStyle = watchLaterStyle(
       WatchLaterTheme.editText,
-      WatchLaterTheme.grey,
+      WatchLaterTheme.colorsOf(context).grey,
       line: WatchLaterTheme.editBarHeight,
     );
     Widget action(String key, String label, VoidCallback onTap) => Semantics(
@@ -605,12 +605,12 @@ class EditBar extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(
+              SizedBox(
                 height: WatchLaterTheme.editBarHairline,
-                child: ColoredBox(color: WatchLaterTheme.hairlineInk),
+                child: ColoredBox(color: WatchLaterTheme.colorsOf(context).hairlineInk),
               ),
               ColoredBox(
-                color: BiliColors.card,
+                color: BiliColors.colorsOf(context).card,
                 child: Padding(
                   padding: EdgeInsets.only(bottom: bottom),
                   child: SizedBox(

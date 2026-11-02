@@ -15,7 +15,9 @@ Paint _fill(Color color) => Paint()..color = color;
 
 /// The bar's ‹, drawn at its place in a box whose left edge is the screen's.
 class WatchLaterBackPainter extends CustomPainter {
-  const WatchLaterBackPainter();
+  const WatchLaterBackPainter({this.colors});
+
+  final WatchLaterThemeColors? colors;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -25,12 +27,12 @@ class WatchLaterBackPainter extends CustomPainter {
         ..moveTo(WatchLaterTheme.backEndX, middle - WatchLaterTheme.backHalfHeight)
         ..lineTo(WatchLaterTheme.backTipX, middle)
         ..lineTo(WatchLaterTheme.backEndX, middle + WatchLaterTheme.backHalfHeight),
-      _line(WatchLaterTheme.grey, WatchLaterTheme.backStroke),
+      _line((colors?.grey ?? WatchLaterTheme.grey), WatchLaterTheme.backStroke),
     );
   }
 
   @override
-  bool shouldRepaint(WatchLaterBackPainter oldDelegate) => false;
+  bool shouldRepaint(WatchLaterBackPainter oldDelegate) => oldDelegate.colors != colors;
 }
 
 /// ≡↑ before 最近添加 (86): a long bar over two short ones, and an arrow with only its right barb.
@@ -104,19 +106,21 @@ class _PlayPainter extends CustomPainter {
 
 /// A row's ⋮, centred in its touch box.
 class WatchLaterMorePainter extends CustomPainter {
-  const WatchLaterMorePainter();
+  const WatchLaterMorePainter({this.colors});
+
+  final WatchLaterThemeColors? colors;
 
   @override
   void paint(Canvas canvas, Size size) {
     final centre = size.center(Offset.zero);
-    final paint = _fill(WatchLaterTheme.moreInk);
+    final paint = _fill((colors?.moreInk ?? WatchLaterTheme.moreInk));
     for (final step in const [-1, 0, 1]) {
       canvas.drawCircle(centre.translate(0, step * WatchLaterTheme.morePitch), WatchLaterTheme.moreDot / 2, paint);
     }
   }
 
   @override
-  bool shouldRepaint(WatchLaterMorePainter oldDelegate) => false;
+  bool shouldRepaint(WatchLaterMorePainter oldDelegate) => oldDelegate.colors != colors;
 }
 
 /// The edit mode's circle: a grey ring, or pink with a white ✓ when [chosen].
@@ -127,13 +131,15 @@ class ChoiceCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      CustomPaint(size: const Size.square(WatchLaterTheme.circleSize), painter: _CirclePainter(chosen));
+      CustomPaint(size: const Size.square(WatchLaterTheme.circleSize), painter: _CirclePainter(chosen, colors: WatchLaterTheme.colorsOf(context)));
 }
 
 class _CirclePainter extends CustomPainter {
-  const _CirclePainter(this.chosen);
+  const _CirclePainter(this.chosen, {this.colors});
 
   final bool chosen;
+
+  final WatchLaterThemeColors? colors;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -143,12 +149,12 @@ class _CirclePainter extends CustomPainter {
       canvas.drawCircle(
         centre,
         radius - WatchLaterTheme.circleStroke / 2,
-        _line(WatchLaterTheme.circleInk, WatchLaterTheme.circleStroke),
+        _line((colors?.circleInk ?? WatchLaterTheme.circleInk), WatchLaterTheme.circleStroke),
       );
       return;
     }
     canvas
-      ..drawCircle(centre, radius, _fill(WatchLaterTheme.circleChosen))
+      ..drawCircle(centre, radius, _fill((colors?.circleChosen ?? WatchLaterTheme.circleChosen)))
       ..drawPath(
         Path()
           ..moveTo(centre.dx - 5.6, centre.dy + 0.75)
@@ -159,7 +165,7 @@ class _CirclePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_CirclePainter oldDelegate) => oldDelegate.chosen != chosen;
+  bool shouldRepaint(_CirclePainter oldDelegate) => oldDelegate.colors != colors || oldDelegate.chosen != chosen;
 }
 
 /// The sheets' row glyphs (93, 94), drawn about the middle of a 20 pt box.
@@ -172,17 +178,19 @@ class SheetGlyphView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      CustomPaint(size: const Size.square(WatchLaterTheme.actionGlyphSize), painter: _SheetGlyphPainter(glyph));
+      CustomPaint(size: const Size.square(WatchLaterTheme.actionGlyphSize), painter: _SheetGlyphPainter(glyph, colors: WatchLaterTheme.colorsOf(context)));
 }
 
 class _SheetGlyphPainter extends CustomPainter {
-  const _SheetGlyphPainter(this.glyph);
+  const _SheetGlyphPainter(this.glyph, {this.colors});
 
   final SheetGlyph glyph;
 
+  final WatchLaterThemeColors? colors;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = _line(WatchLaterTheme.ink, WatchLaterTheme.actionGlyphStroke);
+    final paint = _line((colors?.ink ?? WatchLaterTheme.ink), WatchLaterTheme.actionGlyphStroke);
     canvas
       ..save()
       ..translate(size.width / 2, size.height / 2);
@@ -217,7 +225,7 @@ class _SheetGlyphPainter extends CustomPainter {
           ..drawLine(const Offset(-2.1, 4.7), const Offset(-2.1, 7.54), paint)
           ..drawLine(const Offset(2.1, 4.0), const Offset(2.1, 7.54), paint);
       case SheetGlyph.list:
-        final bars = _line(WatchLaterTheme.ink, 1.15);
+        final bars = _line((colors?.ink ?? WatchLaterTheme.ink), 1.15);
         for (final y in const [-5.04, 0.17, 5.38]) {
           canvas.drawLine(Offset(-1.58, y), Offset(7.38, y), bars);
         }
@@ -261,7 +269,7 @@ class _SheetGlyphPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SheetGlyphPainter oldDelegate) => oldDelegate.glyph != glyph;
+  bool shouldRepaint(_SheetGlyphPainter oldDelegate) => oldDelegate.colors != colors || oldDelegate.glyph != glyph;
 }
 
 /// 选择收藏夹's 📁 with a star at its tab (97).
@@ -324,23 +332,25 @@ class PlusGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      const CustomPaint(size: Size.square(WatchLaterTheme.plusSize), painter: _PlusPainter());
+      CustomPaint(size: Size.square(WatchLaterTheme.plusSize), painter: _PlusPainter(colors: WatchLaterTheme.colorsOf(context)));
 }
 
 class _PlusPainter extends CustomPainter {
-  const _PlusPainter();
+  const _PlusPainter({this.colors});
+
+  final WatchLaterThemeColors? colors;
 
   @override
   void paint(Canvas canvas, Size size) {
     const inset = WatchLaterTheme.plusStroke / 2;
-    final paint = _line(WatchLaterTheme.ink, WatchLaterTheme.plusStroke)..strokeCap = StrokeCap.butt;
+    final paint = _line((colors?.ink ?? WatchLaterTheme.ink), WatchLaterTheme.plusStroke)..strokeCap = StrokeCap.butt;
     canvas
       ..drawLine(Offset(size.width / 2, inset), Offset(size.width / 2, size.height - inset), paint)
       ..drawLine(Offset(inset, size.height / 2), Offset(size.width - inset, size.height / 2), paint);
   }
 
   @override
-  bool shouldRepaint(_PlusPainter oldDelegate) => false;
+  bool shouldRepaint(_PlusPainter oldDelegate) => oldDelegate.colors != colors;
 }
 
 /// 85's grey TV: a box tipped back 11.3°, its ledge sticking out at the bottom with a slot in it, the base under it,
@@ -349,19 +359,22 @@ class EmptyTvArt extends StatelessWidget {
   const EmptyTvArt({super.key});
 
   @override
-  Widget build(BuildContext context) => const CustomPaint(
+  Widget build(BuildContext context) => CustomPaint(
     size: Size(WatchLaterTheme.emptyArtWidth, WatchLaterTheme.emptyArtHeight),
-    painter: _EmptyTvPainter(),
+    painter: _EmptyTvPainter(colors: WatchLaterTheme.colorsOf(context)),
   );
 }
 
 class _EmptyTvPainter extends CustomPainter {
-  const _EmptyTvPainter();
+  const _EmptyTvPainter({this.colors});
+
+  final WatchLaterThemeColors? colors;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final body = _fill(WatchLaterTheme.artBody);
-    final shade = _fill(WatchLaterTheme.artShade);
+    final body = _fill((colors?.artBody ?? WatchLaterTheme.artBody));
+    final shadeColor = colors?.artShade ?? WatchLaterTheme.artShade;
+    final shade = _fill(shadeColor);
     // On 85 the box's top left is (160, 426); everything below is in 85's points less that.
     canvas
       ..save()
@@ -369,7 +382,7 @@ class _EmptyTvPainter extends CustomPainter {
       ..drawRRect(RRect.fromLTRBR(190.5, 488, 260.3, 525.7, const Radius.circular(10)), shade)
       ..drawRRect(RRect.fromLTRBR(200, 517, 280.3, 525.7, const Radius.circular(4.35)), shade)
       ..drawPath(_strokes, shade)
-      ..drawPath(_strokes, _line(WatchLaterTheme.artShade, 0.6))
+      ..drawPath(_strokes, _line(shadeColor, 0.6))
       ..translate(162.4, 449.9)
       ..rotate(-11.3 * math.pi / 180)
       ..drawRRect(RRect.fromLTRBR(0, 0, 97.7, 56, const Radius.circular(6)), body)
@@ -389,5 +402,5 @@ class _EmptyTvPainter extends CustomPainter {
     ..addPolygon(const [Offset(266.9, 440.0), Offset(278.1, 437.6), Offset(278.8, 443.3), Offset(266.9, 442.8)], true);
 
   @override
-  bool shouldRepaint(_EmptyTvPainter oldDelegate) => false;
+  bool shouldRepaint(_EmptyTvPainter oldDelegate) => oldDelegate.colors != colors;
 }

@@ -233,7 +233,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
                           key: const ValueKey('settings-account'),
                           title: '账号',
                           value: environment.accountLabel,
-                          valueColor: vip ? SettingsTheme.vipName : SettingsTheme.value,
+                          valueColor: vip ? SettingsTheme.colorsOf(context).vipName : SettingsTheme.colorsOf(context).value,
                           badge: vip ? const VipBadge() : null,
                         ),
                         AccountUnknown() => SettingsRow(
@@ -373,19 +373,19 @@ class SettingsScaffold extends StatelessWidget {
       fontFamily: BiliFonts.family,
       fontSize: SettingsTheme.barTitleText,
       fontWeight: SettingsTheme.barTitleWeight,
-      color: SettingsTheme.barTitle,
+      color: SettingsTheme.colorsOf(context).barTitle,
     );
     // Its own, not the app's default: pushed or swiped back over a dressed 我的, the page under it is still drawn and
     // its light style would be found through this one.
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
+      value: BiliPalette.of(context).isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: SettingsTheme.page,
+        backgroundColor: SettingsTheme.colorsOf(context).page,
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ColoredBox(
-              color: SettingsTheme.bar,
+              color: SettingsTheme.colorsOf(context).bar,
               child: Padding(
                 padding: EdgeInsets.only(top: padding.top),
                 child: SizedBox(
@@ -451,10 +451,10 @@ class _BackButton extends StatelessWidget {
       child: Center(
         child: Transform.flip(
           flipX: true,
-          child: const Chevron(
+          child: Chevron(
             size: Size(SettingsTheme.backGlyphWidth, SettingsTheme.backGlyphHeight),
             stroke: SettingsTheme.backStroke,
-            color: SettingsTheme.backGlyph,
+            color: SettingsTheme.colorsOf(context).backGlyph,
           ),
         ),
       ),
@@ -473,29 +473,29 @@ class SettingsSection extends StatelessWidget {
   final List<Widget> children;
   final String? footer;
 
-  static TextStyle get footerStyle =>
-      TextStyle(fontFamily: BiliFonts.family, fontSize: SettingsTheme.footerText, color: SettingsTheme.footer);
+  static TextStyle footerStyle(BuildContext context) =>
+      TextStyle(fontFamily: BiliFonts.family, fontSize: SettingsTheme.footerText, color: SettingsTheme.colorsOf(context).footer);
 
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       const SizedBox(height: BiliMetrics.settingsSectionGap),
-      const ColoredBox(
-        color: SettingsTheme.hairlineColor,
+      ColoredBox(
+        color: SettingsTheme.colorsOf(context).hairlineColor,
         child: SizedBox(height: SettingsTheme.hairline),
       ),
       ColoredBox(
-        color: SettingsTheme.row,
+        color: SettingsTheme.colorsOf(context).row,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             for (final child in children) ...[
               child,
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(left: SettingsTheme.rowInset),
                 child: ColoredBox(
-                  color: SettingsTheme.hairlineColor,
+                  color: SettingsTheme.colorsOf(context).hairlineColor,
                   child: SizedBox(height: SettingsTheme.hairline),
                 ),
               ),
@@ -511,7 +511,7 @@ class SettingsSection extends StatelessWidget {
             SettingsTheme.rowInset,
             SettingsTheme.footerBottom,
           ),
-          child: Text(footer, style: footerStyle, strutStyle: BiliFonts.strutOf(context, footerStyle)),
+          child: Text(footer, style: footerStyle(context), strutStyle: BiliFonts.strutOf(context, footerStyle(context))),
         ),
     ],
   );
@@ -524,7 +524,7 @@ class SettingsRow extends StatelessWidget {
     super.key,
     required this.title,
     this.value,
-    this.valueColor = SettingsTheme.value,
+    this.valueColor,
     this.badge,
     this.onTap,
     this.enabled = true,
@@ -532,14 +532,15 @@ class SettingsRow extends StatelessWidget {
 
   final String title;
   final String? value;
-  final Color valueColor;
+  final Color? valueColor;
   final Widget? badge;
   final VoidCallback? onTap;
   final bool enabled;
 
   /// A row's title, set where 50's are.
-  static Widget titleText(String title, {Color color = SettingsTheme.rowTitle}) {
-    final style = TextStyle(fontFamily: BiliFonts.family, fontSize: SettingsTheme.rowTitleText, color: color);
+  static Widget titleText(String title, {Color? color}) => Builder(builder: (context) {
+    final style = TextStyle(fontFamily: BiliFonts.family, fontSize: SettingsTheme.rowTitleText,
+        color: color ?? SettingsTheme.colorsOf(context).rowTitle);
     return Transform.translate(
       offset: Offset(0, SettingsTheme.rowTitleDrop),
       child: Builder(
@@ -552,7 +553,7 @@ class SettingsRow extends StatelessWidget {
         ),
       ),
     );
-  }
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -561,7 +562,7 @@ class SettingsRow extends StatelessWidget {
     final valueStyle = TextStyle(
       fontFamily: BiliFonts.family,
       fontSize: BiliMetrics.settingsValueText,
-      color: valueColor,
+      color: valueColor ?? SettingsTheme.colorsOf(context).value,
     );
     return MergeSemantics(
       child: Semantics(
@@ -576,7 +577,7 @@ class SettingsRow extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: titleText(title, color: enabled ? SettingsTheme.rowTitle : SettingsTheme.rowDisabled),
+                    child: titleText(title, color: enabled ? SettingsTheme.colorsOf(context).rowTitle : SettingsTheme.colorsOf(context).rowDisabled),
                   ),
                   if (value != null)
                     ConstrainedBox(
@@ -599,10 +600,10 @@ class SettingsRow extends StatelessWidget {
                     ),
                   if (onTap != null) ...[
                     if (value != null) const SizedBox(width: SettingsTheme.valueGap),
-                    const Chevron(
+                    Chevron(
                       size: Size(SettingsTheme.chevronWidth, SettingsTheme.chevronHeight),
                       stroke: SettingsTheme.chevronStroke,
-                      color: SettingsTheme.chevron,
+                      color: SettingsTheme.colorsOf(context).chevron,
                     ),
                   ],
                 ],
@@ -663,7 +664,7 @@ class _Switch extends StatelessWidget {
       height: BiliMetrics.panelSwitchHeight,
       padding: const EdgeInsets.all(inset),
       decoration: BoxDecoration(
-        color: on ? SettingsTheme.switchOn : SettingsTheme.switchOff,
+        color: on ? SettingsTheme.colorsOf(context).switchOn : SettingsTheme.colorsOf(context).switchOff,
         borderRadius: BorderRadius.circular(BiliMetrics.panelSwitchHeight / 2),
       ),
       child: AnimatedAlign(
@@ -696,7 +697,7 @@ class VipBadge extends StatelessWidget {
     height: BiliMetrics.vipBadgeHeight,
     padding: const EdgeInsets.symmetric(horizontal: SettingsTheme.vipBadgePadding),
     alignment: Alignment.center,
-    decoration: const ShapeDecoration(color: SettingsTheme.vipBadge, shape: StadiumBorder()),
+    decoration: ShapeDecoration(color: SettingsTheme.colorsOf(context).vipBadge, shape: StadiumBorder()),
     child: Text(
       '大会员',
       style: TextStyle(

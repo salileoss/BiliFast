@@ -40,7 +40,7 @@ class StateWithButton extends StatelessWidget {
         Text(
           message,
           textAlign: TextAlign.center,
-          style: watchLaterStyle(WatchLaterTheme.stateText, WatchLaterTheme.stateInk),
+          style: watchLaterStyle(WatchLaterTheme.stateText, WatchLaterTheme.colorsOf(context).stateInk),
         ),
         const SizedBox(height: WatchLaterTheme.stateGap),
         Semantics(
@@ -55,7 +55,7 @@ class StateWithButton extends StatelessWidget {
             child: Container(
               height: WatchLaterTheme.buttonHeight,
               padding: const EdgeInsets.symmetric(horizontal: WatchLaterTheme.buttonPadX),
-              decoration: const ShapeDecoration(color: BiliColors.pink, shape: StadiumBorder()),
+              decoration: ShapeDecoration(color: BiliColors.colorsOf(context).pink, shape: StadiumBorder()),
               child: Center(
                 widthFactor: 1,
                 child: Text(

@@ -53,8 +53,8 @@ class ConcurrencySheet extends StatelessWidget {
       ),
       child: Container(
         key: const ValueKey('offline-concurrency-sheet'),
-        decoration: const BoxDecoration(
-          color: _T.sheet,
+        decoration: BoxDecoration(
+          color: _T.colorsOf(context).sheet,
           borderRadius: BorderRadius.vertical(top: Radius.circular(_T.sheetRadius)),
         ),
         padding: EdgeInsets.only(bottom: bottom + _T.cardBottom),
@@ -62,7 +62,7 @@ class ConcurrencySheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(
+            SizedBox(
               height: _T.cardTop,
               child: Align(
                 alignment: Alignment.topCenter,
@@ -72,7 +72,7 @@ class ConcurrencySheet extends StatelessWidget {
                     width: _T.handleWidth,
                     height: _T.handleHeight,
                     child: DecoratedBox(
-                      decoration: ShapeDecoration(color: _T.handle, shape: StadiumBorder()),
+                      decoration: ShapeDecoration(color: _T.colorsOf(context).handle, shape: StadiumBorder()),
                     ),
                   ),
                 ),
@@ -82,18 +82,18 @@ class ConcurrencySheet extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: _T.cardInset),
               child: Container(
                 clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(color: BiliColors.card, borderRadius: BorderRadius.circular(_T.cardRadius)),
+                decoration: BoxDecoration(color: BiliColors.colorsOf(context).card, borderRadius: BorderRadius.circular(_T.cardRadius)),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     for (final count in counts) ...[
                       if (count != counts.first)
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.only(left: _T.optionInset),
                           child: SizedBox(
                             height: _T.optionRule,
-                            child: ColoredBox(color: _T.optionRuleInk),
+                            child: ColoredBox(color: _T.colorsOf(context).optionRuleInk),
                           ),
                         ),
                       _Option(count: count, chosen: count == current, onTap: () => onPick(count)),
@@ -118,7 +118,7 @@ class _Option extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = offlineStyle(_T.optionText, chosen ? _T.optionChosen : _T.optionInk, line: _T.optionRow);
+    final style = offlineStyle(_T.optionText, chosen ? _T.colorsOf(context).optionChosen : _T.colorsOf(context).optionInk, line: _T.optionRow);
     final badge = offlineStyle(_T.badgeText, _T.badgeInk, line: _T.badgeHeight);
     final vipOnly = count > 1;
     return Semantics(
@@ -142,7 +142,7 @@ class _Option extends StatelessWidget {
                 Container(
                   height: _T.badgeHeight,
                   padding: const EdgeInsets.symmetric(horizontal: _T.badgePadX),
-                  decoration: const ShapeDecoration(color: _T.badgeFill, shape: StadiumBorder()),
+                  decoration: ShapeDecoration(color: _T.colorsOf(context).badgeFill, shape: StadiumBorder()),
                   child: Center(widthFactor: 1, child: offlineLine('(大会员专享)', badge)),
                 ),
               ],

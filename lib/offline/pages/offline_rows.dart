@@ -118,7 +118,7 @@ class _DoneMarks extends StatelessWidget {
                 FractionallySizedBox(
                   alignment: Alignment.centerLeft,
                   widthFactor: watched,
-                  child: const ColoredBox(color: _T.watched),
+                  child: ColoredBox(color: _T.colorsOf(context).watched),
                 ),
               ],
             ),
@@ -182,13 +182,13 @@ class OfflineProgress extends StatelessWidget {
     child: Stack(
       fit: StackFit.expand,
       children: [
-        const ColoredBox(color: _T.progressTrack),
+        ColoredBox(color: _T.colorsOf(context).progressTrack),
         FractionallySizedBox(
           alignment: Alignment.centerLeft,
           widthFactor: item.progress,
           child: ColoredBox(
             key: ValueKey('offline-progress-${item.cid}-${item.state.name}'),
-            color: item.state == OfflineState.downloading ? _T.progressActive : _T.progressIdle,
+            color: item.state == OfflineState.downloading ? _T.colorsOf(context).progressActive : _T.colorsOf(context).progressIdle,
           ),
         ),
       ],
@@ -277,10 +277,10 @@ class OfflineRowFrame extends StatelessWidget {
                 top: _T.coverTop - _T.stackCardRise,
                 width: _T.coverWidth - _T.stackCardInset * 2,
                 height: _T.stackCardRise + _T.coverRadius,
-                child: const IgnorePointer(
+                child: IgnorePointer(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: _T.stackCard,
+                      color: _T.colorsOf(context).stackCard,
                       borderRadius: BorderRadius.vertical(top: Radius.circular(_T.coverRadius)),
                     ),
                   ),
@@ -308,7 +308,7 @@ class OfflineRowFrame extends StatelessWidget {
                 right: 0,
                 top: _T.row - _T.dividerHeight / 2,
                 height: _T.dividerHeight,
-                child: const ColoredBox(color: _T.divider),
+                child: ColoredBox(color: _T.colorsOf(context).divider),
               ),
           ],
         );
@@ -318,8 +318,8 @@ class OfflineRowFrame extends StatelessWidget {
 }
 
 /// The title, up to [maxLines] lines from the cover's top.
-Widget _title(String text, {int maxLines = 2, Key? key}) {
-  final style = offlineStyle(_T.rowTitleText, _T.ink, line: _T.rowTitleLine);
+Widget _title(BuildContext context, String text, {int maxLines = 2, Key? key}) {
+  final style = offlineStyle(_T.rowTitleText, _T.colorsOf(context).ink, line: _T.rowTitleLine);
   return Positioned(
     left: 0,
     right: 0,
@@ -343,13 +343,13 @@ Widget _title(String text, {int maxLines = 2, Key? key}) {
   return (first: request.title, second: request.partTitle);
 }
 
-List<Widget> _queueWords(OfflineItem item) {
+List<Widget> _queueWords(BuildContext context, OfflineItem item) {
   final lines = queueLines(item.request);
   final second = lines.second;
-  final sub = offlineStyle(_T.subText, _T.grey, line: _T.subLine);
-  final state = offlineStyle(_T.stateText, _T.grey, line: _T.stateLine);
+  final sub = offlineStyle(_T.subText, _T.colorsOf(context).grey, line: _T.subLine);
+  final state = offlineStyle(_T.stateText, _T.colorsOf(context).grey, line: _T.stateLine);
   return [
-    _title(lines.first, maxLines: second == null ? 2 : 1, key: ValueKey('offline-title-${item.cid}')),
+    _title(context, lines.first, maxLines: second == null ? 2 : 1, key: ValueKey('offline-title-${item.cid}')),
     if (second != null) _at(_T.subCentre, _T.subLine, offlineLine(second, sub)),
     _at(_T.stateCentre, _T.stateLine, offlineLine(stateLabel(item), state, key: ValueKey('offline-state-${item.cid}'))),
     Positioned(
@@ -364,10 +364,10 @@ List<Widget> _queueWords(OfflineItem item) {
 
 TextStyle _meta(Color color) => offlineStyle(_T.metaText, color, line: _T.metaLine);
 
-Widget _sizeLine(int bytes, {bool vip = false, Key? key}) => _at(
+Widget _sizeLine(BuildContext context, int bytes, {bool vip = false, Key? key}) => _at(
   _T.sizeCentre,
   _T.metaLine,
-  offlineLine(vip ? '大会员专享 · ${formatBytes(bytes)}' : formatBytes(bytes), _meta(vip ? _T.vip : _T.meta), key: key),
+  offlineLine(vip ? '大会员专享 · ${formatBytes(bytes)}' : formatBytes(bytes), _meta(vip ? _T.colorsOf(context).vip : _T.colorsOf(context).meta), key: key),
 );
 
 /// A finished part (145, 156): the cover with its time and watched line, the title, UP and the name, the size.
@@ -414,7 +414,7 @@ class DoneRow extends StatelessWidget {
           overlay: _DoneMarks(item: item),
         ),
         words: [
-          _title(title, key: ValueKey('offline-title-$cid')),
+          _title(context, title, key: ValueKey('offline-title-$cid')),
           _at(
             _T.upCentre,
             _T.metaLine,
@@ -427,11 +427,11 @@ class DoneRow extends StatelessWidget {
                   child: Transform.translate(offset: const Offset(0, -_T.upLift), child: const HistoryUpGlyph()),
                 ),
                 const SizedBox(width: _T.upGap),
-                Flexible(child: offlineLine(name, _meta(_T.meta))),
+                Flexible(child: offlineLine(name, _meta(_T.colorsOf(context).meta))),
               ],
             ),
           ),
-          _sizeLine(item.bytes, vip: item.vipOnly, key: ValueKey('offline-size-$cid')),
+          _sizeLine(context, item.bytes, vip: item.vipOnly, key: ValueKey('offline-size-$cid')),
         ],
       );
     },
@@ -478,8 +478,8 @@ class GroupRow extends StatelessWidget {
           overlay: _GroupMarks(count: entry.cids.length),
         ),
         words: [
-          _title(entry.title, key: ValueKey('offline-title-${entry.key}')),
-          _sizeLine(bytes, key: ValueKey('offline-size-${entry.key}')),
+          _title(context, entry.title, key: ValueKey('offline-title-${entry.key}')),
+          _sizeLine(context, bytes, key: ValueKey('offline-size-${entry.key}')),
         ],
       );
     },
@@ -520,7 +520,7 @@ class QueueRow extends StatelessWidget {
         onTap: () => onTap(item),
         divider: divider,
         cover: OfflineCover(library: library, item: item),
-        words: _queueWords(item),
+        words: _queueWords(context, item),
       );
     },
   );
@@ -575,7 +575,7 @@ class QueueStackRow extends StatelessWidget {
           item: item,
           overlay: _QueueMarks(count: cids.length),
         ),
-        words: _queueWords(item),
+        words: _queueWords(context, item),
       );
     },
   );
@@ -589,7 +589,7 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = offlineStyle(_T.headerText, _T.ink, line: _T.titleLine, weight: _T.headerWeight);
+    final style = offlineStyle(_T.headerText, _T.colorsOf(context).ink, line: _T.titleLine, weight: _T.headerWeight);
     return SizedBox(
       height: _T.headerHeight,
       child: Stack(
@@ -616,7 +616,7 @@ class SpaceFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = offlineStyle(_T.footerText, _T.ink, line: _T.footerLine);
+    final style = offlineStyle(_T.footerText, _T.colorsOf(context).ink, line: _T.footerLine);
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
       child: SizedBox(
@@ -649,7 +649,7 @@ class OfflineEmptyNote extends StatelessWidget {
     padding: const EdgeInsets.only(top: _T.emptyTop),
     child: Align(
       alignment: Alignment.topCenter,
-      child: offlineLine(message, offlineStyle(_T.emptyText, _T.meta), align: TextAlign.center),
+      child: offlineLine(message, offlineStyle(_T.emptyText, _T.colorsOf(context).meta), align: TextAlign.center),
     ),
   );
 }

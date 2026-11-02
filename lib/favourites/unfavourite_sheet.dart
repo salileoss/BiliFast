@@ -138,7 +138,7 @@ class _Sheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ColoredBox(
     key: const ValueKey('fav-sheet'),
-    color: FavouritesTheme.sheetFill,
+    color: FavouritesTheme.colorsOf(context).sheetFill,
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -158,7 +158,7 @@ class _Sheet extends StatelessWidget {
                   onTap: onRemove,
                   child: Stack(
                     children: [
-                      const Positioned(
+                      Positioned(
                         top: FavouritesTheme.sheetStarTop,
                         left: 0,
                         right: 0,
@@ -167,7 +167,7 @@ class _Sheet extends StatelessWidget {
                             FavGlyph.starOff,
                             width: FavouritesTheme.sheetStarWidth,
                             height: FavouritesTheme.sheetStarHeight,
-                            color: FavouritesTheme.sheetRemoveInk,
+                            color: FavouritesTheme.colorsOf(context).sheetRemoveInk,
                             stroke: FavouritesTheme.sheetStarStroke,
                           ),
                         ),
@@ -177,7 +177,7 @@ class _Sheet extends StatelessWidget {
                         left: 0,
                         right: 0,
                         child: Center(
-                          child: _text('取消收藏', FavouritesTheme.sheetLabelText, FavouritesTheme.sheetRemoveInk),
+                          child: _text('取消收藏', FavouritesTheme.sheetLabelText, FavouritesTheme.colorsOf(context).sheetRemoveInk),
                         ),
                       ),
                     ],
@@ -187,9 +187,9 @@ class _Sheet extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(
+        SizedBox(
           height: FavouritesTheme.sheetBand,
-          child: ColoredBox(color: FavouritesTheme.sheetBandFill),
+          child: ColoredBox(color: FavouritesTheme.colorsOf(context).sheetBandFill),
         ),
         FavTap(
           key: const ValueKey('fav-sheet-cancel'),
@@ -197,7 +197,7 @@ class _Sheet extends StatelessWidget {
           onTap: onCancel,
           child: SizedBox(
             height: FavouritesTheme.sheetCancelHeight,
-            child: Center(child: _text('取消', FavouritesTheme.sheetCancelText, FavouritesTheme.sheetCancelInk)),
+            child: Center(child: _text('取消', FavouritesTheme.sheetCancelText, FavouritesTheme.colorsOf(context).sheetCancelInk)),
           ),
         ),
         SizedBox(height: MediaQuery.paddingOf(context).bottom),
