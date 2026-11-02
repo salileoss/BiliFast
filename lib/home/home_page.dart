@@ -347,9 +347,9 @@ class _HomePageState extends State<HomePage> {
   Widget _page(BuildContext context, Skin? head) {
     final still = MediaQuery.disableAnimationsOf(context);
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: head != null && head.lightStatusHome ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      value: (head != null ? head.lightStatusHome : BiliPalette.of(context).isDark) ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: FormFactor.of(context).isPad ? PadHomeTheme.page : BiliColors.pageGrey,
+        backgroundColor: FormFactor.of(context).isPad ? PadHomeTheme.colorsOf(context).page : BiliColors.colorsOf(context).pageGrey,
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
@@ -1191,7 +1191,7 @@ class _RetryMessage extends StatelessWidget {
           message,
           key: messageKey,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.secondaryText),
+          style: TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.colorsOf(context).secondaryText),
           strutStyle: BiliFonts.strutOf(context, const TextStyle(fontSize: BiliMetrics.bodyText)),
         ),
         const SizedBox(height: BiliMetrics.rowGap),
@@ -1204,12 +1204,12 @@ class _RetryMessage extends StatelessWidget {
             height: BiliMetrics.pillHeight,
             padding: const EdgeInsets.symmetric(horizontal: BiliMetrics.sectionGap),
             alignment: Alignment.center,
-            decoration: const ShapeDecoration(
-              shape: StadiumBorder(side: BorderSide(color: BiliColors.pink)),
+            decoration: ShapeDecoration(
+              shape: StadiumBorder(side: BorderSide(color: BiliColors.colorsOf(context).pink)),
             ),
-            child: const Text(
+            child: Text(
               '重试',
-              style: TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.pink),
+              style: TextStyle(fontSize: BiliMetrics.bodyText, color: BiliColors.colorsOf(context).pink),
             ),
           ),
         ),

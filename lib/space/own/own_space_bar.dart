@@ -13,13 +13,17 @@ final class OwnBarLook {
 
   static const stock = OwnBarLook(fill: OwnSpaceTheme.bar, ink: OwnSpaceTheme.barInk, lightStatus: false);
 
-  factory OwnBarLook.of(Skin? skin) {
+  factory OwnBarLook.of(Skin? skin, {BuildContext? context}) {
     final page = skin?.equip.colors.colorSecondPage;
-    if (skin == null || skin.equip.primaryOnly || page == null) return stock;
+    if (skin == null || skin.equip.primaryOnly || page == null) {
+      if (context == null) return stock;
+      final palette = BiliPalette.of(context);
+      return OwnBarLook(fill: OwnSpaceTheme.colorsOf(context).bar, ink: OwnSpaceTheme.colorsOf(context).barInk, lightStatus: palette.isDark);
+    }
     final fill = Color(page);
     return OwnBarLook(
       fill: fill,
-      ink: skin.color ?? (skin.lightText ? OwnSpaceTheme.barLightInk : OwnSpaceTheme.barInk),
+      ink: skin.color ?? (skin.lightText ? OwnSpaceTheme.barLightInk : context == null ? OwnSpaceTheme.barInk : OwnSpaceTheme.colorsOf(context).barInk),
       lightStatus: SkinStatusBar.whiteOverColor(fill),
     );
   }

@@ -17,23 +17,23 @@ class PostTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chosen = postStyle(DynamicPostTheme.tabText, DynamicPostTheme.tabChosen);
-    final other = postStyle(DynamicPostTheme.tabText, DynamicPostTheme.tabInk);
+    final chosen = postStyle(DynamicPostTheme.tabText, DynamicPostTheme.colorsOf(context).tabChosen);
+    final other = postStyle(DynamicPostTheme.tabText, DynamicPostTheme.colorsOf(context).tabInk);
     const half = DynamicPostTheme.tabSpacing / 2;
     final commentsLabel = label('评论', comments);
     final reactionsLabel = label('赞和转发', reactions);
     return ColoredBox(
-      color: DynamicPostTheme.page,
+      color: DynamicPostTheme.colorsOf(context).page,
       child: SizedBox(
         height: DynamicPostTheme.tabsHeight,
         child: Stack(
           children: [
-            const Positioned(
+            Positioned(
               left: 0,
               right: 0,
               bottom: 0,
               height: DynamicPostTheme.tabHairline,
-              child: ColoredBox(color: DynamicPostTheme.tabRule),
+              child: ColoredBox(color: DynamicPostTheme.colorsOf(context).tabRule),
             ),
             Positioned(
               left: DynamicPostTheme.tabFirst - half,
@@ -54,12 +54,12 @@ class PostTabs extends StatelessWidget {
                         alignment: Alignment.center,
                         children: [
                           Text(commentsLabel, maxLines: 1, softWrap: false, style: chosen),
-                          const Positioned(
+                          Positioned(
                             left: 0,
                             right: 0,
                             bottom: DynamicPostTheme.tabHairline,
                             height: DynamicPostTheme.tabUnderline,
-                            child: ColoredBox(key: ValueKey('post-tab-underline'), color: DynamicPostTheme.tabChosen),
+                            child: ColoredBox(key: ValueKey('post-tab-underline'), color: DynamicPostTheme.colorsOf(context).tabChosen),
                           ),
                         ],
                       ),

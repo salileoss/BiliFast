@@ -193,7 +193,7 @@ class _SpacePageState extends State<SpacePage> {
   Widget build(BuildContext context) {
     final profile = _profile;
     // Light over a picture banner, as 72; dark over the default banner (63) and the white bar.
-    final darkStatus = profile == null || _collapsed || (profile.banner?.isEmpty ?? true);
+    final darkStatus = !BiliPalette.of(context).isDark && (profile == null || _collapsed || (profile.banner?.isEmpty ?? true));
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: darkStatus ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
       child: PopScope<Object?>(
@@ -203,9 +203,9 @@ class _SpacePageState extends State<SpacePage> {
         },
         // Pushed on a plain route with no Material above it, text would otherwise take the app's fallback style.
         child: DefaultTextStyle(
-          style: spaceStyle(SpaceTheme.bioText, BiliColors.text),
+          style: spaceStyle(SpaceTheme.bioText, BiliColors.colorsOf(context).text),
           child: ColoredBox(
-            color: SpaceTheme.page,
+            color: SpaceTheme.colorsOf(context).page,
             child: Stack(
               children: [
                 Positioned.fill(
@@ -311,7 +311,7 @@ class _SpacePageState extends State<SpacePage> {
         SpaceTailFiller(
           headerHeight: headerHeight,
           barHeight: barHeight,
-          color: dynamics ? SpaceDynamicsSliver.fill : null,
+          color: dynamics ? SpaceDynamicsSliver.fillOf(context) : null,
         ),
       ],
     );

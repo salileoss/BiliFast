@@ -18,14 +18,14 @@ class FollowSwitch extends StatelessWidget {
     height: DynamicFeedTheme.switchHeight,
     child: Row(
       children: [
-        Expanded(child: _half(DynamicFeedType.all, '全部')),
+        Expanded(child: _half(context, DynamicFeedType.all, '全部')),
         const SizedBox(width: DynamicFeedTheme.switchGap),
-        Expanded(child: _half(DynamicFeedType.video, '视频')),
+        Expanded(child: _half(context, DynamicFeedType.video, '视频')),
       ],
     ),
   );
 
-  Widget _half(DynamicFeedType kind, String label) {
+  Widget _half(BuildContext context, DynamicFeedType kind, String label) {
     final on = kind == type;
     return FollowTap(
       key: ValueKey('follow-switch-${kind.rawValue}'),
@@ -34,7 +34,7 @@ class FollowSwitch extends StatelessWidget {
       onTap: () => onSelect(kind),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: DynamicFeedTheme.switchFill,
+          color: DynamicFeedTheme.colorsOf(context).switchFill,
           borderRadius: BorderRadius.circular(DynamicFeedTheme.switchRadius),
         ),
         child: Center(
@@ -42,7 +42,7 @@ class FollowSwitch extends StatelessWidget {
             label,
             style: followStyle(
               DynamicFeedTheme.switchText,
-              on ? DynamicFeedTheme.switchOn : DynamicFeedTheme.switchOff,
+              on ? DynamicFeedTheme.colorsOf(context).switchOn : DynamicFeedTheme.colorsOf(context).switchOff,
               weight: on ? DynamicFeedTheme.switchOnWeight : FontWeight.w400,
             ),
           ),
@@ -60,7 +60,7 @@ class FollowSectionTitle extends StatelessWidget {
     this.more,
     this.moreKey,
     this.moreText = DynamicFeedTheme.moreText,
-    this.moreInk = DynamicFeedTheme.moreInk,
+    this.moreInk,
     this.moreGap = DynamicFeedTheme.moreGap,
     this.onMore,
   });
@@ -69,7 +69,7 @@ class FollowSectionTitle extends StatelessWidget {
   final String? more;
   final Key? moreKey;
   final double moreText;
-  final Color moreInk;
+  final Color? moreInk;
   final double moreGap;
   final VoidCallback? onMore;
 
@@ -77,7 +77,7 @@ class FollowSectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = followStyle(
       DynamicFeedTheme.sectionText,
-      DynamicFeedTheme.sectionInk,
+      DynamicFeedTheme.colorsOf(context).sectionInk,
       weight: DynamicFeedTheme.sectionWeight,
       height: DynamicFeedTheme.sectionLine / DynamicFeedTheme.sectionText,
     );
@@ -110,12 +110,12 @@ class FollowSectionTitle extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(more, style: followStyle(moreText, moreInk)),
+                      Text(more, style: followStyle(moreText, moreInk ?? DynamicFeedTheme.colorsOf(context).moreInk)),
                       SizedBox(width: moreGap),
-                      const Chevron(
+                      Chevron(
                         size: Size(DynamicFeedTheme.chevronWidth, DynamicFeedTheme.chevronHeight),
                         stroke: DynamicFeedTheme.chevronStroke,
-                        color: DynamicFeedTheme.chevronInk,
+                        color: DynamicFeedTheme.colorsOf(context).chevronInk,
                       ),
                     ],
                   ),
@@ -147,7 +147,7 @@ class FollowFace extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = followStyle(
       DynamicFeedTheme.nameText,
-      DynamicFeedTheme.nameInk,
+      DynamicFeedTheme.colorsOf(context).nameInk,
       height: DynamicFeedTheme.nameLine / DynamicFeedTheme.nameText,
     );
     const dotLeft = DynamicFeedTheme.face / 2 + DynamicFeedTheme.dotOffset - DynamicFeedTheme.dotRing / 2;
@@ -164,11 +164,11 @@ class FollowFace extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   Positioned.fill(child: ClipOval(child: RemoteImage.avatar(up.face))),
-                  const Positioned.fill(
+                  Positioned.fill(
                     child: DecoratedBox(
                       decoration: ShapeDecoration(
                         shape: CircleBorder(
-                          side: BorderSide(color: DynamicFeedTheme.faceRingInk, width: DynamicFeedTheme.faceRing),
+                          side: BorderSide(color: DynamicFeedTheme.colorsOf(context).faceRingInk, width: DynamicFeedTheme.faceRing),
                         ),
                       ),
                     ),
@@ -180,13 +180,13 @@ class FollowFace extends StatelessWidget {
                       top: dotLeft,
                       width: DynamicFeedTheme.dotRing,
                       height: DynamicFeedTheme.dotRing,
-                      child: const DecoratedBox(
-                        decoration: ShapeDecoration(color: BiliColors.card, shape: CircleBorder()),
+                      child: DecoratedBox(
+                        decoration: ShapeDecoration(color: BiliColors.colorsOf(context).card, shape: CircleBorder()),
                         child: Center(
                           child: SizedBox.square(
                             dimension: DynamicFeedTheme.dot,
                             child: DecoratedBox(
-                              decoration: ShapeDecoration(color: DynamicFeedTheme.dotInk, shape: CircleBorder()),
+                              decoration: ShapeDecoration(color: DynamicFeedTheme.colorsOf(context).dotInk, shape: CircleBorder()),
                             ),
                           ),
                         ),
@@ -315,7 +315,7 @@ class FollowTop extends StatelessWidget {
   Widget build(BuildContext context) {
     final faces = ups.isNotEmpty;
     return ColoredBox(
-      color: BiliColors.card,
+      color: BiliColors.colorsOf(context).card,
       child: SizedBox(
         height: heightOf(faces: faces),
         child: Stack(
@@ -372,14 +372,14 @@ class FollowBangumiSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final titleStyle = followStyle(
       DynamicFeedTheme.posterTitleText,
-      DynamicFeedTheme.posterTitleInk,
+      DynamicFeedTheme.colorsOf(context).posterTitleInk,
       height: DynamicFeedTheme.posterTitleLine / DynamicFeedTheme.posterTitleText,
     );
     const rowHeight =
         DynamicFeedTheme.posterHeight + DynamicFeedTheme.posterTitleCentre + DynamicFeedTheme.posterTitleLine / 2;
     return ColoredBox(
       key: const ValueKey('follow-bangumi'),
-      color: BiliColors.card,
+      color: BiliColors.colorsOf(context).card,
       child: SizedBox(
         height: DynamicFeedTheme.bangumi,
         child: Stack(
@@ -393,7 +393,7 @@ class FollowBangumiSection extends StatelessWidget {
                 more: '全部',
                 moreKey: const ValueKey('follow-bangumi-all'),
                 moreText: DynamicFeedTheme.allText,
-                moreInk: DynamicFeedTheme.allInk,
+                moreInk: DynamicFeedTheme.colorsOf(context).allInk,
                 moreGap: DynamicFeedTheme.allGap,
                 onMore: onAll,
               ),

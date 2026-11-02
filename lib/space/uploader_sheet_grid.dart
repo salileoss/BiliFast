@@ -33,7 +33,7 @@ class UploaderVideoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = sheetStyle(
       UploaderSheetTheme.titleText,
-      playing ? UploaderSheetTheme.playingInk : UploaderSheetTheme.titleInk,
+      playing ? UploaderSheetTheme.colorsOf(context).playingInk : UploaderSheetTheme.colorsOf(context).titleInk,
       line: UploaderSheetTheme.titleLine,
     );
     return Semantics(
@@ -215,7 +215,7 @@ class UploaderSheetFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = sheetStyle(UploaderSheetTheme.endText, UploaderSheetTheme.endInk);
+    final style = sheetStyle(UploaderSheetTheme.endText, UploaderSheetTheme.colorsOf(context).endInk);
     final Widget? child;
     if (error != null && !loading) {
       child = Semantics(
@@ -234,7 +234,7 @@ class UploaderSheetFooter extends StatelessWidget {
                   TextSpan(text: '加载失败，', style: style),
                   TextSpan(
                     text: '点击重试',
-                    style: style.copyWith(color: BiliColors.link),
+                    style: style.copyWith(color: BiliColors.colorsOf(context).link),
                   ),
                 ],
               ),
@@ -272,7 +272,7 @@ class UploaderSheetFirstLoad extends StatelessWidget {
   Widget build(BuildContext context) {
     final message = error;
     if (message == null) return const Center(child: LoadingTvState(key: ValueKey('uploader-sheet-first-load')));
-    final style = sheetStyle(UploaderSheetTheme.stateText, UploaderSheetTheme.stateInk);
+    final style = sheetStyle(UploaderSheetTheme.stateText, UploaderSheetTheme.colorsOf(context).stateInk);
     return Center(
       key: const ValueKey('uploader-sheet-failed'),
       child: Padding(
@@ -297,10 +297,10 @@ class UploaderSheetFirstLoad extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: ShapeDecoration(
                     shape: StadiumBorder(
-                      side: BorderSide(color: BiliColors.pink, width: UploaderSheetTheme.retryRim),
+                      side: BorderSide(color: BiliColors.colorsOf(context).pink, width: UploaderSheetTheme.retryRim),
                     ),
                   ),
-                  child: Text('重试', style: sheetStyle(UploaderSheetTheme.retryText, BiliColors.pink)),
+                  child: Text('重试', style: sheetStyle(UploaderSheetTheme.retryText, BiliColors.colorsOf(context).pink)),
                 ),
               ),
             ),

@@ -28,7 +28,7 @@ class SearchUserRow extends StatelessWidget {
     final three = desc.isNotEmpty;
     final countsStyle = searchStyle(
       SearchResultTheme.countsText,
-      SearchResultTheme.countsInk,
+      SearchResultTheme.colorsOf(context).countsInk,
       line: SearchResultTheme.countsLine,
     );
 
@@ -100,12 +100,12 @@ class SearchUserRow extends StatelessWidget {
               onTap: onFollow,
             ),
           ),
-          const Positioned(
+          Positioned(
             left: SearchResultTheme.gutter,
             right: SearchResultTheme.gutter,
             bottom: 0,
             height: SearchResultTheme.hairline,
-            child: ColoredBox(color: SearchResultTheme.rowHairlineInk),
+            child: ColoredBox(color: SearchResultTheme.colorsOf(context).rowHairlineInk),
           ),
         ],
       ),
@@ -120,7 +120,7 @@ class _Name extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = searchStyle(SearchResultTheme.nameText, SearchResultTheme.nameInk, line: SearchResultTheme.nameLine);
+    final style = searchStyle(SearchResultTheme.nameText, SearchResultTheme.colorsOf(context).nameInk, line: SearchResultTheme.nameLine);
     return Row(
       children: [
         Flexible(
@@ -164,7 +164,7 @@ class _Avatar extends StatelessWidget {
               width: SearchResultTheme.badge + SearchResultTheme.badgeRing * 2,
               height: SearchResultTheme.badge + SearchResultTheme.badgeRing * 2,
               padding: const EdgeInsets.all(SearchResultTheme.badgeRing),
-              decoration: const BoxDecoration(color: BiliColors.card, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: BiliColors.colorsOf(context).card, shape: BoxShape.circle),
               child: CustomPaint(painter: VerifiedBoltPainter(badge)),
             ),
           ),
@@ -223,7 +223,7 @@ class _SearchFollowPillState extends State<SearchFollowPill> {
     final following = widget.following;
     final still = MediaQuery.disableAnimationsOf(context);
     final duration = still ? Duration.zero : SearchResultTheme.followMotion;
-    final ink = following ? SearchResultTheme.followedInk : SearchResultTheme.followInk;
+    final ink = following ? SearchResultTheme.colorsOf(context).followedInk : SearchResultTheme.followInk;
     final label = Text(
       following ? '已关注' : '关注',
       style: searchStyle(SearchResultTheme.followText, ink).copyWith(height: 1),
@@ -247,7 +247,7 @@ class _SearchFollowPillState extends State<SearchFollowPill> {
             duration: duration,
             curve: Curves.easeOut,
             decoration: BoxDecoration(
-              color: following ? SearchResultTheme.followedFill : SearchResultTheme.followFill,
+              color: following ? SearchResultTheme.colorsOf(context).followedFill : SearchResultTheme.colorsOf(context).followFill,
               borderRadius: BorderRadius.circular(SearchResultTheme.followHeight / 2),
             ),
             alignment: Alignment.center,

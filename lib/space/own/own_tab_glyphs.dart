@@ -84,7 +84,7 @@ class FolderStackBadge extends StatelessWidget {
   const FolderStackBadge({super.key});
 
   @override
-  Widget build(BuildContext context) => const ExcludeSemantics(
+  Widget build(BuildContext context) => ExcludeSemantics(
     child: CustomPaint(size: Size.square(OwnSpaceTabsTheme.stackSize), painter: _StackPainter()),
   );
 }
@@ -126,20 +126,22 @@ class HiddenEye extends StatelessWidget {
   const HiddenEye({super.key});
 
   @override
-  Widget build(BuildContext context) => const ExcludeSemantics(
-    child: CustomPaint(size: Size(OwnSpaceTabsTheme.eyeWidth, OwnSpaceTabsTheme.eyeHeight), painter: _EyePainter()),
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: CustomPaint(size: Size(OwnSpaceTabsTheme.eyeWidth, OwnSpaceTabsTheme.eyeHeight), painter: _EyePainter(palette: BiliPalette.of(context))),
   );
 }
 
 class _EyePainter extends CustomPainter {
-  const _EyePainter();
+  final BiliPalette palette;
+
+  const _EyePainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
     // Traced on 114 at 3 px per point, in px from the ink's top left.
     final scale = size.width / 46;
     final line = Paint()
-      ..color = OwnSpaceTabsTheme.eyeInk
+      ..color = OwnSpaceTabsThemeColors(palette).eyeInk
       ..style = PaintingStyle.stroke
       ..strokeWidth = OwnSpaceTabsTheme.eyeStroke * 3
       ..strokeCap = StrokeCap.round;
@@ -171,7 +173,7 @@ class _EyePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_EyePainter oldDelegate) => false;
+  bool shouldRepaint(_EyePainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// 投稿's upload glyph (108): an arrow up out of an open tray.
@@ -179,18 +181,20 @@ class UploadGlyph extends StatelessWidget {
   const UploadGlyph({super.key});
 
   @override
-  Widget build(BuildContext context) => const ExcludeSemantics(
-    child: CustomPaint(size: Size.square(OwnSpaceTabsTheme.uploadSize), painter: _UploadPainter()),
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: CustomPaint(size: Size.square(OwnSpaceTabsTheme.uploadSize), painter: _UploadPainter(palette: BiliPalette.of(context))),
   );
 }
 
 class _UploadPainter extends CustomPainter {
-  const _UploadPainter();
+  final BiliPalette palette;
+
+  const _UploadPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final line = Paint()
-      ..color = OwnSpaceTabsTheme.uploadInk
+      ..color = OwnSpaceTabsThemeColors(palette).uploadInk
       ..style = PaintingStyle.stroke
       ..strokeWidth = OwnSpaceTabsTheme.uploadStroke
       ..strokeCap = StrokeCap.round
@@ -222,5 +226,5 @@ class _UploadPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_UploadPainter oldDelegate) => false;
+  bool shouldRepaint(_UploadPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }

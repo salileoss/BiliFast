@@ -83,7 +83,7 @@ class _MainShellState extends State<MainShell> {
           )
         : media.removePadding(removeBottom: true);
     return Material(
-      color: HomeTabBarTheme.bar,
+      color: HomeTabBarTheme.colorsOf(context).bar,
       child: Stack(
         children: [
           Positioned(
@@ -113,7 +113,7 @@ class _MainShellState extends State<MainShell> {
                   _Place(
                     shown: mine,
                     child: AnnotatedRegion<SystemUiOverlayStyle>(
-                      value: SystemUiOverlayStyle.dark,
+                      value: BiliPalette.of(context).isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
                       child: MePage(active: mine, developerPage: widget.developerPage, skin: widget.skin),
                     ),
                   ),

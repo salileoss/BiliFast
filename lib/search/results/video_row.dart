@@ -96,7 +96,7 @@ class SearchVideoRow extends StatelessWidget {
         coverBottom + SearchResultTheme.metaBottom - SearchResultTheme.metaLine * 2 - SearchResultTheme.metaGap;
     final titleStyle = searchStyle(
       SearchResultTheme.titleText,
-      SearchResultTheme.titleInk,
+      SearchResultTheme.colorsOf(context).titleInk,
       line: SearchResultTheme.titleLine,
     );
     final title = video.title;
@@ -137,7 +137,7 @@ class SearchVideoRow extends StatelessWidget {
                     for (final run in title.runs)
                       TextSpan(
                         text: run.text,
-                        style: run.highlighted ? const TextStyle(color: SearchResultTheme.highlight) : null,
+                        style: run.highlighted ? TextStyle(color: SearchResultTheme.colorsOf(context).highlight) : null,
                       ),
                   ],
                 ),
@@ -167,10 +167,10 @@ class SearchVideoRow extends StatelessWidget {
                   ),
                   const SizedBox(height: SearchResultTheme.metaGap),
                   SearchMetaLine(
-                    glyph: const SearchGlyphIcon(
+                    glyph: SearchGlyphIcon(
                       SearchGlyph.play,
                       size: SearchResultTheme.metaGlyph,
-                      color: SearchResultTheme.metaInk,
+                      color: SearchResultTheme.colorsOf(context).metaInk,
                     ),
                     text: plays,
                   ),
@@ -200,12 +200,12 @@ class SearchVideoRow extends StatelessWidget {
               ),
             ),
           ),
-          const Positioned(
+          Positioned(
             left: SearchResultTheme.gutter,
             right: 0,
             bottom: 0,
             height: SearchResultTheme.hairline,
-            child: ColoredBox(color: SearchResultTheme.rowHairlineInk),
+            child: ColoredBox(color: SearchResultTheme.colorsOf(context).rowHairlineInk),
           ),
         ],
       ),
@@ -222,7 +222,7 @@ class SearchMetaLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = searchStyle(SearchResultTheme.metaText, SearchResultTheme.metaInk, line: SearchResultTheme.metaLine);
+    final style = searchStyle(SearchResultTheme.metaText, SearchResultTheme.colorsOf(context).metaInk, line: SearchResultTheme.metaLine);
     return SizedBox(
       height: SearchResultTheme.metaLine,
       child: Row(
@@ -276,7 +276,7 @@ class _Cover extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           if (video.cover.isEmpty)
-            const ColoredBox(key: ValueKey('search-cover-placeholder'), color: SearchResultTheme.coverPlaceholder)
+            ColoredBox(key: ValueKey('search-cover-placeholder'), color: SearchResultTheme.colorsOf(context).coverPlaceholder)
           else
             RemoteImage(
               video.cover,

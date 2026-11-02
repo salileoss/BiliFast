@@ -127,7 +127,9 @@ class _NumberPainter extends CustomPainter {
 
 /// The 勋章 pills' rim: a stadium of dashes drawn inside its box.
 class OwnDashedPillPainter extends CustomPainter {
-  const OwnDashedPillPainter();
+  final BiliPalette palette;
+
+  const OwnDashedPillPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -135,7 +137,7 @@ class OwnDashedPillPainter extends CustomPainter {
     final box = Rect.fromLTWH(inset, inset, size.width - inset * 2, size.height - inset * 2);
     final outline = Path()..addRRect(RRect.fromRectAndRadius(box, Radius.circular(box.height / 2)));
     final paint = Paint()
-      ..color = OwnSpaceTheme.pillRim
+      ..color = OwnSpaceThemeColors(palette).pillRim
       ..style = PaintingStyle.stroke
       ..strokeWidth = OwnSpaceTheme.pillBorder;
     for (final PathMetric metric in outline.computeMetrics()) {
@@ -146,5 +148,5 @@ class OwnDashedPillPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(OwnDashedPillPainter oldDelegate) => false;
+  bool shouldRepaint(OwnDashedPillPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }

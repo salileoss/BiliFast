@@ -9,10 +9,15 @@ enum ShortcutGlyph { offline, history, star, later }
 
 /// The shortcuts' line icons, traced on 49 on a 32 pt box, in [color].
 class ShortcutPainter extends CustomPainter {
-  const ShortcutPainter(this.glyph, {this.color = BiliColors.text});
+  final BiliPalette palette;
+
+  // Keep the public color argument while resolving its default from the appearance snapshot.
+  // ignore: prefer_initializing_formals
+  const ShortcutPainter(this.glyph, {Color? color, this.palette = const BiliPalette(Brightness.light)}) : _color = color;
 
   final ShortcutGlyph glyph;
-  final Color color;
+  final Color? _color;
+  Color get color => _color ?? BiliColorsColors(palette).text;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -103,5 +108,5 @@ class ShortcutPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(ShortcutPainter oldDelegate) => oldDelegate.glyph != glyph || oldDelegate.color != color;
+  bool shouldRepaint(ShortcutPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness || (oldDelegate.glyph != glyph || oldDelegate.color != color);
 }

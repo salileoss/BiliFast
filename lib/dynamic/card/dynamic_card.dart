@@ -105,7 +105,7 @@ class _DynamicCardState extends State<DynamicCard> {
     final video = item.major is DynamicVideo;
     final textStyle = dynamicStyle(
       DynamicCardTheme.text,
-      DynamicCardTheme.textInk,
+      DynamicCardTheme.colorsOf(context).textInk,
       line: opus ? DynamicCardTheme.opusTextLine : DynamicCardTheme.textLine,
     );
     final body = _body();
@@ -133,7 +133,7 @@ class _DynamicCardState extends State<DynamicCard> {
             behavior: HitTestBehavior.opaque,
             onTap: _open,
             child: ColoredBox(
-              color: DynamicCardTheme.fill,
+              color: DynamicCardTheme.colorsOf(context).fill,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -174,7 +174,7 @@ class _DynamicCardState extends State<DynamicCard> {
           ),
           SizedBox(
             height: DynamicCardTheme.band,
-            child: ColoredBox(color: widget.space ? DynamicCardTheme.spaceBandInk : DynamicCardTheme.bandInk),
+            child: ColoredBox(color: widget.space ? DynamicCardTheme.colorsOf(context).spaceBandInk : DynamicCardTheme.colorsOf(context).bandInk),
           ),
         ],
       ),
@@ -237,13 +237,13 @@ class _AuthorRow extends StatelessWidget {
         : DynamicCardTheme.moreRight + DynamicCardTheme.moreTarget / 2;
     final nameStyle = dynamicStyle(
       DynamicCardTheme.nameText,
-      author.vipPink ? DynamicCardTheme.nameVipInk : DynamicCardTheme.nameInk,
+      author.vipPink ? DynamicCardTheme.colorsOf(context).nameVipInk : DynamicCardTheme.colorsOf(context).nameInk,
       weight: DynamicCardTheme.nameWeight,
       line: DynamicCardTheme.nameLine,
     );
     final timeStyle = dynamicStyle(
       DynamicCardTheme.timeText,
-      DynamicCardTheme.timeInk,
+      DynamicCardTheme.colorsOf(context).timeInk,
       line: DynamicCardTheme.timeLine,
     );
     return Stack(
@@ -301,7 +301,7 @@ class _AuthorRow extends StatelessWidget {
               children: [
                 TextSpan(text: author.pubTime),
                 if (author.pubAction.isNotEmpty) ...[
-                  const WidgetSpan(
+                  WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: Padding(
                       padding: EdgeInsets.only(
@@ -311,7 +311,7 @@ class _AuthorRow extends StatelessWidget {
                       child: SizedBox.square(
                         dimension: DynamicCardTheme.timeDot,
                         child: DecoratedBox(
-                          decoration: BoxDecoration(color: DynamicCardTheme.timeInk, shape: BoxShape.circle),
+                          decoration: BoxDecoration(color: DynamicCardTheme.colorsOf(context).timeInk, shape: BoxShape.circle),
                         ),
                       ),
                     ),
@@ -350,12 +350,12 @@ class _AuthorRow extends StatelessWidget {
               key: const ValueKey('dynamic-more'),
               behavior: HitTestBehavior.opaque,
               onTap: onMore,
-              child: const Center(
+              child: Center(
                 child: DynamicIcon(
                   DynamicArt.more,
                   width: DynamicCardTheme.moreWidth,
                   height: DynamicCardTheme.moreHeight,
-                  color: DynamicCardTheme.moreInk,
+                  color: DynamicCardTheme.colorsOf(context).moreInk,
                 ),
               ),
             ),
@@ -407,7 +407,7 @@ class _Face extends StatelessWidget {
               width: DynamicCardTheme.badge + ring * 2,
               height: DynamicCardTheme.badge + ring * 2,
               padding: const EdgeInsets.all(ring),
-              decoration: const BoxDecoration(color: DynamicCardTheme.fill, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: DynamicCardTheme.colorsOf(context).fill, shape: BoxShape.circle),
               child: CustomPaint(painter: VerifiedBoltPainter(badge)),
             ),
           ),
@@ -549,7 +549,7 @@ class _Footer extends StatelessWidget {
                   iconCentre: DynamicCardTheme.likeCentre,
                   text: count(stat.like, '点赞'),
                   label: stat.liked ? '取消点赞' : '点赞',
-                  ink: stat.liked ? DynamicCardTheme.footerLiked : DynamicCardTheme.footerInk,
+                  ink: stat.liked ? DynamicCardTheme.colorsOf(context).footerLiked : DynamicCardTheme.colorsOf(context).footerInk,
                   onTap: onLike,
                 ),
               ],
@@ -570,7 +570,7 @@ class _FooterButton extends StatelessWidget {
     required this.text,
     required this.label,
     required this.onTap,
-    this.ink = DynamicCardTheme.footerInk,
+    this.ink,
   });
 
   final String icon;
@@ -578,12 +578,12 @@ class _FooterButton extends StatelessWidget {
   final double iconCentre;
   final String text;
   final String label;
-  final Color ink;
+  final Color? ink;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final style = dynamicStyle(DynamicCardTheme.footerText, ink).copyWith(height: 1);
+    final style = dynamicStyle(DynamicCardTheme.footerText, ink ?? DynamicCardTheme.colorsOf(context).footerInk).copyWith(height: 1);
     return Expanded(
       child: Semantics(
         container: true,
@@ -601,7 +601,7 @@ class _FooterButton extends StatelessWidget {
               children: [
                 Transform.translate(
                   offset: Offset(0, iconCentre - DynamicCardTheme.footerCentre),
-                  child: DynamicIcon(icon, width: iconWidth, color: ink),
+                  child: DynamicIcon(icon, width: iconWidth, color: ink ?? DynamicCardTheme.colorsOf(context).footerInk),
                 ),
                 const SizedBox(width: DynamicCardTheme.footerGapToCount),
                 Text.rich(apartFromHan(text), maxLines: 1, softWrap: false, style: style),

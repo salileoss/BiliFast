@@ -279,7 +279,7 @@ class _MePageState extends State<MePage> with RouteAware {
       openVipCentre: () => unawaited(_openVipCentre()),
     );
     return Material(
-      color: MeTheme.background,
+      color: MeTheme.colorsOf(context).background,
       child: ListenableBuilder(
         listenable: Listenable.merge([_me, _environment, _skin]),
         builder: (context, _) {
@@ -296,14 +296,13 @@ class _MePageState extends State<MePage> with RouteAware {
             key: _headerKey,
             children: [
               MeHeader(view: view, actions: actions, reserveCard: _reserveCard(view), animate: animate, ink: ink),
-              _TopRow(onTap: _soon, color: ink ?? MeTheme.topGlyph),
+              _TopRow(onTap: _soon, color: ink ?? MeTheme.colorsOf(context).topGlyph),
             ],
           );
           final card = MeHeader.hasCard(view) || _reserveCard(view);
+          final lightStatus = skin != null ? skin.lightStatusMe(card: card) : BiliPalette.of(context).isDark;
           return AnnotatedRegion<SystemUiOverlayStyle>(
-            value: skin != null && skin.lightStatusMe(card: card)
-                ? SystemUiOverlayStyle.light
-                : SystemUiOverlayStyle.dark,
+            value: lightStatus ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
             child: Column(
               children: [
                 Stack(
@@ -371,7 +370,7 @@ class _SkinPicture extends StatelessWidget {
             still
           else
             SkinVideo(file: video, loop: skin.equip.colors.headMyselfVideoLoop, placeholder: still),
-          const Positioned(
+          Positioned(
             left: 0,
             right: 0,
             bottom: 0,
@@ -382,7 +381,7 @@ class _SkinPicture extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: MeTheme.skinFadeColors,
+                  colors: MeTheme.colorsOf(context).skinFadeColors,
                   stops: MeTheme.skinFadeStops,
                 ),
               ),
@@ -394,7 +393,7 @@ class _SkinPicture extends StatelessWidget {
   }
 }
 
-/// 投屏, 扫一扫, 装扮 and 夜间模式, none built yet.
+/// 投屏, 扫一扫, 装扮 and the device's appearance toggle.
 class _TopRow extends StatelessWidget {
   const _TopRow({required this.onTap, required this.color});
 
@@ -410,6 +409,14 @@ class _TopRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appearance = AppScope.of(context).appearance;
+    return ListenableBuilder(
+      listenable: appearance,
+      builder: (context, _) => _row(context, appearance.isDark, appearance.toggle),
+    );
+  }
+
+  Widget _row(BuildContext context, bool dark, VoidCallback toggle) {
     final width = MediaQuery.sizeOf(context).width;
     return SizedBox(
       height: MeTheme.topTapHeight,
@@ -428,12 +435,13 @@ class _TopRow extends StatelessWidget {
               height: MeTheme.topTapHeight,
               child: MeTap(
                 key: ValueKey(key),
-                label: label,
-                onTap: onTap,
+                label: glyph == MeTopGlyph.night && dark ? '日间模式' : label,
+                toggled: glyph == MeTopGlyph.night ? dark : null,
+                onTap: glyph == MeTopGlyph.night ? toggle : onTap,
                 child: Center(
                   child: CustomPaint(
                     size: const Size.square(MeTheme.topGlyphBox),
-                    painter: MeTopGlyphPainter(glyph, color: color),
+                    painter: MeTopGlyphPainter(glyph, color: color, palette: BiliPalette.of(context)),
                   ),
                 ),
               ),
@@ -508,7 +516,7 @@ class _List extends StatelessWidget {
                       fontFamily: BiliFonts.family,
                       fontSize: MeTheme.servicesTitleText,
                       fontWeight: MeTheme.servicesTitleWeight,
-                      color: MeTheme.servicesTitle,
+                      color: MeTheme.colorsOf(context).servicesTitle,
                     ),
                   ),
                 ),
@@ -562,7 +570,7 @@ class _Shortcut extends StatelessWidget {
                 top: MeTheme.shortcutIconCentre - MeTheme.listCut - AvatarPageTheme.shortcutIconBox / 2,
                 child: CustomPaint(
                   size: const Size.square(AvatarPageTheme.shortcutIconBox),
-                  painter: ShortcutPainter(glyph, color: MeTheme.shortcutGlyph),
+                  painter: ShortcutPainter(glyph, color: MeTheme.shortcutGlyph, palette: BiliPalette.of(context)),
                 ),
               ),
               Positioned(
@@ -578,7 +586,7 @@ class _Shortcut extends StatelessWidget {
                       fontFamilyFallback: BiliFonts.fallback,
                       fontSize: MeTheme.shortcutText,
                       letterSpacing: 0,
-                      color: MeTheme.shortcutLabel,
+                      color: MeTheme.colorsOf(context).shortcutLabel,
                     ),
                   ),
                 ),
@@ -611,7 +619,7 @@ class _ServiceRow extends StatelessWidget {
           Positioned(
             left: MeTheme.serviceGlyphCentre - MeTheme.serviceGlyphBox / 2,
             top: (MeTheme.serviceRow - MeTheme.serviceGlyphBox) / 2,
-            child: CustomPaint(size: const Size.square(MeTheme.serviceGlyphBox), painter: MeServiceGlyphPainter(glyph)),
+            child: CustomPaint(size: const Size.square(MeTheme.serviceGlyphBox), painter: MeServiceGlyphPainter(glyph, color: glyph == MeServiceGlyph.listen ? MeTheme.colorsOf(context).listenGlyph : MeTheme.colorsOf(context).serviceGlyph)),
           ),
           Positioned(
             left: MeTheme.serviceTextLeft,
@@ -623,7 +631,7 @@ class _ServiceRow extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: BiliFonts.family,
                   fontSize: MeTheme.serviceText,
-                  color: MeTheme.serviceLabel,
+                  color: MeTheme.colorsOf(context).serviceLabel,
                 ),
               ),
             ),
@@ -631,9 +639,9 @@ class _ServiceRow extends StatelessWidget {
           Positioned(
             right: MeTheme.spaceRight,
             top: (MeTheme.serviceRow - MeTheme.chevronHeight) / 2,
-            child: const CustomPaint(
+            child: CustomPaint(
               size: Size(MeTheme.chevronWidth, MeTheme.chevronHeight),
-              painter: MeChevronPainter(color: MeTheme.serviceChevron, stroke: MeTheme.chevronStroke),
+              painter: MeChevronPainter(color: MeTheme.colorsOf(context).serviceChevron, stroke: MeTheme.chevronStroke),
             ),
           ),
         ],

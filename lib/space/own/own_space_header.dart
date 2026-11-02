@@ -39,7 +39,7 @@ class OwnSpaceHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ColoredBox(
     key: const ValueKey('own-space-header'),
-    color: SpaceTheme.page,
+    color: SpaceTheme.colorsOf(context).page,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -96,13 +96,13 @@ class _Top extends StatelessWidget {
           height: foot,
           child: ExcludeSemantics(
             child: banner == null || banner.isEmpty
-                ? const ColoredBox(key: ValueKey('own-space-banner-default'), color: SpaceTheme.bannerDefault)
+                ? ColoredBox(key: ValueKey('own-space-banner-default'), color: SpaceTheme.colorsOf(context).bannerDefault)
                 : RemoteImage(
                     banner,
                     key: const ValueKey('own-space-banner'),
                     // A pull stretches the box every frame; the download keeps the resting size.
                     size: Size(MediaQuery.sizeOf(context).width, OwnSpaceTheme.bannerHeight),
-                    placeholder: const ColoredBox(color: SpaceTheme.bannerDefault),
+                    placeholder: ColoredBox(color: SpaceTheme.colorsOf(context).bannerDefault),
                   ),
           ),
         ),
@@ -111,7 +111,7 @@ class _Top extends StatelessWidget {
           right: 0,
           top: foot - OwnSpaceTheme.labelShade,
           height: OwnSpaceTheme.labelShade,
-          child: const IgnorePointer(
+          child: IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(colors: [OwnSpaceTheme.labelShadeClear, OwnSpaceTheme.labelShadeInk]),
@@ -134,7 +134,7 @@ class _Top extends StatelessWidget {
               key: const ValueKey('own-space-skin'),
               behavior: HitTestBehavior.opaque,
               onTap: onSoon,
-              child: const Center(child: OwnSkinGlyph(color: OwnSpaceTheme.skinInk)),
+              child: Center(child: OwnSkinGlyph(color: OwnSpaceTheme.skinInk)),
             ),
           ),
         ),
@@ -207,7 +207,7 @@ class _Top extends StatelessWidget {
         top: foot - OwnSpaceTheme.labelIconRise - OwnSpaceTheme.labelRuleHeight / 2,
         width: OwnSpaceTheme.labelRule,
         height: OwnSpaceTheme.labelRuleHeight,
-        child: const ColoredBox(color: OwnSpaceTheme.labelRuleInk),
+        child: ColoredBox(color: OwnSpaceTheme.labelRuleInk),
       ),
     ];
   }
@@ -269,7 +269,7 @@ class _Face extends StatelessWidget {
                 key: const ValueKey('own-space-vip-badge'),
                 padding: const EdgeInsets.all(OwnSpaceTheme.vipRing),
                 decoration: const BoxDecoration(color: OwnSpaceTheme.vipRingInk, shape: BoxShape.circle),
-                child: const FittedBox(child: MeVipDisc()),
+                child: FittedBox(child: MeVipDisc()),
               ),
             ),
         ],
@@ -286,12 +286,12 @@ class _Stats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const ruleTop = SpaceTheme.statsRuleTop - (SpaceTheme.countCentre - SpaceTheme.countLine / 2);
-    const rule = Padding(
+    final rule = Padding(
       padding: EdgeInsets.only(top: ruleTop),
       child: SizedBox(
         width: SpaceTheme.statsRuleWidth,
         height: SpaceTheme.statsRule,
-        child: ColoredBox(color: SpaceTheme.statsRuleInk),
+        child: ColoredBox(color: SpaceTheme.colorsOf(context).statsRuleInk),
       ),
     );
     return Row(
@@ -335,7 +335,7 @@ class _Count extends StatelessWidget {
             child: Center(
               child: spaceLine(
                 value,
-                spaceStyle(SpaceTheme.countText, SpaceTheme.countInk, line: SpaceTheme.countLine),
+                spaceStyle(SpaceTheme.countText, SpaceTheme.colorsOf(context).countInk, line: SpaceTheme.countLine),
               ),
             ),
           ),
@@ -345,7 +345,7 @@ class _Count extends StatelessWidget {
             child: Center(
               child: spaceLine(
                 label,
-                spaceStyle(SpaceTheme.labelText, SpaceTheme.labelInk, line: SpaceTheme.labelLine),
+                spaceStyle(SpaceTheme.labelText, SpaceTheme.colorsOf(context).labelInk, line: SpaceTheme.labelLine),
               ),
             ),
           ),
@@ -372,14 +372,14 @@ class _EditButton extends StatelessWidget {
       onTap: onTap,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: OwnSpaceTheme.editFill,
-          border: Border.all(color: OwnSpaceTheme.editInk, width: OwnSpaceTheme.editBorder),
+          color: OwnSpaceTheme.colorsOf(context).editFill,
+          border: Border.all(color: OwnSpaceTheme.colorsOf(context).editInk, width: OwnSpaceTheme.editBorder),
           borderRadius: BorderRadius.circular(SpaceTheme.followRadius),
         ),
         child: Center(
           child: spaceLine(
             '编辑资料',
-            spaceStyle(SpaceTheme.followText, OwnSpaceTheme.editInk, line: SpaceTheme.followHeight),
+            spaceStyle(SpaceTheme.followText, OwnSpaceTheme.colorsOf(context).editInk, line: SpaceTheme.followHeight),
           ),
         ),
       ),
@@ -405,7 +405,7 @@ class _NameRow extends StatelessWidget {
               profile.name,
               spaceStyle(
                 SpaceTheme.nameText,
-                profile.vip ? SpaceTheme.nameVipInk : SpaceTheme.nameInk,
+                profile.vip ? SpaceTheme.colorsOf(context).nameVipInk : SpaceTheme.colorsOf(context).nameInk,
                 line: SpaceTheme.nameBox,
               ),
               key: const ValueKey('own-space-name'),
@@ -471,27 +471,27 @@ class _MedalPill extends StatelessWidget {
       child: SizedBox(
         height: SpaceTheme.nameBox,
         child: Center(
-          child: SizedBox(key: pillKey, height: OwnSpaceTheme.pillHeight, child: _pill()),
+          child: SizedBox(key: pillKey, height: OwnSpaceTheme.pillHeight, child: _pill(context)),
         ),
       ),
     ),
   );
 
-  Widget _pill() => CustomPaint(
-    painter: const OwnDashedPillPainter(),
+  Widget _pill(BuildContext context) => CustomPaint(
+    painter: OwnDashedPillPainter(palette: BiliPalette.of(context)),
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: OwnSpaceTheme.pillPad),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SpaceGlyphIcon(
+          SpaceGlyphIcon(
             SpaceGlyph.plus,
             width: OwnSpaceTheme.pillPlus,
             height: OwnSpaceTheme.pillPlus,
-            color: OwnSpaceTheme.pillInk,
+            color: OwnSpaceTheme.colorsOf(context).pillInk,
           ),
           const SizedBox(width: OwnSpaceTheme.pillPlusGap),
-          spaceLine(title, spaceStyle(OwnSpaceTheme.pillText, OwnSpaceTheme.pillInk, line: OwnSpaceTheme.pillHeight)),
+          spaceLine(title, spaceStyle(OwnSpaceTheme.pillText, OwnSpaceTheme.colorsOf(context).pillInk, line: OwnSpaceTheme.pillHeight)),
         ],
       ),
     ),
@@ -528,7 +528,7 @@ class _LevelRow extends StatelessWidget {
             height: OwnSpaceTheme.expLine,
             child: spaceLine(
               '${own.exp}/$next',
-              spaceStyle(OwnSpaceTheme.expText, OwnSpaceTheme.expInk, line: OwnSpaceTheme.expLine),
+              spaceStyle(OwnSpaceTheme.expText, OwnSpaceTheme.colorsOf(context).expInk, line: OwnSpaceTheme.expLine),
               key: const ValueKey('own-space-exp'),
             ),
           ),
@@ -539,7 +539,7 @@ class _LevelRow extends StatelessWidget {
             height: OwnSpaceTheme.expBarHeight,
             child: ColoredBox(
               key: const ValueKey('own-space-exp-bar'),
-              color: OwnSpaceTheme.expTrack,
+              color: OwnSpaceTheme.colorsOf(context).expTrack,
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: FractionallySizedBox(
@@ -575,7 +575,7 @@ class _BioLine extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: spaceLine(
             sign.trim().isEmpty ? spaceEmptyBio : sign.replaceAll('\n', ' '),
-            spaceStyle(SpaceTheme.bioText, SpaceTheme.bioInk, line: SpaceTheme.bioBox),
+            spaceStyle(SpaceTheme.bioText, SpaceTheme.colorsOf(context).bioInk, line: SpaceTheme.bioBox),
             key: const ValueKey('own-space-bio'),
           ),
         ),
@@ -595,7 +595,7 @@ class _BioLine extends StatelessWidget {
             onTap: onDetail,
             child: Padding(
               padding: const EdgeInsets.only(left: SpaceTheme.gutter),
-              child: spaceLine('详情', spaceStyle(SpaceTheme.detailText, SpaceTheme.detailInk, line: SpaceTheme.bioBox)),
+              child: spaceLine('详情', spaceStyle(SpaceTheme.detailText, SpaceTheme.colorsOf(context).detailInk, line: SpaceTheme.bioBox)),
             ),
           ),
         ),
@@ -613,7 +613,7 @@ class _TagRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = spaceStyle(SpaceTheme.tagText, SpaceTheme.tagInk, line: SpaceTheme.tagBox);
+    final style = spaceStyle(SpaceTheme.tagText, SpaceTheme.colorsOf(context).tagInk, line: SpaceTheme.tagBox);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: SpaceTheme.gutter),
       child: ClipRect(
@@ -643,11 +643,11 @@ class _Tag extends StatelessWidget {
   Widget build(BuildContext context) {
     final icon = tag.icon;
     final Widget? glyph = tag.text.startsWith('IP属地')
-        ? const SpaceGlyphIcon(
+        ? SpaceGlyphIcon(
             SpaceGlyph.ip,
             width: SpaceTheme.tagIconWidth,
             height: SpaceTheme.tagIconHeight,
-            color: SpaceTheme.tagInk,
+            color: SpaceTheme.colorsOf(context).tagInk,
           )
         : icon != null && icon.isNotEmpty
         ? SizedBox(
@@ -667,11 +667,11 @@ class _Tag extends StatelessWidget {
         Flexible(child: spaceLine(tag.text, style)),
         if (tag.link) ...[
           const SizedBox(width: SpaceTheme.tagChevronGap),
-          const SpaceGlyphIcon(
+          SpaceGlyphIcon(
             SpaceGlyph.chevron,
             width: SpaceTheme.tagChevronWidth,
             height: SpaceTheme.tagChevronHeight,
-            color: SpaceTheme.tagInk,
+            color: SpaceTheme.colorsOf(context).tagInk,
           ),
         ],
       ],

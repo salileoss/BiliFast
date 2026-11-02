@@ -109,7 +109,7 @@ class _DynamicRepostBlockState extends State<DynamicRepostBlock> {
     final follow = _follow;
     final textStyle = dynamicStyle(
       DynamicCardTheme.text,
-      DynamicCardTheme.repostTextInk,
+      DynamicCardTheme.colorsOf(context).repostTextInk,
       line: DynamicCardTheme.textLine,
     );
     final nodes = DynamicRepostBlock._words(original);
@@ -124,7 +124,7 @@ class _DynamicRepostBlockState extends State<DynamicRepostBlock> {
       behavior: HitTestBehavior.opaque,
       onTap: _open,
       child: ColoredBox(
-        color: DynamicCardTheme.repostFill,
+        color: DynamicCardTheme.colorsOf(context).repostFill,
         child: Padding(
           padding: EdgeInsets.only(
             top: detail ? DynamicCardTheme.repostDetailTop : DynamicCardTheme.repostTop,
@@ -157,7 +157,7 @@ class _DynamicRepostBlockState extends State<DynamicRepostBlock> {
                                 overflow: TextOverflow.ellipsis,
                                 style: dynamicStyle(
                                   DynamicCardTheme.repostNameText,
-                                  DynamicCardTheme.linkInk,
+                                  DynamicCardTheme.colorsOf(context).linkInk,
                                   line: DynamicCardTheme.repostNameLine,
                                 ),
                               ),
@@ -183,9 +183,9 @@ class _DynamicRepostBlockState extends State<DynamicRepostBlock> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const CustomPaint(
+                                    CustomPaint(
                                       size: Size.square(DynamicCardTheme.repostPlus),
-                                      painter: _PlusPainter(),
+                                      painter: _PlusPainter(palette: BiliPalette.of(context)),
                                     ),
                                     const SizedBox(width: DynamicCardTheme.repostPlusGap),
                                     Text(
@@ -193,7 +193,7 @@ class _DynamicRepostBlockState extends State<DynamicRepostBlock> {
                                       maxLines: 1,
                                       style: dynamicStyle(
                                         DynamicCardTheme.repostFollowText,
-                                        DynamicCardTheme.repostFollowInk,
+                                        DynamicCardTheme.colorsOf(context).repostFollowInk,
                                       ).copyWith(height: 1),
                                     ),
                                   ],
@@ -249,12 +249,14 @@ class _DynamicRepostBlockState extends State<DynamicRepostBlock> {
 
 /// + 关注's thin cross (136), drawn: SF's plus is shorter and heavier.
 class _PlusPainter extends CustomPainter {
-  const _PlusPainter();
+  final BiliPalette palette;
+
+  const _PlusPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final line = Paint()
-      ..color = DynamicCardTheme.repostFollowInk
+      ..color = DynamicCardThemeColors(palette).repostFollowInk
       ..strokeWidth = DynamicCardTheme.repostPlusStroke;
     final centre = size.center(Offset.zero);
     canvas
@@ -263,5 +265,5 @@ class _PlusPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_PlusPainter oldDelegate) => false;
+  bool shouldRepaint(_PlusPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }

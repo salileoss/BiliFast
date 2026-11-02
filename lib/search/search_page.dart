@@ -268,9 +268,9 @@ class _SearchPageState extends State<SearchPage> with SingleTickerProviderStateM
         if (!didPop) _closeOverlay();
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.dark,
+        value: BiliPalette.of(context).isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         child: Scaffold(
-          backgroundColor: SearchTheme.page,
+          backgroundColor: SearchTheme.colorsOf(context).page,
           resizeToAvoidBottomInset: false,
           body: Stack(
             children: [
@@ -422,8 +422,8 @@ class _SearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = _style(SearchTheme.text);
-    final hint = _style(SearchTheme.dim);
+    final text = _style(SearchTheme.colorsOf(context).text);
+    final hint = _style(SearchTheme.colorsOf(context).dim);
     return SizedBox(
       height: SearchTheme.barHeight,
       child: Row(
@@ -438,10 +438,10 @@ class _SearchBar extends StatelessWidget {
               child: Center(
                 child: Transform.flip(
                   flipX: true,
-                  child: const Chevron(
+                  child: Chevron(
                     size: Size(SearchTheme.backWidth, SearchTheme.backHeight),
                     stroke: SearchTheme.backStroke,
-                    color: SearchTheme.dim,
+                    color: SearchTheme.colorsOf(context).dim,
                   ),
                 ),
               ),
@@ -455,19 +455,19 @@ class _SearchBar extends StatelessWidget {
                 child: Container(
                   height: SearchTheme.fieldHeight,
                   padding: const EdgeInsets.only(left: SearchTheme.magnifierInset),
-                  foregroundDecoration: const ShapeDecoration(
+                  foregroundDecoration: ShapeDecoration(
                     shape: StadiumBorder(
-                      side: BorderSide(color: SearchTheme.fieldRimColor, width: SearchTheme.fieldRim),
+                      side: BorderSide(color: SearchTheme.colorsOf(context).fieldRimColor, width: SearchTheme.fieldRim),
                     ),
                   ),
                   child: Row(
                     children: [
                       Transform.translate(
                         offset: const Offset(0, -SearchTheme.magnifierLift),
-                        child: const SearchGlyphIcon(
+                        child: SearchGlyphIcon(
                           SearchGlyph.magnifier,
                           size: SearchTheme.magnifier,
-                          color: SearchTheme.dim,
+                          color: SearchTheme.colorsOf(context).dim,
                         ),
                       ),
                       const SizedBox(width: SearchTheme.magnifierGap),
@@ -482,7 +482,7 @@ class _SearchBar extends StatelessWidget {
                           enableSuggestions: false,
                           textInputAction: TextInputAction.search,
                           contextMenuBuilder: _editMenu,
-                          cursorColor: SearchTheme.caret,
+                          cursorColor: SearchTheme.colorsOf(context).caret,
                           onChanged: onChanged,
                           onSubmitted: (_) => onSubmit(),
                           style: text,
@@ -511,11 +511,11 @@ class _SearchBar extends StatelessWidget {
                                   key: const ValueKey('search-clear'),
                                   label: '清空',
                                   onTap: onClear,
-                                  child: const Center(
+                                  child: Center(
                                     child: SearchGlyphIcon(
                                       SearchGlyph.clear,
                                       size: SearchTheme.clear,
-                                      color: SearchTheme.clearColor,
+                                      color: SearchTheme.colorsOf(context).clearColor,
                                     ),
                                   ),
                                 ),
@@ -536,7 +536,7 @@ class _SearchBar extends StatelessWidget {
               child: Center(
                 child: Transform.translate(
                   offset: const Offset(0, SearchTheme.submitDrop),
-                  child: Text('搜索', style: _style(SearchTheme.submit, size: SearchTheme.submitText)),
+                  child: Text('搜索', style: _style(SearchTheme.colorsOf(context).submit, size: SearchTheme.submitText)),
                 ),
               ),
             ),

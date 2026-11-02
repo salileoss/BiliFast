@@ -30,10 +30,10 @@ class DynamicGoodsBlock extends StatelessWidget {
             child: Row(
               children: [
                 const SizedBox(width: DynamicCardTheme.goodsLockLead),
-                const DynamicIcon(
+                DynamicIcon(
                   DynamicArt.lock,
                   width: DynamicCardTheme.goodsLockWidth,
-                  color: DynamicCardTheme.goodsHeadInk,
+                  color: DynamicCardTheme.colorsOf(context).goodsHeadInk,
                 ),
                 const SizedBox(width: DynamicCardTheme.goodsLockGap),
                 Flexible(
@@ -44,7 +44,7 @@ class DynamicGoodsBlock extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: dynamicStyle(
                       DynamicCardTheme.goodsHeadText,
-                      DynamicCardTheme.goodsHeadInk,
+                      DynamicCardTheme.colorsOf(context).goodsHeadInk,
                       line: DynamicCardTheme.goodsHeadLine,
                     ),
                   ),
@@ -66,7 +66,7 @@ class DynamicGoodsBlock extends StatelessWidget {
               child: Container(
                 height: DynamicCardTheme.goodsBox,
                 decoration: BoxDecoration(
-                  color: DynamicCardTheme.goodsFill,
+                  color: DynamicCardTheme.colorsOf(context).goodsFill,
                   borderRadius: BorderRadius.circular(DynamicCardTheme.goodsRadius),
                 ),
                 child: Stack(
@@ -86,7 +86,7 @@ class DynamicGoodsBlock extends StatelessWidget {
                       centre: DynamicCardTheme.goodsNameCentre,
                       style: dynamicStyle(
                         DynamicCardTheme.goodsNameText,
-                        DynamicCardTheme.goodsNameInk,
+                        DynamicCardTheme.colorsOf(context).goodsNameInk,
                         line: DynamicCardTheme.goodsNameLine,
                       ),
                     ),
@@ -96,7 +96,7 @@ class DynamicGoodsBlock extends StatelessWidget {
                         centre: DynamicCardTheme.goodsBriefCentre,
                         style: dynamicStyle(
                           DynamicCardTheme.goodsBriefText,
-                          DynamicCardTheme.goodsBriefInk,
+                          DynamicCardTheme.colorsOf(context).goodsBriefInk,
                           line: DynamicCardTheme.goodsBriefLine,
                         ),
                       ),
@@ -111,7 +111,7 @@ class DynamicGoodsBlock extends StatelessWidget {
                         onTap: soon,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: DynamicCardTheme.goodsButtonFill,
+                            color: DynamicCardTheme.colorsOf(context).goodsButtonFill,
                             borderRadius: BorderRadius.circular(DynamicCardTheme.goodsButtonRadius),
                           ),
                           child: Center(

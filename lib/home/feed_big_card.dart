@@ -303,7 +303,7 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
       child: ClipRRect(
         borderRadius: BorderRadius.circular(FeedBigCardTheme.radius),
         child: ColoredBox(
-          color: BiliColors.card,
+          color: BiliColors.colorsOf(context).card,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -696,9 +696,9 @@ class _Progress extends StatelessWidget {
         return FractionallySizedBox(
           key: const ValueKey('big-card-progress'),
           widthFactor: share,
-          child: const SizedBox(
+          child: SizedBox(
             height: FeedBigCardTheme.progress,
-            child: ColoredBox(color: FeedBigCardTheme.progressInk),
+            child: ColoredBox(color: FeedBigCardTheme.colorsOf(context).progressInk),
           ),
         );
       },
@@ -724,9 +724,9 @@ class _TitleBand extends StatelessWidget {
   final VoidCallback onLike;
   final VoidCallback onMore;
 
-  static const _title = TextStyle(
+  TextStyle _title(BuildContext context) => TextStyle(
     fontSize: FeedBigCardTheme.titleText,
-    color: FeedBigCardTheme.title,
+    color: FeedBigCardTheme.colorsOf(context).title,
     height: FeedBigCardTheme.titleLine / FeedBigCardTheme.titleText,
   );
 
@@ -738,7 +738,7 @@ class _TitleBand extends StatelessWidget {
       fontFamily: BiliFonts.family,
       fontFamilyFallback: BiliFonts.fallback,
       fontSize: FeedBigCardTheme.countText,
-      color: FeedBigCardTheme.count,
+      color: FeedBigCardTheme.colorsOf(context).count,
       height: 1,
     );
     const ink = FeedBigCardTheme.likeInk;
@@ -760,8 +760,8 @@ class _TitleBand extends StatelessWidget {
                 card.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: _title,
-                strutStyle: BiliFonts.strutOf(context, _title),
+                style: _title(context),
+                strutStyle: BiliFonts.strutOf(context, _title(context)),
               ),
             ),
           ),
@@ -801,7 +801,7 @@ class _TitleBand extends StatelessWidget {
                                   key: const ValueKey('big-card-unliked'),
                                   width: ink / FeedBigCardTheme.likeAssetInk,
                                   height: ink / FeedBigCardTheme.likeAssetInk,
-                                  color: FeedBigCardTheme.like,
+                                  color: FeedBigCardTheme.colorsOf(context).like,
                                   colorBlendMode: BlendMode.srcIn,
                                   excludeFromSemantics: true,
                                 ),
@@ -819,7 +819,7 @@ class _TitleBand extends StatelessWidget {
                             key: const ValueKey('big-card-likes'),
                             maxLines: 1,
                             softWrap: false,
-                            style: count.copyWith(color: liked ? FeedBigCardTheme.liked : FeedBigCardTheme.count),
+                            style: count.copyWith(color: liked ? FeedBigCardTheme.colorsOf(context).liked : FeedBigCardTheme.colorsOf(context).count),
                           ),
                         ),
                       ),
@@ -838,8 +838,8 @@ class _TitleBand extends StatelessWidget {
             key: const ValueKey('big-card-more'),
             behavior: HitTestBehavior.opaque,
             onTap: onMore,
-            child: const Center(
-              child: Icon(Icons.more_vert, size: BiliMetrics.cardFooterText + 4, color: BiliColors.secondaryText),
+            child: Center(
+              child: Icon(Icons.more_vert, size: BiliMetrics.cardFooterText + 4, color: BiliColors.colorsOf(context).secondaryText),
             ),
           ),
         ),

@@ -64,14 +64,14 @@ abstract final class FollowPosts {
   @visibleForTesting
   static Widget Function(DynamicItem item, FeedInlineHost host)? cardOverride;
 
-  static Widget row(DynamicItem item, FeedInlineHost host, {required bool bandAbove}) => Column(
+  static Widget row(BuildContext context, DynamicItem item, FeedInlineHost host, {required bool bandAbove}) => Column(
     key: ValueKey('follow-post-${item.id}'),
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       if (bandAbove)
-        const SizedBox(
+        SizedBox(
           height: DynamicFeedTheme.band,
-          child: ColoredBox(color: DynamicFeedTheme.bandFill),
+          child: ColoredBox(color: DynamicFeedTheme.colorsOf(context).bandFill),
         ),
       cardOverride?.call(item, host) ?? DynamicCard(item: item, inline: host),
     ],
@@ -172,7 +172,7 @@ class FollowPinkButton extends StatelessWidget {
     child: Container(
       height: height,
       padding: EdgeInsets.symmetric(horizontal: padX),
-      decoration: const ShapeDecoration(color: BiliColors.pink, shape: StadiumBorder()),
+      decoration: ShapeDecoration(color: BiliColors.colorsOf(context).pink, shape: StadiumBorder()),
       child: Center(
         widthFactor: 1,
         child: Text(label, style: followStyle(text, BiliColors.onPink, weight: DynamicFeedTheme.buttonWeight)),
@@ -190,7 +190,7 @@ class FollowStateMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = followStyle(DynamicFeedTheme.stateText, DynamicFeedTheme.stateInk);
+    final style = followStyle(DynamicFeedTheme.stateText, DynamicFeedTheme.colorsOf(context).stateInk);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: DynamicFeedTheme.gutter),
       child: Column(
@@ -227,7 +227,7 @@ class FollowFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const padding = EdgeInsets.symmetric(vertical: DynamicFeedTheme.footerPad);
-    final style = followStyle(DynamicFeedTheme.footerText, DynamicFeedTheme.footerInk);
+    final style = followStyle(DynamicFeedTheme.footerText, DynamicFeedTheme.colorsOf(context).footerInk);
     final error = this.error;
     if (error != null && !loading) {
       return FollowTap(
@@ -242,7 +242,7 @@ class FollowFooter extends StatelessWidget {
                 TextSpan(text: '$error，', style: style),
                 TextSpan(
                   text: '点击重试',
-                  style: style.copyWith(color: BiliColors.link),
+                  style: style.copyWith(color: BiliColors.colorsOf(context).link),
                 ),
               ],
             ),

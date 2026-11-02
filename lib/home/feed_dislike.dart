@@ -21,7 +21,7 @@ Future<FeedReason?> showFeedReasonsSheet(BuildContext context, FeedDislike disli
     builder: (context) {
       final title = feedSheetStyle(
         FeedDislikeTheme.titleText,
-        FeedDislikeTheme.ink,
+        FeedDislikeTheme.colorsOf(context).ink,
         weight: FeedDislikeTheme.titleWeight,
       );
       return Column(
@@ -68,10 +68,10 @@ Future<FeedReason?> showFeedReasonsSheet(BuildContext context, FeedDislike disli
                 FeedSheetRow(
                   key: const ValueKey('feed-reason-repeated'),
                   label: repeated.name,
-                  icon: const FeedDislikeGlyphIcon(
+                  icon: FeedDislikeGlyphIcon(
                     FeedDislikeGlyph.repeatedOff,
                     size: FeedDislikeTheme.rowIconBox,
-                    color: FeedDislikeTheme.ink,
+                    color: FeedDislikeTheme.colorsOf(context).ink,
                   ),
                   onTap: () => Navigator.of(context).pop(repeated),
                 ),
@@ -92,7 +92,7 @@ class _ReasonTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = feedSheetStyle(FeedDislikeTheme.tileLabelText, FeedDislikeTheme.tileLabelInk);
+    final label = feedSheetStyle(FeedDislikeTheme.tileLabelText, FeedDislikeTheme.colorsOf(context).tileLabelInk);
     return Semantics(
       button: true,
       label: reason.name,
@@ -102,7 +102,7 @@ class _ReasonTile extends StatelessWidget {
         key: ValueKey('feed-reason-${reason.id}'),
         borderRadius: BorderRadius.circular(FeedDislikeTheme.cardRadius),
         child: ColoredBox(
-          color: FeedDislikeTheme.cardFill,
+          color: FeedDislikeTheme.colorsOf(context).cardFill,
           child: PressHighlight(
             onTap: onTap,
             child: SizedBox(
@@ -117,7 +117,7 @@ class _ReasonTile extends StatelessWidget {
                       child: FeedDislikeGlyphIcon(
                         FeedDislikeGlyph.forReason(reason.name),
                         size: FeedDislikeTheme.tileIconBox,
-                        color: FeedDislikeTheme.ink,
+                        color: FeedDislikeTheme.colorsOf(context).ink,
                         stroke: FeedDislikeTheme.tileGlyphStroke,
                       ),
                     ),
@@ -155,12 +155,12 @@ class FeedDislikedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final message = feedSheetStyle(FeedDislikeTheme.messageText, FeedDislikeTheme.messageInk);
     final undo = feedSheetStyle(FeedDislikeTheme.undoText, FeedDislikeTheme.undoInk);
-    final reasons = feedSheetStyle(FeedDislikeTheme.reasonsText, FeedDislikeTheme.ink);
+    final reasons = feedSheetStyle(FeedDislikeTheme.reasonsText, FeedDislikeTheme.colorsOf(context).ink);
     final onReasons = this.onReasons;
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(BiliMetrics.cardRadius)),
       child: ColoredBox(
-        color: BiliColors.card,
+        color: BiliColors.colorsOf(context).card,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -269,13 +269,13 @@ class FeedDislikedCard extends StatelessWidget {
                                   children: [
                                     Text('选择不感兴趣原因', style: reasons),
                                     const SizedBox(width: FeedDislikeTheme.chevronGap),
-                                    const SizedBox(
+                                    SizedBox(
                                       width: FeedDislikeTheme.chevronWidth,
                                       height: FeedDislikeTheme.chevronHeight,
                                       child: FeedDislikeGlyphIcon(
                                         FeedDislikeGlyph.chevron,
                                         size: FeedDislikeTheme.chevronHeight,
-                                        color: FeedDislikeTheme.ink,
+                                        color: FeedDislikeTheme.colorsOf(context).ink,
                                         stroke: FeedDislikeTheme.chevronStroke,
                                       ),
                                     ),

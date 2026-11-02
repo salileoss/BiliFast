@@ -18,7 +18,7 @@ class SuggestionList extends StatelessWidget {
       fontFamilyFallback: BiliFonts.fallback,
       fontSize: SearchTheme.wordText,
       height: SearchTheme.wordLine / SearchTheme.wordText,
-      color: SearchTheme.text,
+      color: SearchTheme.colorsOf(context).text,
       decoration: TextDecoration.none,
     );
     final media = MediaQuery.of(context);
@@ -75,7 +75,7 @@ class _Row extends StatelessWidget {
                           for (final run in text.runs)
                             TextSpan(
                               text: run.text,
-                              style: run.highlighted ? const TextStyle(color: SearchTheme.highlight) : null,
+                              style: run.highlighted ? TextStyle(color: SearchTheme.colorsOf(context).highlight) : null,
                             ),
                         ],
                       ),
@@ -87,11 +87,11 @@ class _Row extends StatelessWidget {
                   ),
                 ),
               ),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(left: SearchTheme.gutter),
                 child: SizedBox(
                   height: SearchTheme.suggestionHairline,
-                  child: ColoredBox(color: SearchTheme.suggestionHairlineColor),
+                  child: ColoredBox(color: SearchTheme.colorsOf(context).suggestionHairlineColor),
                 ),
               ),
             ],

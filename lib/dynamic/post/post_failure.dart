@@ -22,7 +22,7 @@ class PostFailure extends StatelessWidget {
             message,
             key: const ValueKey('post-failed'),
             textAlign: TextAlign.center,
-            style: postStyle(DynamicPostTheme.stateText, DynamicPostTheme.stateInk),
+            style: postStyle(DynamicPostTheme.stateText, DynamicPostTheme.colorsOf(context).stateInk),
           ),
           if (retry != null) ...[const SizedBox(height: DynamicPostTheme.stateGap), _RetryPill(onTap: retry)],
         ],
@@ -68,12 +68,12 @@ class _RetryPillState extends State<_RetryPill> {
           height: DynamicPostTheme.retryHeight,
           padding: const EdgeInsets.symmetric(horizontal: DynamicPostTheme.retryPadX),
           alignment: Alignment.center,
-          decoration: const ShapeDecoration(
+          decoration: ShapeDecoration(
             shape: StadiumBorder(
-              side: BorderSide(color: DynamicPostTheme.retryInk, width: DynamicPostTheme.retryRim),
+              side: BorderSide(color: DynamicPostTheme.colorsOf(context).retryInk, width: DynamicPostTheme.retryRim),
             ),
           ),
-          child: Text('重试', style: postStyle(DynamicPostTheme.retryText, DynamicPostTheme.retryInk)),
+          child: Text('重试', style: postStyle(DynamicPostTheme.retryText, DynamicPostTheme.colorsOf(context).retryInk)),
         ),
       ),
     ),

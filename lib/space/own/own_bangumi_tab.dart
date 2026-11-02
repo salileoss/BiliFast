@@ -18,6 +18,7 @@ class OwnBangumiSliver extends StatefulWidget {
 
   /// What the posters lie on.
   static const fill = OwnSpaceTabsTheme.greyPage;
+  static Color fillOf(BuildContext context) => OwnSpaceTabsTheme.colorsOf(context).greyPage;
 
   @override
   State<OwnBangumiSliver> createState() => _OwnBangumiSliverState();
@@ -53,10 +54,10 @@ class _OwnBangumiSliverState extends State<OwnBangumiSliver> with OwnPagerView<O
     final posters = pager.items;
     final failed = pager.failed;
     final rows = (posters.length + 2) ~/ 3;
-    final end = ownStyle(OwnSpaceTabsTheme.endText, OwnSpaceTabsTheme.endInk, line: OwnSpaceTabsTheme.endLine);
+    final end = ownStyle(OwnSpaceTabsTheme.endText, OwnSpaceTabsTheme.colorsOf(context).endInk, line: OwnSpaceTabsTheme.endLine);
     const endTop = OwnSpaceTabsTheme.endCentre - OwnSpaceTabsTheme.endLine / 2;
     return DecoratedSliver(
-      decoration: const BoxDecoration(color: OwnBangumiSliver.fill),
+      decoration: BoxDecoration(color: OwnBangumiSliver.fillOf(context)),
       sliver: SliverMainAxisGroup(
         slivers: [
           if (posters.isEmpty && (!pager.loaded || failed))

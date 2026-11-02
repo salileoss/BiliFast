@@ -156,8 +156,8 @@ class _ResultMoreSheetState extends State<ResultMoreSheet> with SingleTickerProv
                 onVerticalDragEnd: _released,
                 child: Container(
                   key: _sheetKey,
-                  decoration: const BoxDecoration(
-                    color: SearchResultTheme.sheetFill,
+                  decoration: BoxDecoration(
+                    color: SearchResultTheme.colorsOf(context).sheetFill,
                     borderRadius: BorderRadius.vertical(top: Radius.circular(SearchResultTheme.sheetRadius)),
                   ),
                   padding: EdgeInsets.only(
@@ -169,7 +169,7 @@ class _ResultMoreSheetState extends State<ResultMoreSheet> with SingleTickerProv
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(
+                      SizedBox(
                         height: SearchResultTheme.sheetCardTop,
                         child: Align(
                           alignment: Alignment.topCenter,
@@ -180,7 +180,7 @@ class _ResultMoreSheetState extends State<ResultMoreSheet> with SingleTickerProv
                               height: SearchResultTheme.grabberHeight,
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
-                                  color: SearchResultTheme.grabberInk,
+                                  color: SearchResultTheme.colorsOf(context).grabberInk,
                                   borderRadius: BorderRadius.all(Radius.circular(SearchResultTheme.grabberHeight / 2)),
                                 ),
                               ),
@@ -193,13 +193,13 @@ class _ResultMoreSheetState extends State<ResultMoreSheet> with SingleTickerProv
                         height: SearchResultTheme.sheetCardHeight,
                         label: '添加至稍后再看',
                         onTap: () => unawaited(_watchLater()),
-                        child: const Row(
+                        child: Row(
                           children: [
                             SizedBox(width: SearchResultTheme.sheetIconLeft),
                             SearchGlyphIcon(
                               SearchGlyph.watchLater,
                               size: SearchResultTheme.sheetIcon,
-                              color: SearchResultTheme.sheetInk,
+                              color: SearchResultTheme.colorsOf(context).sheetInk,
                             ),
                             SizedBox(width: SearchResultTheme.sheetIconGap),
                             _Words('添加至稍后再看'),
@@ -245,7 +245,7 @@ class _Words extends StatelessWidget {
     child: Text(
       text,
       maxLines: 1,
-      style: searchStyle(size, SearchResultTheme.sheetInk, weight: weight).copyWith(height: 1),
+      style: searchStyle(size, SearchResultTheme.colorsOf(context).sheetInk, weight: weight).copyWith(height: 1),
     ),
   );
 }
@@ -337,11 +337,11 @@ class _CardState extends State<_Card> {
       child: Container(
         height: widget.height,
         foregroundDecoration: BoxDecoration(
-          color: _pressed ? BiliColors.pressedFill : null,
+          color: _pressed ? BiliColors.colorsOf(context).pressedFill : null,
           borderRadius: BorderRadius.circular(SearchResultTheme.sheetCardRadius),
         ),
         decoration: BoxDecoration(
-          color: SearchResultTheme.sheetCardFill,
+          color: SearchResultTheme.colorsOf(context).sheetCardFill,
           borderRadius: BorderRadius.circular(SearchResultTheme.sheetCardRadius),
         ),
         child: widget.child,

@@ -11,7 +11,9 @@ Paint _stroke(Color color, double width) => Paint()
 
 /// The round glass ‹ (129): a disc of the bar's [fill] lifted by white, centred in what it is given.
 class FollowingBackPainter extends CustomPainter {
-  const FollowingBackPainter({required this.fill});
+  final BiliPalette palette;
+
+  const FollowingBackPainter({required this.fill, this.palette = const BiliPalette(Brightness.light)});
 
   final Color fill;
 
@@ -56,17 +58,19 @@ class FollowingBackPainter extends CustomPainter {
         ..moveTo(centre.dx + end, centre.dy - FollowingListTheme.backHalfHeight)
         ..lineTo(tip, centre.dy)
         ..lineTo(centre.dx + end, centre.dy + FollowingListTheme.backHalfHeight),
-      _stroke(FollowingListTheme.backInk, FollowingListTheme.backStroke),
+      _stroke(FollowingListThemeColors(palette).backInk, FollowingListTheme.backStroke),
     );
   }
 
   @override
-  bool shouldRepaint(FollowingBackPainter oldDelegate) => oldDelegate.fill != fill;
+  bool shouldRepaint(FollowingBackPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness || (oldDelegate.fill != fill);
 }
 
 /// ▽ after the order, △ while the menu is open; its arms span the box.
 class SortChevronPainter extends CustomPainter {
-  const SortChevronPainter({required this.open});
+  final BiliPalette palette;
+
+  const SortChevronPainter({required this.open, this.palette = const BiliPalette(Brightness.light)});
 
   final bool open;
 
@@ -79,17 +83,19 @@ class SortChevronPainter extends CustomPainter {
         ..moveTo(0, top)
         ..lineTo(size.width / 2, bottom)
         ..lineTo(size.width, top),
-      _stroke(FollowingListTheme.sortChevron, FollowingListTheme.sortChevronStroke),
+      _stroke(FollowingListThemeColors(palette).sortChevron, FollowingListTheme.sortChevronStroke),
     );
   }
 
   @override
-  bool shouldRepaint(SortChevronPainter oldDelegate) => oldDelegate.open != open;
+  bool shouldRepaint(SortChevronPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness || (oldDelegate.open != open);
 }
 
 /// The chosen order's ✓, its arms spanning the box.
 class SortCheckPainter extends CustomPainter {
-  const SortCheckPainter();
+  final BiliPalette palette;
+
+  const SortCheckPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -98,18 +104,20 @@ class SortCheckPainter extends CustomPainter {
         ..moveTo(0, size.height * 0.5)
         ..lineTo(size.width * 0.36, size.height)
         ..lineTo(size.width, 0),
-      _stroke(FollowingListTheme.menuChosen, FollowingListTheme.checkStroke),
+      _stroke(FollowingListThemeColors(palette).menuChosen, FollowingListTheme.checkStroke),
     );
   }
 
   @override
-  bool shouldRepaint(SortCheckPainter oldDelegate) => false;
+  bool shouldRepaint(SortCheckPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// The menu's top: the hairline with the notch rising from it at [notchX], white inside, drawn [notch] tall over the
 /// row above.
 class MenuEdgePainter extends CustomPainter {
-  const MenuEdgePainter({required this.notchX});
+  final BiliPalette palette;
+
+  const MenuEdgePainter({required this.notchX, this.palette = const BiliPalette(Brightness.light)});
 
   final double notchX;
 
@@ -120,7 +128,7 @@ class MenuEdgePainter extends CustomPainter {
     final base = notch + FollowingListTheme.barHairline / 2;
     canvas.drawRect(
       Rect.fromLTWH(0, notch, size.width, FollowingListTheme.barHairline),
-      Paint()..color = FollowingListTheme.hairline,
+      Paint()..color = FollowingListThemeColors(palette).hairline,
     );
     final outline = Path()
       ..moveTo(notchX - half, base)
@@ -133,17 +141,17 @@ class MenuEdgePainter extends CustomPainter {
           ..lineTo(notchX, 0)
           ..lineTo(notchX + half + FollowingListTheme.notchRim, base + FollowingListTheme.barHairline)
           ..close(),
-        Paint()..color = FollowingListTheme.menuFill,
+        Paint()..color = FollowingListThemeColors(palette).menuFill,
       )
       ..drawPath(
         outline,
         Paint()
-          ..color = FollowingListTheme.hairline
+          ..color = FollowingListThemeColors(palette).hairline
           ..style = PaintingStyle.stroke
           ..strokeWidth = FollowingListTheme.notchRim,
       );
   }
 
   @override
-  bool shouldRepaint(MenuEdgePainter oldDelegate) => oldDelegate.notchX != notchX;
+  bool shouldRepaint(MenuEdgePainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness || (oldDelegate.notchX != notchX);
 }

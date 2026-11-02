@@ -78,7 +78,7 @@ class DynamicPictureGrid extends StatelessWidget {
                         child: RemoteImage(
                           pictures[index].url,
                           size: frame.size,
-                          placeholder: const ColoredBox(color: DynamicCardTheme.pictureFill),
+                          placeholder: ColoredBox(color: DynamicCardTheme.colorsOf(context).pictureFill),
                         ),
                       ),
                     ),
@@ -154,7 +154,7 @@ class DynamicPictureStrip extends StatelessWidget {
                 child: RemoteImage(
                   pictures[index].url,
                   size: size,
-                  placeholder: const ColoredBox(color: DynamicCardTheme.pictureFill),
+                  placeholder: ColoredBox(color: DynamicCardTheme.colorsOf(context).pictureFill),
                 ),
               ),
             ),

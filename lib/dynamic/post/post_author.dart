@@ -41,7 +41,7 @@ class PostAuthor extends StatelessWidget {
   Widget build(BuildContext context) {
     void open() => openUploader(context, UploaderRef(mid: author.mid, name: author.name, face: author.face));
     final location = author.location;
-    final meta = postStyle(DynamicPostTheme.metaText, DynamicPostTheme.meta, line: DynamicPostTheme.metaLine);
+    final meta = postStyle(DynamicPostTheme.metaText, DynamicPostTheme.colorsOf(context).meta, line: DynamicPostTheme.metaLine);
     final lines = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +65,7 @@ class PostAuthor extends StatelessWidget {
                   author.name,
                   postStyle(
                     DynamicPostTheme.nameText,
-                    author.vipPink ? DynamicPostTheme.vipName : DynamicPostTheme.name,
+                    author.vipPink ? DynamicPostTheme.vipName : DynamicPostTheme.colorsOf(context).name,
                     line: DynamicPostTheme.nameLine,
                     weight: DynamicPostTheme.nameWeight,
                   ),
@@ -165,7 +165,7 @@ class PostLocation extends StatelessWidget {
       child: postLine(
         context,
         'IP属地：$location',
-        postStyle(DynamicPostTheme.metaText, DynamicPostTheme.meta, line: DynamicPostTheme.metaLine),
+        postStyle(DynamicPostTheme.metaText, DynamicPostTheme.colorsOf(context).meta, line: DynamicPostTheme.metaLine),
         key: const ValueKey('post-location'),
       ),
     ),

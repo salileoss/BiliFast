@@ -27,7 +27,7 @@ class PostBar extends StatelessWidget {
     final share = onShare;
     final more = onMore;
     return ColoredBox(
-      color: DynamicPostTheme.page,
+      color: DynamicPostTheme.colorsOf(context).page,
       child: Padding(
         padding: EdgeInsets.only(top: top),
         child: SizedBox(
@@ -58,7 +58,7 @@ class PostBar extends StatelessWidget {
                               child: postLine(
                                 context,
                                 author.name,
-                                postStyle(DynamicPostTheme.titleText, DynamicPostTheme.titleInk),
+                                postStyle(DynamicPostTheme.titleText, DynamicPostTheme.colorsOf(context).titleInk),
                               ),
                             ),
                           ],
@@ -76,7 +76,7 @@ class PostBar extends StatelessWidget {
                   key: const ValueKey('post-back'),
                   label: '返回',
                   onTap: onBack,
-                  child: const CustomPaint(painter: PostBackPainter()),
+                  child: CustomPaint(painter: PostBackPainter(palette: BiliPalette.of(context))),
                 ),
               ),
               if (share != null)
@@ -95,7 +95,7 @@ class PostBar extends StatelessWidget {
                         child: Image.asset(
                           'assets/images/dynamic/dy_ic_arrow_share_line_24.png',
                           width: DynamicPostTheme.shareWidth,
-                          color: DynamicPostTheme.barInk,
+                          color: DynamicPostTheme.colorsOf(context).barInk,
                           filterQuality: FilterQuality.medium,
                           excludeFromSemantics: true,
                         ),
@@ -113,7 +113,7 @@ class PostBar extends StatelessWidget {
                     key: const ValueKey('post-more'),
                     label: '更多',
                     onTap: more,
-                    child: const CustomPaint(painter: PostMorePainter()),
+                    child: CustomPaint(painter: PostMorePainter(palette: BiliPalette.of(context))),
                   ),
                 ),
             ],
@@ -137,7 +137,7 @@ class PostBarRule extends StatelessWidget {
       key: const ValueKey('post-bar-rule'),
       opacity: shown ? 1 : 0,
       duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : DynamicPostTheme.barFade,
-      child: const ColoredBox(color: DynamicPostTheme.barRule),
+      child: ColoredBox(color: DynamicPostTheme.colorsOf(context).barRule),
     ),
   );
 }

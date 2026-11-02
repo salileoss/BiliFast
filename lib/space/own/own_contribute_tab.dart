@@ -21,6 +21,7 @@ class OwnContributeSliver extends StatelessWidget {
 
   /// What the videos and the empty page lie on.
   static const fill = OwnSpaceTabsTheme.whitePage;
+  static Color fillOf(BuildContext context) => OwnSpaceTabsTheme.colorsOf(context).whitePage;
 
   @override
   Widget build(BuildContext context) {
@@ -28,15 +29,15 @@ class OwnContributeSliver extends StatelessWidget {
       return SpaceVideosSliver(profile: profile, api: AppScope.of(context).spaceApi, open: open);
     }
     void soon() => showToast(context, '暂未开放');
-    final text = ownStyle(OwnSpaceTabsTheme.emptyText, OwnSpaceTabsTheme.emptyInk, line: OwnSpaceTabsTheme.emptyLine);
+    final text = ownStyle(OwnSpaceTabsTheme.emptyText, OwnSpaceTabsTheme.colorsOf(context).emptyInk, line: OwnSpaceTabsTheme.emptyLine);
     final pill = ownStyle(
       OwnSpaceTabsTheme.uploadPillText,
-      OwnSpaceTabsTheme.uploadPillInk,
+      OwnSpaceTabsTheme.colorsOf(context).uploadPillInk,
       line: OwnSpaceTabsTheme.emptyLine,
     );
     final reward = ownStyle(
       OwnSpaceTabsTheme.rewardText,
-      OwnSpaceTabsTheme.rewardInk,
+      OwnSpaceTabsTheme.colorsOf(context).rewardInk,
       line: OwnSpaceTabsTheme.rewardLine,
     );
     const discTop = OwnSpaceTabsTheme.emptyDiscCentre - OwnSpaceTabsTheme.emptyDisc / 2;
@@ -44,7 +45,7 @@ class OwnContributeSliver extends StatelessWidget {
     const pillTop = OwnSpaceTabsTheme.uploadPillCentre - OwnSpaceTabsTheme.uploadPillHeight / 2;
     const rewardTop = OwnSpaceTabsTheme.rewardCentre - OwnSpaceTabsTheme.rewardLine / 2;
     return DecoratedSliver(
-      decoration: const BoxDecoration(color: fill),
+      decoration: BoxDecoration(color: OwnContributeSliver.fillOf(context)),
       sliver: SliverMainAxisGroup(
         slivers: [
           SliverToBoxAdapter(
@@ -53,13 +54,13 @@ class OwnContributeSliver extends StatelessWidget {
               height: rewardTop + OwnSpaceTabsTheme.rewardLine + OwnSpaceTabsTheme.emptyBottom,
               child: Stack(
                 children: [
-                  const Positioned(
+                  Positioned(
                     left: 0,
                     right: 0,
                     top: discTop,
                     child: Center(
                       child: DecoratedBox(
-                        decoration: BoxDecoration(color: OwnSpaceTabsTheme.emptyDiscFill, shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: OwnSpaceTabsTheme.colorsOf(context).emptyDiscFill, shape: BoxShape.circle),
                         child: SizedBox.square(
                           dimension: OwnSpaceTabsTheme.emptyDisc,
                           child: Center(child: UploadGlyph()),
@@ -92,10 +93,10 @@ class OwnContributeSliver extends StatelessWidget {
                           width: OwnSpaceTabsTheme.uploadPillWidth,
                           height: OwnSpaceTabsTheme.uploadPillHeight,
                           alignment: Alignment.center,
-                          decoration: const ShapeDecoration(
+                          decoration: ShapeDecoration(
                             shape: StadiumBorder(
                               side: BorderSide(
-                                color: OwnSpaceTabsTheme.uploadPillInk,
+                                color: OwnSpaceTabsTheme.colorsOf(context).uploadPillInk,
                                 width: OwnSpaceTabsTheme.uploadPillRim,
                               ),
                             ),
@@ -120,7 +121,7 @@ class OwnContributeSliver extends StatelessWidget {
                           children: [
                             Text('去创作中心领奖', maxLines: 1, style: reward, strutStyle: BiliFonts.strut(reward)),
                             const SizedBox(width: OwnSpaceTabsTheme.rewardChevronGap),
-                            const OwnChevron(color: OwnSpaceTabsTheme.rewardInk),
+                            OwnChevron(color: OwnSpaceTabsTheme.colorsOf(context).rewardInk),
                           ],
                         ),
                       ),

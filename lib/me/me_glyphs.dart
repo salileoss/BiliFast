@@ -20,7 +20,9 @@ Paint _stroke(double width, Color color) => Paint()
 
 /// The top row's line icons, traced on 87 at 16× in a box [MeTheme.topGlyphBox] square, its ink centred.
 class MeTopGlyphPainter extends CustomPainter {
-  const MeTopGlyphPainter(this.glyph, {this.color = MeTheme.topGlyph});
+  final BiliPalette palette;
+
+  const MeTopGlyphPainter(this.glyph, {this.color = MeTheme.topGlyph, this.palette = const BiliPalette(Brightness.light)});
 
   final MeTopGlyph glyph;
   final Color color;
@@ -135,7 +137,7 @@ class MeTopGlyphPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(MeTopGlyphPainter oldDelegate) => oldDelegate.glyph != glyph || oldDelegate.color != color;
+  bool shouldRepaint(MeTopGlyphPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness || (oldDelegate.glyph != glyph || oldDelegate.color != color);
 }
 
 /// 更多服务's pink line icons, traced on 106 at 16× in a box [MeTheme.serviceGlyphBox] square, their middle at the
@@ -266,11 +268,13 @@ class MeServiceGlyphPainter extends CustomPainter {
 
 /// The ✏️ after the name: a pencil pointing down-left over a short line.
 class MePencilPainter extends CustomPainter {
-  const MePencilPainter();
+  final BiliPalette palette;
+
+  const MePencilPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = _stroke(MeTheme.pencilStroke, MeTheme.pencil);
+    final paint = _stroke(MeTheme.pencilStroke, MeThemeColors(palette).pencil);
     final pencil = Path()
       ..moveTo(4.3, 15.4)
       ..lineTo(4.3, 11.6)
@@ -287,7 +291,7 @@ class MePencilPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(MePencilPainter oldDelegate) => false;
+  bool shouldRepaint(MePencilPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// A chevron pointing right, filling its box.
@@ -319,17 +323,19 @@ class MeVipDisc extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      const CustomPaint(size: Size.square(MeTheme.vipDisc), painter: _VipDiscPainter());
+      CustomPaint(size: Size.square(MeTheme.vipDisc), painter: _VipDiscPainter(palette: BiliPalette.of(context)));
 }
 
 class _VipDiscPainter extends CustomPainter {
-  const _VipDiscPainter();
+  final BiliPalette palette;
+
+  const _VipDiscPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final unit = size.width / 16;
     canvas
-      ..drawCircle(size.center(Offset.zero), size.width / 2, Paint()..color = MeTheme.vipDiscFill)
+      ..drawCircle(size.center(Offset.zero), size.width / 2, Paint()..color = MeThemeColors(palette).vipDiscFill)
       ..scale(unit);
     final paint = _stroke(MeTheme.vipDiscStroke, MeTheme.vipDiscInk);
     canvas.drawPath(
@@ -346,7 +352,7 @@ class _VipDiscPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_VipDiscPainter oldDelegate) => false;
+  bool shouldRepaint(_VipDiscPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// The LV badge after the name (87): 评论's block shape and block letters, a little larger, in 我的's colours.

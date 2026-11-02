@@ -16,6 +16,7 @@ import 'package:bilifast/me/me_model.dart';
 import 'package:bilifast/me/me_page.dart';
 import 'package:bilifast/settings/font_store.dart';
 import 'package:bilifast/shared/theme.dart';
+import 'package:bilifast/shared/app_theme.dart';
 import 'package:bilifast/skin/fake_skin_api.dart';
 import 'package:bilifast/skin/skin.dart';
 import 'package:bilifast/skin/skin_model.dart';
@@ -179,6 +180,7 @@ Future<MeHarness> showMe(
   WidgetBuilder? developerPage,
   bool checkAccount = false,
   Skin? skin,
+  Widget? bottomBar,
 }) async {
   tester.view
     ..physicalSize = const Size(440, 956) * pixelRatio
@@ -219,8 +221,13 @@ Future<MeHarness> showMe(
   }
 
   await tester.pumpWidget(
-    MaterialApp(
+    ListenableBuilder(
+      listenable: services.appearance,
+      builder: (context, _) => MaterialApp(
       theme: theme,
+      darkTheme: biliTheme(Brightness.dark),
+      themeMode: services.appearance.mode,
+      themeAnimationDuration: Duration.zero,
       navigatorObservers: [pageRoutes],
       builder: (context, child) => RepaintBoundary(
         key: const ValueKey('screen'),
@@ -247,9 +254,10 @@ Future<MeHarness> showMe(
                 ),
               ),
             ),
-            const SizedBox(height: 83),
+            bottomBar ?? const SizedBox(height: 83),
           ],
         ),
+      ),
       ),
     ),
   );

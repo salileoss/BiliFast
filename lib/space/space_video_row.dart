@@ -56,10 +56,10 @@ class SpaceVideoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = spaceVideosStyle(
       SpaceVideosTheme.titleText,
-      SpaceVideosTheme.titleInk,
+      SpaceVideosTheme.colorsOf(context).titleInk,
       line: SpaceVideosTheme.titleLine,
     );
-    final meta = spaceVideosStyle(SpaceVideosTheme.metaText, SpaceVideosTheme.metaInk, line: SpaceVideosTheme.metaLine);
+    final meta = spaceVideosStyle(SpaceVideosTheme.metaText, SpaceVideosTheme.colorsOf(context).metaInk, line: SpaceVideosTheme.metaLine);
     final plays = SpaceVideoFormat.count(video.play);
     final danmaku = SpaceVideoFormat.count(video.danmaku);
     final length = video.duration > 0 ? '，${SpaceVideoFormat.duration(video.duration)}' : '';
@@ -77,7 +77,7 @@ class SpaceVideoRow extends StatelessWidget {
               child: PressHighlight(
                 key: ValueKey('space-video-${video.bvid}'),
                 onTap: onOpen,
-                child: const SizedBox.expand(),
+                child: SizedBox.expand(),
               ),
             ),
           ),
@@ -162,18 +162,18 @@ class SpaceVideoRow extends StatelessWidget {
                     key: ValueKey('space-more-${video.bvid}'),
                     behavior: HitTestBehavior.opaque,
                     onTap: more,
-                    child: const CustomPaint(painter: MoreDotsPainter()),
+                    child: CustomPaint(painter: MoreDotsPainter(palette: BiliPalette.of(context))),
                   ),
                 );
               },
             ),
           ),
-          const Positioned(
+          Positioned(
             left: SpaceVideosTheme.gutter,
             right: 0,
             top: _coverTop + SpaceVideosTheme.coverHeight + SpaceVideosTheme.rowPadBottom,
             height: SpaceVideosTheme.hairline,
-            child: ColoredBox(color: SpaceVideosTheme.hairlineInk),
+            child: ColoredBox(color: SpaceVideosTheme.colorsOf(context).hairlineInk),
           ),
         ],
       ),
@@ -195,7 +195,7 @@ class _Count extends StatelessWidget {
     children: [
       CustomPaint(
         size: const Size(SpaceVideosTheme.countGlyphWidth, SpaceVideosTheme.countGlyphHeight),
-        painter: CountPainter(glyph, color: SpaceVideosTheme.metaInk),
+        painter: CountPainter(glyph, color: SpaceVideosTheme.colorsOf(context).metaInk),
       ),
       const SizedBox(width: SpaceVideosTheme.countGap),
       Flexible(
@@ -221,7 +221,7 @@ class _Cover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final picture = video.cover.isEmpty
-        ? const ColoredBox(key: ValueKey('space-cover-placeholder'), color: SpaceVideosTheme.coverPlaceholder)
+        ? ColoredBox(key: ValueKey('space-cover-placeholder'), color: SpaceVideosTheme.colorsOf(context).coverPlaceholder)
         : RemoteImage(
             video.cover,
             size: const Size(SpaceVideosTheme.coverWidth, SpaceVideosTheme.coverHeight),
@@ -281,7 +281,7 @@ class _Pill extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: badge ? SpaceVideosTheme.badgePadX : SpaceVideosTheme.durationPadX),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: badge ? SpaceVideosTheme.badgeFill : SpaceVideosTheme.durationFill,
+        color: badge ? SpaceVideosTheme.colorsOf(context).badgeFill : SpaceVideosTheme.durationFill,
         borderRadius: BorderRadius.circular(badge ? SpaceVideosTheme.badgeRadius : SpaceVideosTheme.durationRadius),
       ),
       child: Text(text, maxLines: 1, softWrap: false, style: style, strutStyle: BiliFonts.strut(style)),

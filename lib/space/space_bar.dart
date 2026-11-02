@@ -57,7 +57,7 @@ class SpaceBar extends StatelessWidget {
                   key: const ValueKey('space-bar'),
                   behavior: HitTestBehavior.opaque,
                   onTap: () {},
-                  child: const ColoredBox(color: SpaceTheme.bar),
+                  child: ColoredBox(color: SpaceTheme.colorsOf(context).bar),
                 ),
               ),
             ),
@@ -222,7 +222,7 @@ class _Button extends StatelessWidget {
                     AnimatedOpacity(
                       opacity: collapsed ? 1 : 0,
                       duration: fade,
-                      child: glyphIn(SpaceTheme.barInk),
+                      child: glyphIn(SpaceTheme.colorsOf(context).barInk),
                     ),
                 ],
               ),
@@ -243,7 +243,7 @@ class _Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ink = following ? SpaceTheme.pillFollowedInk : SpaceTheme.pillInk;
+    final ink = following ? SpaceTheme.colorsOf(context).pillFollowedInk : SpaceTheme.colorsOf(context).pillInk;
     return Semantics(
       button: true,
       label: following ? '已关注' : '关注',
@@ -256,7 +256,7 @@ class _Pill extends StatelessWidget {
         child: Container(
           height: SpaceTheme.pillHeight,
           decoration: BoxDecoration(
-            color: following ? SpaceTheme.pillFollowedFill : SpaceTheme.pillFill,
+            color: following ? SpaceTheme.colorsOf(context).pillFollowedFill : SpaceTheme.colorsOf(context).pillFill,
             borderRadius: BorderRadius.circular(SpaceTheme.pillHeight / 2),
           ),
           child: Row(
@@ -304,7 +304,7 @@ class _Title extends StatelessWidget {
         Flexible(
           child: spaceLine(
             name,
-            spaceStyle(SpaceTheme.loadingNameText, BiliColors.text, line: SpaceTheme.pillHeight),
+            spaceStyle(SpaceTheme.loadingNameText, BiliColors.colorsOf(context).text, line: SpaceTheme.pillHeight),
           ),
         ),
       ],

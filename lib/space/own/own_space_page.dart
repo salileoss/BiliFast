@@ -171,7 +171,7 @@ class _OwnSpacePageState extends State<OwnSpacePage> {
     final skin = widget.skin ?? AppScope.of(context).skin;
     return ValueListenableBuilder<Skin?>(
       valueListenable: skin,
-      builder: (context, skin, _) => _page(OwnBarLook.of(skin)),
+      builder: (context, skin, _) => _page(OwnBarLook.of(skin, context: context)),
     );
   }
 
@@ -180,14 +180,14 @@ class _OwnSpacePageState extends State<OwnSpacePage> {
     final banner = profile?.own?.banner ?? profile?.banner;
     final collapsed = profile == null || _collapsed;
     // Light over a picture banner; over the default banner dark, and on the bar whatever its colour wants.
-    final lightStatus = collapsed ? look.lightStatus : banner != null && banner.isNotEmpty;
+    final lightStatus = collapsed ? look.lightStatus : (banner != null && banner.isNotEmpty) || BiliPalette.of(context).isDark;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: lightStatus ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       // Pushed on a plain route with no Material above it, text would otherwise take the app's fallback style.
       child: DefaultTextStyle(
-        style: spaceStyle(SpaceTheme.bioText, BiliColors.text),
+        style: spaceStyle(SpaceTheme.bioText, BiliColors.colorsOf(context).text),
         child: ColoredBox(
-          color: SpaceTheme.page,
+          color: SpaceTheme.colorsOf(context).page,
           child: Stack(
             children: [
               Positioned.fill(
@@ -263,10 +263,10 @@ class _OwnSpacePageState extends State<OwnSpacePage> {
           headerHeight: headerHeight,
           barHeight: barHeight,
           color: switch (_tab) {
-            SpaceTabKind.home => OwnHomeSliver.fill,
-            SpaceTabKind.favourite => OwnFavouritesSliver.fill,
-            SpaceTabKind.bangumi => OwnBangumiSliver.fill,
-            _ => OwnContributeSliver.fill,
+            SpaceTabKind.home => OwnHomeSliver.fillOf(context),
+            SpaceTabKind.favourite => OwnFavouritesSliver.fillOf(context),
+            SpaceTabKind.bangumi => OwnBangumiSliver.fillOf(context),
+            _ => OwnContributeSliver.fillOf(context),
           },
         ),
       ],

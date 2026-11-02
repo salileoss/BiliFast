@@ -20,7 +20,7 @@ class FollowHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final head = skin?.headBg;
-    final ink = skin?.color ?? DynamicFeedTheme.titleInk;
+    final ink = skin?.color ?? DynamicFeedTheme.colorsOf(context).titleInk;
     return SizedBox(
       key: const ValueKey('follow-header'),
       height: heightOf(MediaQuery.paddingOf(context).top),
@@ -30,7 +30,7 @@ class FollowHeader extends StatelessWidget {
           if (head != null)
             SkinDecodeGate.image(head, key: const ValueKey('follow-head-art'))
           else
-            const ColoredBox(color: DynamicFeedTheme.bar),
+            ColoredBox(color: DynamicFeedTheme.colorsOf(context).bar),
           Positioned(
             left: 0,
             right: 0,

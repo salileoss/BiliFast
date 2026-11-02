@@ -43,9 +43,9 @@ class AvatarPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
+      value: BiliPalette.of(context).isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: AvatarPageTheme.background,
+        backgroundColor: AvatarPageTheme.colorsOf(context).background,
         body: Column(
           children: [
             SizedBox(height: top),
@@ -110,7 +110,7 @@ class _Bar extends StatelessWidget {
               key: const ValueKey('avatar-back'),
               label: '返回',
               onTap: () => Navigator.of(context).maybePop(),
-              child: const BackGlyph(color: AvatarPageTheme.barIcon, shadow: false),
+              child: BackGlyph(color: AvatarPageTheme.colorsOf(context).barIcon, shadow: false),
             ),
           ),
           Positioned(
@@ -128,7 +128,7 @@ class _Bar extends StatelessWidget {
                     fontFamily: BiliFonts.family,
                     fontSize: AvatarPageTheme.tabText,
                     fontWeight: AvatarPageTheme.tabWeight,
-                    color: BiliColors.pink,
+                    color: BiliColors.colorsOf(context).pink,
                   ),
                 ),
               ),
@@ -139,8 +139,8 @@ class _Bar extends StatelessWidget {
             top: AvatarPageTheme.tabUnderlineTop,
             width: AvatarPageTheme.tabUnderlineWidth,
             height: AvatarPageTheme.tabUnderlineHeight,
-            child: const DecoratedBox(
-              decoration: ShapeDecoration(color: BiliColors.pink, shape: StadiumBorder()),
+            child: DecoratedBox(
+              decoration: ShapeDecoration(color: BiliColors.colorsOf(context).pink, shape: StadiumBorder()),
             ),
           ),
           Positioned(
@@ -152,7 +152,7 @@ class _Bar extends StatelessWidget {
               key: const ValueKey('avatar-settings'),
               label: '设置',
               onTap: onSettings,
-              child: const CustomPaint(size: Size.square(AvatarPageTheme.gearBox), painter: _GearPainter()),
+              child: CustomPaint(size: Size.square(AvatarPageTheme.gearBox), painter: _GearPainter(palette: BiliPalette.of(context))),
             ),
           ),
         ],
@@ -211,7 +211,7 @@ class _Shortcut extends StatelessWidget {
                 top: AvatarPageTheme.shortcutIconCentre - AvatarPageTheme.shortcutIconBox / 2,
                 child: CustomPaint(
                   size: const Size.square(AvatarPageTheme.shortcutIconBox),
-                  painter: ShortcutPainter(glyph),
+                  painter: ShortcutPainter(glyph, palette: BiliPalette.of(context)),
                 ),
               ),
               Positioned(
@@ -227,7 +227,7 @@ class _Shortcut extends StatelessWidget {
                       fontFamilyFallback: BiliFonts.fallback,
                       letterSpacing: 0,
                       fontSize: AvatarPageTheme.shortcutText,
-                      color: BiliColors.text,
+                      color: BiliColors.colorsOf(context).text,
                     ),
                   ),
                 ),
@@ -356,7 +356,7 @@ class _RecentCardState extends State<_RecentCard> with RouteAware {
   Widget build(BuildContext context) => ClipRRect(
     borderRadius: const BorderRadius.vertical(top: Radius.circular(AvatarPageTheme.cardRadius)),
     child: ColoredBox(
-      color: BiliColors.card,
+      color: BiliColors.colorsOf(context).card,
       child: ListenableBuilder(
         listenable: _changes,
         builder: (context, _) => _signedOut ? _recentsList(context) : _historyList(context),
@@ -470,7 +470,7 @@ class _RecentCardState extends State<_RecentCard> with RouteAware {
                   style: TextStyle(
                     fontFamily: BiliFonts.family,
                     fontSize: BiliMetrics.bodyText,
-                    color: BiliColors.secondaryText,
+                    color: BiliColors.colorsOf(context).secondaryText,
                   ),
                 ),
                 if (action != null) ...[const SizedBox(height: HistoryTheme.stateGap), action],
@@ -505,7 +505,7 @@ class _Header extends StatelessWidget {
                 fontFamily: BiliFonts.family,
                 fontSize: AvatarPageTheme.headerText,
                 fontWeight: AvatarPageTheme.headerWeight,
-                color: BiliColors.text,
+                color: BiliColors.colorsOf(context).text,
               ),
             ),
           ),
@@ -533,13 +533,13 @@ class _Header extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: BiliFonts.family,
                       fontSize: AvatarPageTheme.allText,
-                      color: BiliColors.secondaryText,
+                      color: BiliColors.colorsOf(context).secondaryText,
                     ),
                   ),
                   const SizedBox(width: AvatarPageTheme.allChevronGap),
-                  const CustomPaint(
+                  CustomPaint(
                     size: Size(AvatarPageTheme.allChevronWidth, AvatarPageTheme.allChevronHeight),
-                    painter: _ChevronPainter(),
+                    painter: _ChevronPainter(palette: BiliPalette.of(context)),
                   ),
                 ],
               ),
@@ -571,7 +571,7 @@ class _LoginButton extends StatelessWidget {
       child: Container(
         height: HistoryTheme.loginHeight,
         padding: const EdgeInsets.symmetric(horizontal: HistoryTheme.loginPadX),
-        decoration: const ShapeDecoration(color: BiliColors.pink, shape: StadiumBorder()),
+        decoration: ShapeDecoration(color: BiliColors.colorsOf(context).pink, shape: StadiumBorder()),
         child: Center(
           widthFactor: 1,
           child: Text(
@@ -628,12 +628,12 @@ class _VideoRow extends StatelessWidget {
       fontFamily: BiliFonts.family,
       fontSize: AvatarPageTheme.titleText,
       height: AvatarPageTheme.titleLine / AvatarPageTheme.titleText,
-      color: BiliColors.text,
+      color: BiliColors.colorsOf(context).text,
     );
     final timeStyle = TextStyle(
       fontFamily: BiliFonts.family,
       fontSize: AvatarPageTheme.timeText,
-      color: BiliColors.secondaryText,
+      color: BiliColors.colorsOf(context).secondaryText,
     );
     return SizedBox(
       height: AvatarPageTheme.rowExtent,
@@ -646,7 +646,7 @@ class _VideoRow extends StatelessWidget {
               label: title,
               excludeSemantics: true,
               onTap: onOpen,
-              child: PressHighlight(onTap: onOpen, child: const SizedBox.expand()),
+              child: PressHighlight(onTap: onOpen, child: SizedBox.expand()),
             ),
           ),
           Positioned(
@@ -667,7 +667,7 @@ class _VideoRow extends StatelessWidget {
                         cover: true,
                       )
                     else
-                      const ColoredBox(color: BiliColors.pageGrey),
+                      ColoredBox(color: BiliColors.colorsOf(context).pageGrey),
                     if (duration > 0)
                       Positioned(
                         right: AvatarPageTheme.durationInset,
@@ -698,7 +698,7 @@ class _VideoRow extends StatelessWidget {
                         bottom: 0,
                         height: AvatarPageTheme.progressHeight,
                         width: AvatarPageTheme.coverWidth * progress,
-                        child: const ColoredBox(key: ValueKey('avatar-recent-progress'), color: BiliColors.pink),
+                        child: ColoredBox(key: ValueKey('avatar-recent-progress'), color: BiliColors.colorsOf(context).pink),
                       ),
                   ],
                 ),
@@ -749,8 +749,8 @@ class _VideoRow extends StatelessWidget {
                 key: ValueKey('avatar-remove-$id'),
                 behavior: HitTestBehavior.opaque,
                 onTap: onRemove,
-                child: const Center(
-                  child: CustomPaint(size: Size.square(AvatarPageTheme.removeGlyph), painter: _CrossPainter()),
+                child: Center(
+                  child: CustomPaint(size: Size.square(AvatarPageTheme.removeGlyph), painter: _CrossPainter(palette: BiliPalette.of(context))),
                 ),
               ),
             ),
@@ -770,7 +770,9 @@ Paint _stroke(double width, Color color) => Paint()
 
 /// 49's ⚙: a hexagon standing on a point, with rounded corners, around a small ring.
 class _GearPainter extends CustomPainter {
-  const _GearPainter();
+  final BiliPalette palette;
+
+  const _GearPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -794,18 +796,20 @@ class _GearPainter extends CustomPainter {
       path.quadraticBezierTo(corner.dx, corner.dy, out.dx, out.dy);
     }
     path.close();
-    final paint = _stroke(AvatarPageTheme.gearStroke, AvatarPageTheme.barIcon);
+    final paint = _stroke(AvatarPageTheme.gearStroke, AvatarPageThemeColors(palette).barIcon);
     canvas
       ..drawPath(path, paint)
       ..drawCircle(centre, AvatarPageTheme.gearHole, paint);
   }
 
   @override
-  bool shouldRepaint(_GearPainter oldDelegate) => false;
+  bool shouldRepaint(_GearPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 class _ChevronPainter extends CustomPainter {
-  const _ChevronPainter();
+  final BiliPalette palette;
+
+  const _ChevronPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -814,24 +818,26 @@ class _ChevronPainter extends CustomPainter {
       ..moveTo(inset, inset)
       ..lineTo(size.width - inset, size.height / 2)
       ..lineTo(inset, size.height - inset);
-    canvas.drawPath(path, _stroke(AvatarPageTheme.allChevronStroke, BiliColors.secondaryText));
+    canvas.drawPath(path, _stroke(AvatarPageTheme.allChevronStroke, BiliColorsColors(palette).secondaryText));
   }
 
   @override
-  bool shouldRepaint(_ChevronPainter oldDelegate) => false;
+  bool shouldRepaint(_ChevronPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 class _CrossPainter extends CustomPainter {
-  const _CrossPainter();
+  final BiliPalette palette;
+
+  const _CrossPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = _stroke(AvatarPageTheme.removeStroke, AvatarPageTheme.remove);
+    final paint = _stroke(AvatarPageTheme.removeStroke, AvatarPageThemeColors(palette).remove);
     canvas
       ..drawLine(Offset.zero, Offset(size.width, size.height), paint)
       ..drawLine(Offset(size.width, 0), Offset(0, size.height), paint);
   }
 
   @override
-  bool shouldRepaint(_CrossPainter oldDelegate) => false;
+  bool shouldRepaint(_CrossPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }

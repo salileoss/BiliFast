@@ -21,10 +21,10 @@ class SpaceTabRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const hairline = SizedBox(height: SpaceTheme.tabsHairline, child: ColoredBox(color: SpaceTheme.tabsHairlineInk));
+    final hairline = SizedBox(height: SpaceTheme.tabsHairline, child: ColoredBox(color: SpaceTheme.colorsOf(context).tabsHairlineInk));
     return ColoredBox(
       key: const ValueKey('space-tabs'),
-      color: SpaceTheme.page,
+      color: SpaceTheme.colorsOf(context).page,
       child: SizedBox(
         height: SpaceTheme.tabsHeight,
         child: Column(
@@ -83,7 +83,7 @@ class _Tab extends StatelessWidget {
           children: [
             spaceLine(
               tab.title,
-              spaceStyle(SpaceTheme.tabText, shown ? SpaceTheme.tabSelected : SpaceTheme.tabInk, line: SpaceTheme.tabLine),
+              spaceStyle(SpaceTheme.tabText, shown ? SpaceTheme.colorsOf(context).tabSelected : SpaceTheme.colorsOf(context).tabInk, line: SpaceTheme.tabLine),
             ),
             if (shown)
               Positioned(
@@ -93,7 +93,7 @@ class _Tab extends StatelessWidget {
                   width: SpaceTheme.indicatorWidth,
                   height: SpaceTheme.indicatorHeight,
                   decoration: BoxDecoration(
-                    color: SpaceTheme.tabSelected,
+                    color: SpaceTheme.colorsOf(context).tabSelected,
                     borderRadius: BorderRadius.circular(SpaceTheme.indicatorHeight / 2),
                   ),
                 ),

@@ -100,7 +100,7 @@ class HomeTabBar extends StatelessWidget {
   static double heightOf(BuildContext context) =>
       FormFactor.of(context).isPad ? PadHomeTheme.barHeight : HomeTabBarTheme.height;
 
-  static const _phone = (
+  static _Shape _phone(BuildContext context) => (
     height: HomeTabBarTheme.height,
     iconCentre: HomeTabBarTheme.iconCentre,
     labelTop: HomeTabBarTheme.labelTop,
@@ -108,11 +108,11 @@ class HomeTabBar extends StatelessWidget {
     slot: null,
     artWidth: null,
     hairline: HomeTabBarTheme.hairlineWidth,
-    label: HomeTabBarTheme.label,
-    selected: HomeTabBarTheme.selected,
+    label: HomeTabBarTheme.colorsOf(context).label,
+    selected: HomeTabBarTheme.colorsOf(context).selected,
   );
 
-  static const _pad = (
+  static _Shape _pad(BuildContext context) => (
     height: PadHomeTheme.barHeight,
     iconCentre: PadHomeTheme.barIconCentre,
     labelTop: PadHomeTheme.barLabelTop,
@@ -120,8 +120,8 @@ class HomeTabBar extends StatelessWidget {
     slot: PadHomeTheme.barSlot,
     artWidth: PadHomeTheme.barArtWidth,
     hairline: PadHomeTheme.hairline,
-    label: PadHomeTheme.barLabelInk,
-    selected: PadHomeTheme.pink,
+    label: PadHomeTheme.colorsOf(context).barLabelInk,
+    selected: PadHomeTheme.colorsOf(context).pink,
   );
 
   List<_Place> _places(bool pad) => pad
@@ -166,7 +166,7 @@ class HomeTabBar extends StatelessWidget {
     final skin = dresses(this.skin) ? this.skin : null;
     final pad = FormFactor.of(context).isPad;
     final places = _places(pad);
-    final shape = pad ? _pad : _phone;
+    final shape = pad ? _pad(context) : _phone(context);
     return SkinDecodeGate(
       pictures: skin == null ? const [] : _stills(skin, places),
       builder: (context, decoded) =>
@@ -194,15 +194,15 @@ class HomeTabBar extends StatelessWidget {
     ),
   );
 
-  static BoxDecoration _stockFill(_Shape shape) => BoxDecoration(
-    color: HomeTabBarTheme.bar,
+  static BoxDecoration _stockFill(BuildContext context, _Shape shape) => BoxDecoration(
+    color: HomeTabBarTheme.colorsOf(context).bar,
     border: Border(
-      top: BorderSide(color: HomeTabBarTheme.hairline, width: shape.hairline),
+      top: BorderSide(color: HomeTabBarTheme.colorsOf(context).hairline, width: shape.hairline),
     ),
   );
 
   Widget _stock(BuildContext context, List<_Place> places, _Shape shape) =>
-      DecoratedBox(decoration: _stockFill(shape), child: _row(context, null, places, shape));
+      DecoratedBox(decoration: _stockFill(context, shape), child: _row(context, null, places, shape));
 
   /// The picture's own shape sets how far it rises over the row; one too flat to reach the row's top is cropped at
   /// the sides to cover it. Above the row the bar takes taps only over the icons' tops: the rest of a rising picture
@@ -242,7 +242,7 @@ class HomeTabBar extends StatelessWidget {
         Stack(
           clipBehavior: Clip.none,
           children: [
-            if (artWidth != null) Positioned.fill(child: DecoratedBox(decoration: _stockFill(shape))),
+            if (artWidth != null) Positioned.fill(child: DecoratedBox(decoration: _stockFill(context, shape))),
             Positioned(
               left: 0,
               right: 0,

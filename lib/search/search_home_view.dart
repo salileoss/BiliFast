@@ -38,7 +38,7 @@ class _SearchHomeViewState extends State<SearchHomeView> {
     decoration: TextDecoration.none,
   );
 
-  static TextStyle get _word => _style(SearchTheme.wordText, SearchTheme.text);
+  TextStyle get _word => _style(SearchTheme.wordText, SearchTheme.colorsOf(context).text);
 
   bool _closeKeyboard(ScrollStartNotification notification) {
     if (notification.dragDetails != null) FocusManager.instance.primaryFocus?.unfocus();
@@ -93,13 +93,13 @@ class _SearchHomeViewState extends State<SearchHomeView> {
                                 children: [
                                   Text(
                                     '完整榜单',
-                                    style: _style(SearchTheme.moreText, SearchTheme.grey, line: SearchTheme.headerLine),
+                                    style: _style(SearchTheme.moreText, SearchTheme.colorsOf(context).grey, line: SearchTheme.headerLine),
                                   ),
                                   const SizedBox(width: SearchTheme.moreGap),
-                                  const Chevron(
+                                  Chevron(
                                     size: Size(SearchTheme.moreChevronWidth, SearchTheme.moreChevronHeight),
                                     stroke: SearchTheme.moreChevronStroke,
-                                    color: SearchTheme.grey,
+                                    color: SearchTheme.colorsOf(context).grey,
                                   ),
                                 ],
                               ),
@@ -224,23 +224,23 @@ class _SearchHomeViewState extends State<SearchHomeView> {
                       child: Container(
                         width: SearchTheme.feedbackWidth,
                         height: SearchTheme.feedbackHeight,
-                        decoration: const ShapeDecoration(
+                        decoration: ShapeDecoration(
                           shape: StadiumBorder(
-                            side: BorderSide(color: SearchTheme.rule, width: SearchTheme.feedbackRim),
+                            side: BorderSide(color: SearchTheme.colorsOf(context).rule, width: SearchTheme.feedbackRim),
                           ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const SearchGlyphIcon(
+                            SearchGlyphIcon(
                               SearchGlyph.feedback,
                               size: SearchTheme.feedbackGlyph,
-                              color: SearchTheme.dim,
+                              color: SearchTheme.colorsOf(context).dim,
                             ),
                             const SizedBox(width: SearchTheme.feedbackGap),
                             Text(
                               '反馈',
-                              style: _style(SearchTheme.feedbackText, SearchTheme.dim, line: SearchTheme.headerLine),
+                              style: _style(SearchTheme.feedbackText, SearchTheme.colorsOf(context).dim, line: SearchTheme.headerLine),
                             ),
                           ],
                         ),
@@ -260,7 +260,7 @@ class _SearchHomeViewState extends State<SearchHomeView> {
 /// How a [_Button] answers a finger on it.
 enum _Press { none, darken, scale }
 
-/// A tap target that answers accessibility presses. [_Press.darken] lays [BiliColors.pressedFill] over it, rounded
+/// A tap target that answers accessibility presses. [_Press.darken] lays [BiliColors.colorsOf(context).pressedFill] over it, rounded
 /// by [radius], while pressed; [_Press.scale] shrinks it.
 class _Button extends StatefulWidget {
   const _Button({
@@ -297,7 +297,7 @@ class _ButtonState extends State<_Button> {
       _Press.darken => DecoratedBox(
         position: DecorationPosition.foreground,
         decoration: BoxDecoration(
-          color: _pressed ? BiliColors.pressedFill : null,
+          color: _pressed ? BiliColors.colorsOf(context).pressedFill : null,
           borderRadius: BorderRadius.circular(widget.radius),
         ),
         child: widget.child,
@@ -333,9 +333,9 @@ class _Header extends StatelessWidget {
   final String title;
   final List<Widget> trailing;
 
-  static TextStyle get _style => _SearchHomeViewState._style(
+  static TextStyle _style(BuildContext context) => _SearchHomeViewState._style(
     SearchTheme.headerText,
-    SearchTheme.text,
+    SearchTheme.colorsOf(context).text,
     weight: SearchTheme.headerWeight,
     line: SearchTheme.headerLine,
   );
@@ -352,7 +352,7 @@ class _Header extends StatelessWidget {
           child: Center(
             child: Semantics(
               header: true,
-              child: Text(title, style: _style, strutStyle: BiliFonts.strut(_style)),
+              child: Text(title, style: _style(context), strutStyle: BiliFonts.strut(_style(context))),
             ),
           ),
         ),
@@ -395,7 +395,7 @@ class _HeaderGlyph extends StatelessWidget {
       child: Center(
         child: Transform.translate(
           offset: Offset(0, -lift),
-          child: SearchGlyphIcon(glyph, size: size, color: SearchTheme.grey),
+          child: SearchGlyphIcon(glyph, size: size, color: SearchTheme.colorsOf(context).grey),
         ),
       ),
     ),
@@ -406,12 +406,12 @@ class _HeaderRule extends StatelessWidget {
   const _HeaderRule();
 
   @override
-  Widget build(BuildContext context) => const Positioned(
+  Widget build(BuildContext context) => Positioned(
     right: SearchTheme.headerRule - SearchTheme.ruleWidth / 2,
     width: SearchTheme.ruleWidth,
     top: (SearchTheme.headerHeight - SearchTheme.ruleHeight) / 2,
     height: SearchTheme.ruleHeight,
-    child: ColoredBox(color: SearchTheme.rule),
+    child: ColoredBox(color: SearchTheme.colorsOf(context).rule),
   );
 }
 
@@ -514,7 +514,7 @@ class _HistoryChips extends StatelessWidget {
               height: SearchTheme.chipHeight,
               padding: const EdgeInsets.symmetric(horizontal: SearchTheme.chipPadding),
               decoration: BoxDecoration(
-                color: SearchTheme.chipFill,
+                color: SearchTheme.colorsOf(context).chipFill,
                 borderRadius: BorderRadius.circular(SearchTheme.chipRadius),
               ),
               child: Align(
@@ -557,7 +557,7 @@ class _DiscoveryCells extends StatelessWidget {
   final TextStyle style;
   final ValueChanged<String> onSearch;
 
-  Widget _cell(DiscoveryWord word) => _Button(
+  Widget _cell(BuildContext context, DiscoveryWord word) => _Button(
     key: ValueKey('search-discovery-${word.keyword}'),
     label: word.suffix.isEmpty ? word.showName : '${word.showName}·${word.suffix}',
     press: _Press.darken,
@@ -567,7 +567,7 @@ class _DiscoveryCells extends StatelessWidget {
       height: SearchTheme.cellHeight,
       padding: const EdgeInsets.symmetric(horizontal: SearchTheme.cellPadding),
       decoration: BoxDecoration(
-        color: SearchTheme.cellFill,
+        color: SearchTheme.colorsOf(context).cellFill,
         borderRadius: BorderRadius.circular(SearchTheme.cellRadius),
       ),
       alignment: Alignment.centerLeft,
@@ -578,7 +578,7 @@ class _DiscoveryCells extends StatelessWidget {
             if (word.suffix.isNotEmpty)
               TextSpan(
                 text: '·${word.suffix}',
-                style: const TextStyle(color: SearchTheme.suffix),
+                style: TextStyle(color: SearchTheme.colorsOf(context).suffix),
               ),
           ],
         ),
@@ -599,9 +599,9 @@ class _DiscoveryCells extends StatelessWidget {
           if (row > 0) const SizedBox(height: SearchTheme.cellRunSpacing),
           Row(
             children: [
-              Expanded(child: _cell(words[row])),
+              Expanded(child: _cell(context, words[row])),
               const SizedBox(width: SearchTheme.cellGap),
-              Expanded(child: row + 1 < words.length ? _cell(words[row + 1]) : const SizedBox.shrink()),
+              Expanded(child: row + 1 < words.length ? _cell(context, words[row + 1]) : const SizedBox.shrink()),
             ],
           ),
         ],

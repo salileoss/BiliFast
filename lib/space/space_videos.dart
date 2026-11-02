@@ -442,7 +442,7 @@ class _Chip extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = spaceVideosStyle(
       SpaceVideosTheme.chipText,
-      chosen ? SpaceVideosTheme.chipChosenInk : SpaceVideosTheme.chipInk,
+      chosen ? SpaceVideosTheme.colorsOf(context).chipChosenInk : SpaceVideosTheme.colorsOf(context).chipInk,
       line: SpaceVideosTheme.chipHeight,
     );
     return Semantics(
@@ -456,19 +456,19 @@ class _Chip extends StatelessWidget {
         onTap: onTap,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: chosen ? SpaceVideosTheme.chipChosenFill : null,
+            color: chosen ? SpaceVideosTheme.colorsOf(context).chipChosenFill : null,
             borderRadius: BorderRadius.circular(SpaceVideosTheme.chipRadius),
           ),
           child: Stack(
             children: [
               if (!chosen)
-                const Positioned.fill(
+                Positioned.fill(
                   child: Padding(
                     padding: EdgeInsets.all(SpaceVideosTheme.chipRimInset),
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         border: Border.fromBorderSide(
-                          BorderSide(color: SpaceVideosTheme.chipRim, width: SpaceVideosTheme.chipRimWidth),
+                          BorderSide(color: SpaceVideosTheme.colorsOf(context).chipRim, width: SpaceVideosTheme.chipRimWidth),
                         ),
                         borderRadius: BorderRadius.all(
                           Radius.circular(SpaceVideosTheme.chipRadius - SpaceVideosTheme.chipRimInset),
@@ -515,8 +515,8 @@ class _Strip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final playAll = spaceVideosStyle(SpaceVideosTheme.playAllText, SpaceVideosTheme.playAllInk, line: _line);
-    final sort = spaceVideosStyle(SpaceVideosTheme.sortText, SpaceVideosTheme.sortInk, line: _line);
+    final playAll = spaceVideosStyle(SpaceVideosTheme.playAllText, SpaceVideosTheme.colorsOf(context).playAllInk, line: _line);
+    final sort = spaceVideosStyle(SpaceVideosTheme.sortText, SpaceVideosTheme.colorsOf(context).sortInk, line: _line);
     final order = this.order;
     return SizedBox(
       height: SpaceVideosTheme.stripHeight,
@@ -599,7 +599,7 @@ class _End extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = spaceVideosStyle(
       SpaceVideosTheme.endText,
-      SpaceVideosTheme.endInk,
+      SpaceVideosTheme.colorsOf(context).endInk,
       line: SpaceVideosTheme.footerLine,
     );
     return Text(
@@ -621,7 +621,7 @@ class _Failure extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = spaceVideosStyle(SpaceVideosTheme.stateText, SpaceVideosTheme.stateInk);
+    final style = spaceVideosStyle(SpaceVideosTheme.stateText, SpaceVideosTheme.colorsOf(context).stateInk);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -671,12 +671,12 @@ class _RetryPillState extends State<_RetryPill> {
           height: SpaceVideosTheme.retryHeight,
           padding: const EdgeInsets.symmetric(horizontal: SpaceVideosTheme.retryPadX),
           alignment: Alignment.center,
-          decoration: const ShapeDecoration(
+          decoration: ShapeDecoration(
             shape: StadiumBorder(
-              side: BorderSide(color: BiliColors.pink, width: SpaceVideosTheme.retryRim),
+              side: BorderSide(color: BiliColors.colorsOf(context).pink, width: SpaceVideosTheme.retryRim),
             ),
           ),
-          child: Text('重试', style: spaceVideosStyle(SpaceVideosTheme.retryText, BiliColors.pink)),
+          child: Text('重试', style: spaceVideosStyle(SpaceVideosTheme.retryText, BiliColors.colorsOf(context).pink)),
         ),
       ),
     ),

@@ -42,7 +42,7 @@ class SearchFilterPanel extends StatelessWidget {
       ),
     ];
     return ColoredBox(
-      color: SearchFilterTheme.panel,
+      color: SearchFilterTheme.colorsOf(context).panel,
       child: Padding(
         padding: const EdgeInsets.only(
           left: SearchFilterTheme.side,
@@ -87,7 +87,7 @@ class _FilterSection extends StatelessWidget {
       fontFamily: BiliFonts.family,
       fontFamilyFallback: BiliFonts.fallback,
       fontSize: SearchFilterTheme.titleText,
-      color: SearchFilterTheme.title,
+      color: SearchFilterTheme.colorsOf(context).title,
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -141,7 +141,7 @@ class _FilterChip extends StatelessWidget {
       fontFamily: BiliFonts.family,
       fontFamilyFallback: BiliFonts.fallback,
       fontSize: SearchFilterTheme.chipText,
-      color: chosen ? SearchFilterTheme.chipChosenLabel : SearchFilterTheme.chipLabel,
+      color: chosen ? SearchFilterTheme.colorsOf(context).chipChosenLabel : SearchFilterTheme.colorsOf(context).chipLabel,
     );
     return Semantics(
       button: true,
@@ -153,8 +153,8 @@ class _FilterChip extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: DecoratedBox(
-          decoration: const BoxDecoration(
-            color: SearchFilterTheme.chip,
+          decoration: BoxDecoration(
+            color: SearchFilterTheme.colorsOf(context).chip,
             borderRadius: BorderRadius.all(Radius.circular(SearchFilterTheme.chipRadius)),
           ),
           child: Center(

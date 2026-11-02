@@ -14,6 +14,7 @@ import 'package:bilifast/settings/font_store.dart';
 import 'package:bilifast/shared/cover_placeholder.dart';
 import 'package:bilifast/shared/loading_tv.dart';
 import 'package:bilifast/shared/theme.dart';
+import 'package:bilifast/shared/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -38,7 +39,7 @@ FeedHttp _feed() => FeedHttp()
   ];
 
 /// 首页 at 3× under the system font, its feed answered by [http], inside a boundary keyed [_screen].
-Future<void> _showHome(WidgetTester tester, FeedHttp http) async {
+Future<void> _showHome(WidgetTester tester, FeedHttp http, {bool dark = false}) async {
   final saved = BiliFonts.family;
   addTearDown(() => BiliFonts.family = saved);
   await tester.runAsync(loadSystemFontStandIns);
@@ -62,7 +63,7 @@ Future<void> _showHome(WidgetTester tester, FeedHttp http) async {
   BiliFonts.family = BiliFonts.system;
   await tester.pumpWidget(
     MaterialApp(
-      theme: appTheme(),
+      theme: dark ? biliTheme(Brightness.dark) : appTheme(),
       builder: (context, child) => RepaintBoundary(
         key: _screen,
         child: AppScope(services: services, child: child!),
@@ -78,6 +79,20 @@ Future<void> _showHome(WidgetTester tester, FeedHttp http) async {
 /// 首页 as KaiC's iPhone draws it, under the system font, against 01's and 14's measures (px / 3). With
 /// BILIFAST_SHOTS naming a folder outside the repo, the 3× shots are saved there for tools/screen_diff.py.
 void main() {
+  testWidgets('dark Home keeps the existing feed arrangement with charcoal page and pale titles', (tester) async {
+    await _showHome(tester, _feed(), dark: true);
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
+    expect(scaffold.backgroundColor, const BiliPalette(Brightness.dark).page);
+    expect(tester.getRect(find.byType(HomeTabBar)).top, 873);
+    expect(tester.getRect(find.byKey(const ValueKey('home-search'))), const Rect.fromLTRB(64, 67, 364, 101));
+    final shots = Platform.environment['BILIFAST_SHOTS'];
+    if (shots != null) {
+      await tester.runAsync(loadIconFonts);
+      await tester.pump();
+      await saveShot(tester, find.byKey(_screen), '$shots/home-dark.png');
+    }
+  });
+
   testWidgets('首页 under the system font: the top row and the bottom bar where 01 has them', (tester) async {
     await _showHome(tester, _feed());
 

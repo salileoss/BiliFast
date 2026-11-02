@@ -258,9 +258,9 @@ class _FollowTabPageState extends State<FollowTabPage> with SkinRefreshRoom {
         (ModalRoute.isCurrentOf(context) ?? true) &&
         !widget.faceSheet.isOpen;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: head != null && head.lightStatusFollow ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      value: (head != null ? head.lightStatusFollow : BiliPalette.of(context).isDark) ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: Material(
-        color: BiliColors.card,
+        color: BiliColors.colorsOf(context).card,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -380,7 +380,7 @@ class _FollowTabPageState extends State<FollowTabPage> with SkinRefreshRoom {
             else ...[
               SliverList.builder(
                 itemCount: items.length,
-                itemBuilder: (context, index) => FollowPosts.row(items[index], inline, bandAbove: index == 0),
+                itemBuilder: (context, index) => FollowPosts.row(context, items[index], inline, bandAbove: index == 0),
               ),
               SliverToBoxAdapter(
                 child: FollowFooter(
@@ -426,8 +426,8 @@ class _Band extends StatelessWidget {
   const _Band();
 
   @override
-  Widget build(BuildContext context) => const SizedBox(
+  Widget build(BuildContext context) => SizedBox(
     height: DynamicFeedTheme.band,
-    child: ColoredBox(color: DynamicFeedTheme.bandFill),
+    child: ColoredBox(color: DynamicFeedTheme.colorsOf(context).bandFill),
   );
 }

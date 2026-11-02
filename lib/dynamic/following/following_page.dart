@@ -62,13 +62,17 @@ final class FollowingBarLook {
     lightStatus: false,
   );
 
-  factory FollowingBarLook.of(Skin? skin) {
+  factory FollowingBarLook.of(Skin? skin, {BuildContext? context}) {
     final page = skin?.equip.colors.colorSecondPage;
-    if (skin == null || skin.equip.primaryOnly || page == null) return stock;
+    if (skin == null || skin.equip.primaryOnly || page == null) {
+      if (context == null) return stock;
+      final palette = BiliPalette.of(context);
+      return FollowingBarLook(fill: FollowingListTheme.colorsOf(context).bar, ink: FollowingListTheme.colorsOf(context).barInk, lightStatus: palette.isDark);
+    }
     final fill = Color(page);
     return FollowingBarLook(
       fill: fill,
-      ink: skin.color ?? (skin.lightText ? FollowingListTheme.barLightInk : FollowingListTheme.barInk),
+      ink: skin.color ?? (skin.lightText ? FollowingListTheme.barLightInk : context == null ? FollowingListTheme.barInk : FollowingListTheme.colorsOf(context).barInk),
       lightStatus: SkinStatusBar.whiteOverColor(fill),
     );
   }
@@ -252,7 +256,7 @@ class _FollowingListPageState extends State<FollowingListPage> with SingleTicker
     final skin = widget.skin ?? AppScope.of(context).skin;
     return ValueListenableBuilder<Skin?>(
       valueListenable: skin,
-      builder: (context, skin, _) => _page(FollowingBarLook.of(skin)),
+      builder: (context, skin, _) => _page(FollowingBarLook.of(skin, context: context)),
     );
   }
 
@@ -273,10 +277,10 @@ class _FollowingListPageState extends State<FollowingListPage> with SingleTicker
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: look.lightStatus ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         child: Scaffold(
-          backgroundColor: FollowingListTheme.page,
+          backgroundColor: FollowingListTheme.colorsOf(context).page,
           resizeToAvoidBottomInset: false,
           body: DefaultTextStyle(
-            style: followingStyle(FollowingListTheme.nameText, FollowingListTheme.name),
+            style: followingStyle(FollowingListTheme.nameText, FollowingListTheme.colorsOf(context).name),
             child: ListenableBuilder(
               listenable: _model,
               builder: (context, _) {
@@ -376,7 +380,7 @@ class _FollowingListPageState extends State<FollowingListPage> with SingleTicker
             onTap: () => _setMenu(false),
             child: FadeTransition(
               opacity: fade,
-              child: const ColoredBox(color: FollowingListTheme.dim),
+              child: ColoredBox(color: FollowingListTheme.dim),
             ),
           ),
         ),
@@ -463,7 +467,7 @@ class _Bar extends StatelessWidget {
                   key: const ValueKey('following-back'),
                   behavior: HitTestBehavior.opaque,
                   onTap: onBack,
-                  child: CustomPaint(painter: FollowingBackPainter(fill: look.fill)),
+                  child: CustomPaint(painter: FollowingBackPainter(fill: look.fill, palette: BiliPalette.of(context))),
                 ),
               ),
             ),
@@ -499,15 +503,15 @@ class _SearchSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = followingStyle(
       FollowingListTheme.fieldText,
-      FollowingListTheme.fieldInk,
+      FollowingListTheme.colorsOf(context).fieldInk,
       line: FollowingListTheme.fieldLine,
     );
-    final hint = text.copyWith(color: FollowingListTheme.placeholder);
+    final hint = text.copyWith(color: FollowingListTheme.colorsOf(context).placeholder);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const ColoredBox(
-          color: FollowingListTheme.hairline,
+        ColoredBox(
+          color: FollowingListTheme.colorsOf(context).hairline,
           child: SizedBox(height: FollowingListTheme.barHairline),
         ),
         const SizedBox(height: FollowingListTheme.searchTop),
@@ -518,16 +522,16 @@ class _SearchSection extends StatelessWidget {
             child: Container(
               key: const ValueKey('following-search'),
               height: FollowingListTheme.fieldHeight,
-              decoration: const ShapeDecoration(color: FollowingListTheme.field, shape: StadiumBorder()),
+              decoration: ShapeDecoration(color: FollowingListTheme.colorsOf(context).field, shape: StadiumBorder()),
               padding: const EdgeInsets.only(left: FollowingListTheme.magnifierLead),
               child: Row(
                 children: [
                   Transform.translate(
                     offset: const Offset(0, -FollowingListTheme.magnifierLift),
-                    child: const SearchGlyphIcon(
+                    child: SearchGlyphIcon(
                       SearchGlyph.magnifier,
                       size: FollowingListTheme.magnifier,
-                      color: FollowingListTheme.magnifierInk,
+                      color: FollowingListTheme.colorsOf(context).magnifierInk,
                     ),
                   ),
                   const SizedBox(width: FollowingListTheme.magnifierGap),
@@ -540,7 +544,7 @@ class _SearchSection extends StatelessWidget {
                       enableSuggestions: false,
                       textInputAction: TextInputAction.search,
                       contextMenuBuilder: _editMenu,
-                      cursorColor: FollowingListTheme.caret,
+                      cursorColor: FollowingListTheme.colorsOf(context).caret,
                       onChanged: onChanged,
                       onSubmitted: (_) => onSubmit(),
                       style: text,
@@ -572,13 +576,13 @@ class _SearchSection extends StatelessWidget {
                               key: const ValueKey('following-search-clear'),
                               behavior: HitTestBehavior.opaque,
                               onTap: onClear,
-                              child: const SizedBox(
+                              child: SizedBox(
                                 width: FollowingListTheme.clearTarget,
                                 child: Center(
                                   child: SearchGlyphIcon(
                                     SearchGlyph.clear,
                                     size: FollowingListTheme.clear,
-                                    color: FollowingListTheme.clearColor,
+                                    color: FollowingListTheme.colorsOf(context).clearColor,
                                   ),
                                 ),
                               ),
@@ -591,8 +595,8 @@ class _SearchSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: FollowingListTheme.searchBottom),
-        const ColoredBox(
-          color: FollowingListTheme.hairline,
+        ColoredBox(
+          color: FollowingListTheme.colorsOf(context).hairline,
           child: SizedBox(height: FollowingListTheme.searchRule),
         ),
       ],
@@ -611,10 +615,10 @@ class _SortRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = followingStyle(
       FollowingListTheme.sortText,
-      FollowingListTheme.sortLabel,
+      FollowingListTheme.colorsOf(context).sortLabel,
       line: FollowingListTheme.sortLine,
     );
-    final value = label.copyWith(color: FollowingListTheme.sortValue);
+    final value = label.copyWith(color: FollowingListTheme.colorsOf(context).sortValue);
     return SizedBox(
       height: FollowingListTheme.sortRow,
       child: Stack(
@@ -658,7 +662,7 @@ class _SortRow extends StatelessWidget {
                       CustomPaint(
                         key: ValueKey(open ? 'following-sort-up' : 'following-sort-down'),
                         size: const Size(FollowingListTheme.sortChevronWidth, FollowingListTheme.sortChevronHeight),
-                        painter: SortChevronPainter(open: open),
+                        painter: SortChevronPainter(open: open, palette: BiliPalette.of(context)),
                       ),
                     ],
                   ),
@@ -687,11 +691,11 @@ class _SortMenu extends StatelessWidget {
       LayoutBuilder(
         builder: (context, constraints) => CustomPaint(
           size: const Size.fromHeight(FollowingListTheme.notchHeight + FollowingListTheme.barHairline),
-          painter: MenuEdgePainter(notchX: constraints.maxWidth - FollowingListTheme.notchRight),
+          painter: MenuEdgePainter(notchX: constraints.maxWidth - FollowingListTheme.notchRight, palette: BiliPalette.of(context)),
         ),
       ),
       ColoredBox(
-        color: FollowingListTheme.menuFill,
+        color: FollowingListTheme.colorsOf(context).menuFill,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -722,7 +726,7 @@ class _MenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = followingStyle(
       FollowingListTheme.menuText,
-      chosen ? FollowingListTheme.menuChosen : FollowingListTheme.menuInk,
+      chosen ? FollowingListTheme.colorsOf(context).menuChosen : FollowingListTheme.colorsOf(context).menuInk,
       line: FollowingListTheme.menuLine,
     );
     // The first row lost the hairline from its top, so its middle is the full row's.
@@ -755,10 +759,10 @@ class _MenuItem extends StatelessWidget {
                 Positioned(
                   right: FollowingListTheme.checkRight - FollowingListTheme.checkWidth / 2,
                   top: height / 2 - lift + FollowingListTheme.checkDrop - FollowingListTheme.checkHeight / 2,
-                  child: const CustomPaint(
+                  child: CustomPaint(
                     key: ValueKey('following-order-check'),
                     size: Size(FollowingListTheme.checkWidth, FollowingListTheme.checkHeight),
-                    painter: SortCheckPainter(),
+                    painter: SortCheckPainter(palette: BiliPalette.of(context)),
                   ),
                 ),
             ],
@@ -803,7 +807,7 @@ class _Lane extends StatelessWidget {
       );
     }
     if (lane.users.isEmpty) {
-      return Center(child: _line(empty, followingStyle(FollowingListTheme.stateText, FollowingListTheme.stateInk)));
+      return Center(child: _line(empty, followingStyle(FollowingListTheme.stateText, FollowingListTheme.colorsOf(context).stateInk)));
     }
     final media = MediaQuery.of(context);
     final bottom = math.max(media.viewInsets.bottom, media.padding.bottom);
@@ -836,7 +840,7 @@ class _FollowingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = followingStyle(
       FollowingListTheme.nameText,
-      user.vipPink ? FollowingListTheme.vipName : FollowingListTheme.name,
+      user.vipPink ? FollowingListTheme.colorsOf(context).vipName : FollowingListTheme.colorsOf(context).name,
       line: FollowingListTheme.nameLine,
     );
     const faceTop = (FollowingListTheme.row - FollowingListTheme.face) / 2;
@@ -882,15 +886,15 @@ class _FollowingRow extends StatelessWidget {
                   height: FollowingListTheme.dot,
                   child: DecoratedBox(
                     key: ValueKey('following-dot-${user.mid}'),
-                    decoration: const BoxDecoration(color: FollowingListTheme.dotInk, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: FollowingListTheme.colorsOf(context).dotInk, shape: BoxShape.circle),
                   ),
                 ),
-              const Positioned(
+              Positioned(
                 left: FollowingListTheme.rowRuleInset,
                 right: FollowingListTheme.rowRuleInset,
                 bottom: 0,
                 height: FollowingListTheme.rowRule,
-                child: ColoredBox(color: FollowingListTheme.hairline),
+                child: ColoredBox(color: FollowingListTheme.colorsOf(context).hairline),
               ),
             ],
           ),
@@ -925,7 +929,7 @@ class _Face extends StatelessWidget {
               width: FollowingListTheme.badge + FollowingListTheme.badgeRing * 2,
               height: FollowingListTheme.badge + FollowingListTheme.badgeRing * 2,
               padding: const EdgeInsets.all(FollowingListTheme.badgeRing),
-              decoration: const BoxDecoration(color: FollowingListTheme.page, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: FollowingListTheme.colorsOf(context).page, shape: BoxShape.circle),
               child: CustomPaint(painter: VerifiedBoltPainter(badge)),
             ),
           ),
@@ -954,7 +958,7 @@ class _StateMessage extends StatelessWidget {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _line(message, followingStyle(FollowingListTheme.stateText, FollowingListTheme.stateInk)),
+        _line(message, followingStyle(FollowingListTheme.stateText, FollowingListTheme.colorsOf(context).stateInk)),
         const SizedBox(height: FollowingListTheme.stateGap),
         Semantics(
           button: true,
@@ -969,12 +973,12 @@ class _StateMessage extends StatelessWidget {
               height: FollowingListTheme.retryHeight,
               padding: const EdgeInsets.symmetric(horizontal: FollowingListTheme.retryPadX),
               alignment: Alignment.center,
-              decoration: const ShapeDecoration(
+              decoration: ShapeDecoration(
                 shape: StadiumBorder(
-                  side: BorderSide(color: BiliColors.pink, width: FollowingListTheme.retryRim),
+                  side: BorderSide(color: BiliColors.colorsOf(context).pink, width: FollowingListTheme.retryRim),
                 ),
               ),
-              child: Text(action, style: followingStyle(FollowingListTheme.retryText, BiliColors.pink)),
+              child: Text(action, style: followingStyle(FollowingListTheme.retryText, BiliColors.colorsOf(context).pink)),
             ),
           ),
         ),
@@ -1004,7 +1008,7 @@ class _Footer extends StatelessWidget {
       );
     }
     if (error == null) return const SizedBox.shrink();
-    final style = followingStyle(FollowingListTheme.footerText, FollowingListTheme.footerInk);
+    final style = followingStyle(FollowingListTheme.footerText, FollowingListTheme.colorsOf(context).footerInk);
     return Semantics(
       button: true,
       label: '加载失败，点击重试',
@@ -1022,7 +1026,7 @@ class _Footer extends StatelessWidget {
                 TextSpan(text: '加载失败，', style: style),
                 TextSpan(
                   text: '点击重试',
-                  style: style.copyWith(color: BiliColors.link),
+                  style: style.copyWith(color: BiliColors.colorsOf(context).link),
                 ),
               ],
             ),

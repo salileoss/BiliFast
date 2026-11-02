@@ -35,7 +35,7 @@ class SpaceWaiting extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top + SpaceTheme.barRow;
-    final style = spaceStyle(SpaceTheme.retryText, SpaceTheme.retryInk);
+    final style = spaceStyle(SpaceTheme.retryText, SpaceTheme.colorsOf(context).retryInk);
     return Padding(
       padding: EdgeInsets.only(top: top),
       child: Center(
@@ -62,7 +62,7 @@ class SpaceWaiting extends StatelessWidget {
                   TextSpan(
                     children: [
                       TextSpan(text: '$message\n', style: style),
-                      TextSpan(text: '点击重试', style: spaceStyle(SpaceTheme.retryText, SpaceTheme.retryAction)),
+                      TextSpan(text: '点击重试', style: spaceStyle(SpaceTheme.retryText, SpaceTheme.colorsOf(context).retryAction)),
                     ],
                   ),
                 ),

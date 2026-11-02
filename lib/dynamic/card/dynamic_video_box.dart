@@ -197,7 +197,7 @@ class DynamicVideoBoxState extends State<DynamicVideoBox> implements FeedInlineC
                     overflow: TextOverflow.ellipsis,
                     style: dynamicStyle(
                       DynamicCardTheme.titleText,
-                      DynamicCardTheme.titleInk,
+                      DynamicCardTheme.colorsOf(context).titleInk,
                       weight: DynamicCardTheme.titleWeight,
                       line: DynamicCardTheme.titleLine,
                     ),
@@ -408,9 +408,9 @@ class _Progress extends StatelessWidget {
       return FractionallySizedBox(
         key: const ValueKey('dynamic-video-progress'),
         widthFactor: share,
-        child: const SizedBox(
+        child: SizedBox(
           height: DynamicCardTheme.progress,
-          child: ColoredBox(color: DynamicCardTheme.progressInk),
+          child: ColoredBox(color: DynamicCardTheme.colorsOf(context).progressInk),
         ),
       );
     },

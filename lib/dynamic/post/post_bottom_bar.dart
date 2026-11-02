@@ -75,21 +75,21 @@ class PostBottomBar extends StatelessWidget {
         DynamicPostTheme.actionPitch * actions.length -
         DynamicPostTheme.actionPitch / 2 +
         DynamicPostTheme.pillToAction;
-    final promptStyle = postStyle(DynamicPostTheme.pillText, DynamicPostTheme.pillInk);
+    final promptStyle = postStyle(DynamicPostTheme.pillText, DynamicPostTheme.colorsOf(context).pillInk);
     return ColoredBox(
       key: const ValueKey('post-bottom-bar'),
-      color: DynamicPostTheme.page,
+      color: DynamicPostTheme.colorsOf(context).page,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(
+          SizedBox(
             height: DynamicPostTheme.bottomRuleEach,
-            child: ColoredBox(color: DynamicPostTheme.bottomRule),
+            child: ColoredBox(color: DynamicPostTheme.colorsOf(context).bottomRule),
           ),
-          const SizedBox(
+          SizedBox(
             height: DynamicPostTheme.bottomRuleEach,
-            child: ColoredBox(color: DynamicPostTheme.bottomRuleSoft),
+            child: ColoredBox(color: DynamicPostTheme.colorsOf(context).bottomRuleSoft),
           ),
           SizedBox(
             height: DynamicPostTheme.bottomRow,
@@ -110,7 +110,7 @@ class PostBottomBar extends StatelessWidget {
                       behavior: HitTestBehavior.opaque,
                       onTap: onWrite,
                       child: DecoratedBox(
-                        decoration: const ShapeDecoration(color: DynamicPostTheme.pillFill, shape: StadiumBorder()),
+                        decoration: ShapeDecoration(color: DynamicPostTheme.colorsOf(context).pillFill, shape: StadiumBorder()),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: DynamicPostTheme.pillPadding),
                           child: Align(alignment: Alignment.centerLeft, child: postLine(context, prompt, promptStyle)),
@@ -185,7 +185,7 @@ class _Action extends StatelessWidget {
                   child: Image.asset(
                     icon,
                     width: iconWidth,
-                    color: on ? DynamicPostTheme.actionLiked : DynamicPostTheme.actionInk,
+                    color: on ? DynamicPostTheme.colorsOf(context).actionLiked : DynamicPostTheme.colorsOf(context).actionInk,
                     filterQuality: FilterQuality.medium,
                     excludeFromSemantics: true,
                   ),
@@ -202,7 +202,7 @@ class _Action extends StatelessWidget {
                     text,
                     postStyle(
                       DynamicPostTheme.actionCountText,
-                      on ? DynamicPostTheme.actionLiked : DynamicPostTheme.actionCountInk,
+                      on ? DynamicPostTheme.colorsOf(context).actionLiked : DynamicPostTheme.colorsOf(context).actionCountInk,
                       line: line,
                     ),
                   ),

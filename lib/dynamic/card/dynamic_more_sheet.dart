@@ -133,7 +133,7 @@ class _MoreSheetRoute extends PopupRoute<_MoreChoice> {
           type: MaterialType.transparency,
           child: ColoredBox(
             key: const ValueKey('dynamic-more-sheet'),
-            color: DynamicCardTheme.sheetFill,
+            color: DynamicCardTheme.colorsOf(context).sheetFill,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -149,9 +149,9 @@ class _MoreSheetRoute extends PopupRoute<_MoreChoice> {
                     hairline: index < rows.length - 1,
                     onTap: () => pick(row.choice),
                   ),
-                const SizedBox(
+                SizedBox(
                   height: DynamicCardTheme.sheetGap,
-                  child: ColoredBox(color: DynamicCardTheme.sheetGapFill),
+                  child: ColoredBox(color: DynamicCardTheme.colorsOf(context).sheetGapFill),
                 ),
                 Semantics(
                   container: true,
@@ -171,7 +171,7 @@ class _MoreSheetRoute extends PopupRoute<_MoreChoice> {
                             '取消',
                             style: dynamicStyle(
                               DynamicCardTheme.sheetCancelText,
-                              DynamicCardTheme.sheetCancelInk,
+                              DynamicCardTheme.colorsOf(context).sheetCancelInk,
                             ).copyWith(height: 1),
                           ),
                         ),
@@ -238,7 +238,7 @@ class _Row extends StatelessWidget {
               child: Center(
                 child: Transform.translate(
                   offset: Offset(0, -iconRise),
-                  child: DynamicIcon(asset, width: iconWidth, color: DynamicCardTheme.sheetIconInk),
+                  child: DynamicIcon(asset, width: iconWidth, color: DynamicCardTheme.colorsOf(context).sheetIconInk),
                 ),
               ),
             ),
@@ -252,17 +252,17 @@ class _Row extends StatelessWidget {
                 child: Text(
                   label,
                   maxLines: 1,
-                  style: dynamicStyle(DynamicCardTheme.sheetText, DynamicCardTheme.sheetInk).copyWith(height: 1),
+                  style: dynamicStyle(DynamicCardTheme.sheetText, DynamicCardTheme.colorsOf(context).sheetInk).copyWith(height: 1),
                 ),
               ),
             ),
             if (hairline)
-              const Positioned(
+              Positioned(
                 left: DynamicCardTheme.sheetHairlineLeft,
                 right: 0,
                 bottom: 0,
                 height: DynamicCardTheme.sheetHairline,
-                child: ColoredBox(color: DynamicCardTheme.sheetHairlineInk),
+                child: ColoredBox(color: DynamicCardTheme.colorsOf(context).sheetHairlineInk),
               ),
           ],
         ),

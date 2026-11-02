@@ -20,12 +20,14 @@ class MeTap extends StatelessWidget {
     required this.onTap,
     required this.child,
     this.feedback = MeTapFeedback.fade,
+    this.toggled,
   });
 
   final String label;
   final VoidCallback? onTap;
   final Widget child;
   final MeTapFeedback feedback;
+  final bool? toggled;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +36,7 @@ class MeTap extends StatelessWidget {
       container: true,
       button: true,
       label: label,
+      toggled: toggled,
       excludeSemantics: true,
       onTap: onTap,
       child: switch (feedback) {
@@ -155,7 +158,7 @@ class MeHeader extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: BiliFonts.family,
                       fontSize: MeTheme.loggedOutText,
-                      color: ink ?? MeTheme.name,
+                      color: ink ?? MeTheme.colorsOf(context).name,
                     ),
                   ),
                 ),
@@ -197,13 +200,13 @@ class MeHeader extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: BiliFonts.family,
                           fontSize: MeTheme.spaceText,
-                          color: ink ?? MeTheme.space,
+                          color: ink ?? MeTheme.colorsOf(context).space,
                         ),
                       ),
                       const SizedBox(width: MeTheme.spaceChevronGap),
                       CustomPaint(
                         size: const Size(MeTheme.chevronWidth, MeTheme.chevronHeight),
-                        painter: MeChevronPainter(color: ink ?? MeTheme.space, stroke: MeTheme.chevronStroke),
+                        painter: MeChevronPainter(color: ink ?? MeTheme.colorsOf(context).space, stroke: MeTheme.chevronStroke),
                       ),
                     ],
                   ),
@@ -276,8 +279,8 @@ class _Avatar extends StatelessWidget {
             child: profile == null
                 ? ColoredBox(
                     key: const ValueKey('me-avatar-blank'),
-                    color: BiliColors.pageGrey,
-                    child: Icon(Icons.person, size: face * MeTheme.blankHead, color: BiliColors.divider),
+                    color: BiliColors.colorsOf(context).pageGrey,
+                    child: Icon(Icons.person, size: face * MeTheme.blankHead, color: BiliColors.colorsOf(context).divider),
                   )
                 : RemoteImage.avatar(profile.face),
           ),
@@ -298,7 +301,7 @@ class _Avatar extends StatelessWidget {
               key: const ValueKey('me-vip-badge'),
               padding: const EdgeInsets.all(MeTheme.vipRing),
               decoration: const BoxDecoration(color: MeTheme.vipRingInk, shape: BoxShape.circle),
-              child: const MeVipDisc(),
+              child: MeVipDisc(),
             ),
           ),
       ],
@@ -316,7 +319,7 @@ class _NameRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ink = this.ink;
-    const pencil = CustomPaint(size: Size.square(MeTheme.pencilBox), painter: MePencilPainter());
+    final pencil = CustomPaint(size: Size.square(MeTheme.pencilBox), painter: MePencilPainter(palette: BiliPalette.of(context)));
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -328,7 +331,7 @@ class _NameRow extends StatelessWidget {
             fontFamily: BiliFonts.family,
             fontSize: MeTheme.nameText,
             fontWeight: MeTheme.nameWeight,
-            color: ink ?? (profile.vip ? MeTheme.vipName : MeTheme.name),
+            color: ink ?? (profile.vip ? MeTheme.colorsOf(context).vipName : MeTheme.colorsOf(context).name),
           ),
         ),
         MeTap(
@@ -359,7 +362,7 @@ class _VipLabel extends StatelessWidget {
     key: const ValueKey('me-vip-label'),
     padding: const EdgeInsets.symmetric(horizontal: MeTheme.vipLabelPad),
     alignment: Alignment.center,
-    decoration: const ShapeDecoration(color: MeTheme.vipLabelFill, shape: StadiumBorder()),
+    decoration: ShapeDecoration(color: MeTheme.colorsOf(context).vipLabelFill, shape: StadiumBorder()),
     child: Text(
       label,
       maxLines: 1,
@@ -382,7 +385,7 @@ class _Coins extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = TextStyle(fontFamily: BiliFonts.family, fontSize: MeTheme.coinsText, color: ink ?? MeTheme.coins);
+    final style = TextStyle(fontFamily: BiliFonts.family, fontSize: MeTheme.coinsText, color: ink ?? MeTheme.colorsOf(context).coins);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -420,12 +423,12 @@ class _Counts extends StatelessWidget {
             child: Stack(
               children: [
                 if (index > 0 && ink == null)
-                  const Positioned(
+                  Positioned(
                     left: 0,
                     top: lift,
                     width: MeTheme.countRuleWidth,
                     height: MeTheme.countRuleHeight,
-                    child: ColoredBox(color: MeTheme.countRule),
+                    child: ColoredBox(color: MeTheme.colorsOf(context).countRule),
                   ),
                 Positioned.fill(
                   child: MeTap(
@@ -442,7 +445,7 @@ class _Counts extends StatelessWidget {
                               fontFamily: BiliFonts.family,
                               fontSize: MeTheme.countText,
                               fontWeight: MeTheme.countWeight,
-                              color: ink ?? MeTheme.count,
+                              color: ink ?? MeTheme.colorsOf(context).count,
                             ),
                           ),
                           _CountLine(
@@ -451,7 +454,7 @@ class _Counts extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: BiliFonts.family,
                               fontSize: MeTheme.countLabelText,
-                              color: ink ?? MeTheme.countLabel,
+                              color: ink ?? MeTheme.colorsOf(context).countLabel,
                             ),
                           ),
                         ],
@@ -561,7 +564,7 @@ class _VipCard extends StatelessWidget {
             onTap: onOpen,
             feedback: MeTapFeedback.highlight,
             child: ColoredBox(
-              color: MeTheme.card,
+              color: MeTheme.colorsOf(context).card,
               child: Stack(
                 children: [
                   _CentredRow(
@@ -578,7 +581,7 @@ class _VipCard extends StatelessWidget {
                             fontFamily: BiliFonts.family,
                             fontSize: MeTheme.cardTitleText,
                             fontWeight: MeTheme.cardTitleWeight,
-                            color: MeTheme.cardTitle,
+                            color: MeTheme.colorsOf(context).cardTitle,
                           ),
                         ),
                       ],
@@ -595,13 +598,13 @@ class _VipCard extends StatelessWidget {
                           style: TextStyle(
                             fontFamily: BiliFonts.family,
                             fontSize: MeTheme.cardMoreText,
-                            color: MeTheme.cardMore,
+                            color: MeTheme.colorsOf(context).cardMore,
                           ),
                         ),
                         const SizedBox(width: MeTheme.cardMoreChevronGap),
-                        const CustomPaint(
+                        CustomPaint(
                           size: Size(MeTheme.cardMoreChevronWidth, MeTheme.cardMoreChevronHeight),
-                          painter: MeChevronPainter(color: MeTheme.cardMore, stroke: MeTheme.cardMoreChevronStroke),
+                          painter: MeChevronPainter(color: MeTheme.colorsOf(context).cardMore, stroke: MeTheme.cardMoreChevronStroke),
                         ),
                       ],
                     ),
@@ -622,7 +625,7 @@ class _VipCard extends StatelessWidget {
           label: '会员中心',
           onTap: onOpen,
           child: DecoratedBox(
-            decoration: const ShapeDecoration(color: MeTheme.cardButtonFill, shape: StadiumBorder()),
+            decoration: ShapeDecoration(color: MeTheme.colorsOf(context).cardButtonFill, shape: StadiumBorder()),
             child: Center(
               child: Text(
                 '会员中心',

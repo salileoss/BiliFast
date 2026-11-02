@@ -136,7 +136,6 @@ void main() {
     'me-cast',
     'me-scan',
     'me-outfit',
-    'me-night',
     'me-edit',
     'me-dynamics',
     'me-following',

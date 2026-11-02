@@ -109,7 +109,7 @@ class SpaceVideoMenu extends StatelessWidget {
     final shape = _MenuShape(arrowX: arrowX, below: below);
     return CustomPaint(
       key: const ValueKey('space-menu'),
-      painter: _MenuPainter(shape),
+      painter: _MenuPainter(shape, palette: BiliPalette.of(context)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(SpaceVideosTheme.menuRadius),
         child: Column(
@@ -118,10 +118,10 @@ class SpaceVideoMenu extends StatelessWidget {
               key: const ValueKey('space-menu-watch-later'),
               label: '添加至稍后再看',
               iconCentre: SpaceVideosTheme.menuWatchLaterCentre,
-              icon: const SearchGlyphIcon(
+              icon: SearchGlyphIcon(
                 SearchGlyph.watchLater,
                 size: SpaceVideosTheme.menuWatchLaterIcon,
-                color: SpaceVideosTheme.menuIconInk,
+                color: SpaceVideosTheme.colorsOf(context).menuIconInk,
               ),
               onTap: () => Navigator.of(context).pop(SpaceVideoAction.watchLater),
             ),
@@ -130,11 +130,11 @@ class SpaceVideoMenu extends StatelessWidget {
               label: '分享',
               iconCentre: SpaceVideosTheme.menuShareCentre,
               iconLift: SpaceVideosTheme.menuShareLift,
-              icon: const ActionIcon(
+              icon: ActionIcon(
                 ActionGlyph.share,
                 solid: false,
                 size: SpaceVideosTheme.menuShareIcon,
-                color: SpaceVideosTheme.menuIconInk,
+                color: SpaceVideosTheme.colorsOf(context).menuIconInk,
                 stroke: SpaceVideosTheme.menuShareStroke,
               ),
               onTap: () => Navigator.of(context).pop(SpaceVideoAction.share),
@@ -166,7 +166,7 @@ class _MenuRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = spaceVideosStyle(
       SpaceVideosTheme.menuText,
-      SpaceVideosTheme.menuInk,
+      SpaceVideosTheme.colorsOf(context).menuInk,
       line: SpaceVideosTheme.menuRowHeight,
     );
     return Semantics(
@@ -229,13 +229,15 @@ class _MenuShape {
 }
 
 class _MenuPainter extends CustomPainter {
-  const _MenuPainter(this.shape);
+  final BiliPalette palette;
+
+  const _MenuPainter(this.shape, {this.palette = const BiliPalette(Brightness.light)});
 
   final _MenuShape shape;
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawPath(shape.outline(size), Paint()..color = SpaceVideosTheme.menuFill);
+    canvas.drawPath(shape.outline(size), Paint()..color = SpaceVideosThemeColors(palette).menuFill);
   }
 
   @override

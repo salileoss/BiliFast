@@ -30,6 +30,7 @@ class OwnHomeSliver extends StatelessWidget {
 
   /// What the sections lie on.
   static const fill = OwnSpaceTabsTheme.greyPage;
+  static Color fillOf(BuildContext context) => OwnSpaceTabsTheme.colorsOf(context).greyPage;
 
   void _soon(BuildContext context) => showToast(context, '暂未开放');
 
@@ -140,7 +141,7 @@ class OwnHomeSliver extends StatelessWidget {
       ],
     ];
     return DecoratedSliver(
-      decoration: const BoxDecoration(color: fill),
+      decoration: BoxDecoration(color: OwnHomeSliver.fillOf(context)),
       sliver: SliverMainAxisGroup(
         slivers: [
           SliverToBoxAdapter(
@@ -177,17 +178,17 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     final titleStyle = ownStyle(
       OwnSpaceTabsTheme.titleText,
-      OwnSpaceTabsTheme.titleInk,
+      OwnSpaceTabsTheme.colorsOf(context).titleInk,
       line: OwnSpaceTabsTheme.headerLine,
     );
     final countStyle = ownStyle(
       OwnSpaceTabsTheme.countText,
-      OwnSpaceTabsTheme.countInk,
+      OwnSpaceTabsTheme.colorsOf(context).countInk,
       line: OwnSpaceTabsTheme.headerLine,
     );
     final moreStyle = ownStyle(
       OwnSpaceTabsTheme.moreText,
-      OwnSpaceTabsTheme.moreInk,
+      OwnSpaceTabsTheme.colorsOf(context).moreInk,
       line: OwnSpaceTabsTheme.headerLine,
     );
     final count = this.count;
@@ -242,7 +243,7 @@ class _Section extends StatelessWidget {
                           child: Text('更多', maxLines: 1, style: moreStyle, strutStyle: BiliFonts.strut(moreStyle)),
                         ),
                         const SizedBox(width: OwnSpaceTabsTheme.moreChevronGap),
-                        const OwnChevron(color: OwnSpaceTabsTheme.moreInk),
+                        OwnChevron(color: OwnSpaceTabsTheme.colorsOf(context).moreInk),
                         const SizedBox(width: OwnSpaceTabsTheme.moreRight),
                       ],
                     ),

@@ -99,12 +99,12 @@ class FeedCardView extends StatefulWidget {
 class _FeedCardViewState extends State<FeedCardView> {
   bool _pressed = false;
 
-  static const _title = TextStyle(
+  TextStyle get _title => TextStyle(
     fontSize: BiliMetrics.cardTitleText,
-    color: BiliColors.text,
+    color: BiliColors.colorsOf(context).text,
     height: FeedCardSize._lineHeight,
   );
-  static const _owner = TextStyle(fontSize: BiliMetrics.cardFooterText, color: BiliColors.secondaryText, height: 1);
+  TextStyle get _owner => TextStyle(fontSize: BiliMetrics.cardFooterText, color: BiliColors.colorsOf(context).secondaryText, height: 1);
 
   void _press(bool pressed) {
     if (_pressed != pressed) setState(() => _pressed = pressed);
@@ -214,7 +214,7 @@ class _FeedCardViewState extends State<FeedCardView> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(BiliMetrics.cardRadius),
             child: ColoredBox(
-              color: BiliColors.card,
+              color: BiliColors.colorsOf(context).card,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -264,10 +264,10 @@ class _FeedCardViewState extends State<FeedCardView> {
                                 dimension: BiliMetrics.cardMoreTarget,
                                 child: Transform.translate(
                                   offset: const Offset(0, BiliMetrics.cardMoreDrop),
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.more_vert,
                                     size: BiliMetrics.cardFooterText + 4,
-                                    color: BiliColors.secondaryText,
+                                    color: BiliColors.colorsOf(context).secondaryText,
                                   ),
                                 ),
                               ),
@@ -305,12 +305,12 @@ class _FeedCardViewState extends State<FeedCardView> {
   /// the title after its reason tag, the uploader and date, and ⋮.
   Widget _padCard(BuildContext context, ZoomSource source) {
     final card = widget.card;
-    const title = TextStyle(
+    final title = TextStyle(
       fontSize: PadHomeTheme.titleText,
-      color: BiliColors.text,
+      color: BiliColors.colorsOf(context).text,
       height: PadHomeTheme.titleLine / PadHomeTheme.titleText,
     );
-    const byline = TextStyle(fontSize: PadHomeTheme.subText, color: PadHomeTheme.subInk, height: 1.2);
+    final byline = TextStyle(fontSize: PadHomeTheme.subText, color: PadHomeTheme.colorsOf(context).subInk, height: 1.2);
     final reason = card.reason;
     return LayoutBuilder(
       builder: (context, box) {
@@ -403,7 +403,7 @@ class _FeedCardViewState extends State<FeedCardView> {
                                 key: const ValueKey('card-more'),
                                 behavior: HitTestBehavior.opaque,
                                 onTap: () => unawaited(_more()),
-                                child: const CustomPaint(painter: _PadMorePainter()),
+                                child: CustomPaint(painter: _PadMorePainter(palette: BiliPalette.of(context))),
                               ),
                             ),
                           ],
@@ -436,11 +436,13 @@ class _FeedCardViewState extends State<FeedCardView> {
 
 /// ⋮ as the iPad draws it: three dots one above the other.
 class _PadMorePainter extends CustomPainter {
-  const _PadMorePainter();
+  final BiliPalette palette;
+
+  const _PadMorePainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = PadHomeTheme.moreInk;
+    final paint = Paint()..color = PadHomeThemeColors(palette).moreInk;
     final centre = size.center(Offset.zero);
     for (final step in const [-1, 0, 1]) {
       canvas.drawCircle(centre + Offset(0, step * PadHomeTheme.morePitch), PadHomeTheme.moreDot / 2, paint);
@@ -448,7 +450,7 @@ class _PadMorePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_PadMorePainter oldDelegate) => false;
+  bool shouldRepaint(_PadMorePainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 class _PadTag extends StatelessWidget {
@@ -463,7 +465,7 @@ class _PadTag extends StatelessWidget {
     height: PadHomeTheme.tagHeight,
     padding: const EdgeInsets.symmetric(horizontal: PadHomeTheme.tagPad),
     decoration: BoxDecoration(
-      color: BiliColors.reasonTint,
+      color: BiliColors.colorsOf(context).reasonTint,
       borderRadius: BorderRadius.circular(PadHomeTheme.tagRadius),
     ),
     child: Center(
@@ -693,7 +695,7 @@ class _Tag extends StatelessWidget {
     height: BiliMetrics.cardTagHeight,
     padding: const EdgeInsets.symmetric(horizontal: 4),
     alignment: Alignment.center,
-    decoration: BoxDecoration(color: BiliColors.reasonTint, borderRadius: BorderRadius.circular(2)),
+    decoration: BoxDecoration(color: BiliColors.colorsOf(context).reasonTint, borderRadius: BorderRadius.circular(2)),
     child: Text(text, maxLines: 1, style: _style, strutStyle: BiliFonts.strutOf(context, _style)),
   );
 }
@@ -707,15 +709,15 @@ class UpBadge extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 2),
     alignment: Alignment.center,
     decoration: BoxDecoration(
-      border: Border.all(color: BiliColors.secondaryText),
+      border: Border.all(color: BiliColors.colorsOf(context).secondaryText),
       borderRadius: BorderRadius.circular(2.5),
     ),
-    child: const Text(
+    child: Text(
       'UP',
       style: TextStyle(
         fontSize: BiliMetrics.upBadgeText,
         fontWeight: FontWeight.bold,
-        color: BiliColors.secondaryText,
+        color: BiliColors.colorsOf(context).secondaryText,
         height: 1,
       ),
     ),
@@ -733,15 +735,15 @@ class FeedCardSkeleton extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(BiliMetrics.cardRadius),
       child: ColoredBox(
-        color: BiliColors.card,
+        color: BiliColors.colorsOf(context).card,
         // Inside the card, so the sweep lights only the grey shapes and not the white around them.
         child: Shimmer(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AspectRatio(
+              AspectRatio(
                 aspectRatio: BiliMetrics.coverAspect,
-                child: ColoredBox(color: BiliColors.shimmerBase),
+                child: ColoredBox(color: BiliColors.colorsOf(context).shimmerBase),
               ),
               Padding(
                 padding: const EdgeInsets.only(
@@ -751,7 +753,7 @@ class FeedCardSkeleton extends StatelessWidget {
                 ),
                 child: SizedBox(
                   height: FeedCardSize.titleHeight(scaler),
-                  child: const Column(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -787,7 +789,7 @@ class FeedCardSkeleton extends StatelessWidget {
           Container(
             height: PadHomeTheme.coverHeight(box.maxWidth),
             decoration: BoxDecoration(
-              color: BiliColors.shimmerBase,
+              color: BiliColors.colorsOf(context).shimmerBase,
               borderRadius: BorderRadius.circular(PadHomeTheme.coverRadius),
             ),
           ),
@@ -795,13 +797,13 @@ class FeedCardSkeleton extends StatelessWidget {
             height: PadHomeTheme.footer,
             child: Stack(
               children: [
-                const Positioned(
+                Positioned(
                   left: 0,
                   top: PadHomeTheme.faceTop,
                   child: SizedBox.square(
                     dimension: PadHomeTheme.face,
                     child: DecoratedBox(
-                      decoration: BoxDecoration(color: BiliColors.shimmerBase, shape: BoxShape.circle),
+                      decoration: BoxDecoration(color: BiliColors.colorsOf(context).shimmerBase, shape: BoxShape.circle),
                     ),
                   ),
                 ),
@@ -809,7 +811,7 @@ class FeedCardSkeleton extends StatelessWidget {
                   left: PadHomeTheme.titleLeft,
                   right: PadHomeTheme.titleRight,
                   top: PadHomeTheme.faceTop + PadHomeTheme.skeletonTitleDrop,
-                  child: const Column(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _Bar(),
@@ -833,7 +835,7 @@ class _Bar extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     height: 12,
-    decoration: BoxDecoration(color: BiliColors.shimmerBase, borderRadius: BorderRadius.circular(3)),
+    decoration: BoxDecoration(color: BiliColors.colorsOf(context).shimmerBase, borderRadius: BorderRadius.circular(3)),
   );
 }
 
@@ -882,7 +884,7 @@ class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
           return LinearGradient(
             begin: Alignment(at - 1, -0.3),
             end: Alignment(at + 1, 0.3),
-            colors: const [BiliColors.shimmerBase, BiliColors.shimmerHighlight, BiliColors.shimmerBase],
+            colors: [BiliColors.colorsOf(context).shimmerBase, BiliColors.colorsOf(context).shimmerHighlight, BiliColors.colorsOf(context).shimmerBase],
             stops: const [0.35, 0.5, 0.65],
           ).createShader(bounds);
         },

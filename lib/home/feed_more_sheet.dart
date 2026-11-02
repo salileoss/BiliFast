@@ -32,10 +32,10 @@ Future<FeedMoreChoice?> showFeedMoreSheet(BuildContext context, FeedCard card) {
               label: '添加至稍后再看',
               icon: Transform.translate(
                 offset: const Offset(FeedDislikeTheme.watchLaterShift, 0),
-                child: const SearchGlyphIcon(
+                child: SearchGlyphIcon(
                   SearchGlyph.watchLater,
                   size: FeedDislikeTheme.watchLaterIcon,
-                  color: FeedDislikeTheme.ink,
+                  color: FeedDislikeTheme.colorsOf(context).ink,
                 ),
               ),
               onTap: () => Navigator.of(context).pop(FeedMoreChoice.watchLater),
@@ -50,10 +50,10 @@ Future<FeedMoreChoice?> showFeedMoreSheet(BuildContext context, FeedCard card) {
                 FeedSheetRow(
                   key: const ValueKey('feed-more-dislike-video'),
                   label: '不感兴趣：当前视频',
-                  icon: const FeedDislikeGlyphIcon(
+                  icon: FeedDislikeGlyphIcon(
                     FeedDislikeGlyph.videoOff,
                     size: FeedDislikeTheme.rowIconBox,
-                    color: FeedDislikeTheme.ink,
+                    color: FeedDislikeTheme.colorsOf(context).ink,
                   ),
                   onTap: () => Navigator.of(context).pop(FeedMoreChoice.dislikeVideo),
                 ),
@@ -61,10 +61,10 @@ Future<FeedMoreChoice?> showFeedMoreSheet(BuildContext context, FeedCard card) {
                 FeedSheetRow(
                   key: const ValueKey('feed-more-dislike-uploader'),
                   label: '不感兴趣：UP',
-                  icon: const FeedDislikeGlyphIcon(
+                  icon: FeedDislikeGlyphIcon(
                     FeedDislikeGlyph.uploaderOff,
                     size: FeedDislikeTheme.rowIconBox,
-                    color: FeedDislikeTheme.ink,
+                    color: FeedDislikeTheme.colorsOf(context).ink,
                   ),
                   onTap: () => Navigator.of(context).pop(FeedMoreChoice.dislikeUploader),
                 ),
@@ -156,8 +156,8 @@ class _FeedSheetRoute<T> extends PopupRoute<T> {
             child: Container(
               key: _sheetKey,
               width: double.infinity,
-              decoration: const BoxDecoration(
-                color: FeedDislikeTheme.sheetFill,
+              decoration: BoxDecoration(
+                color: FeedDislikeTheme.colorsOf(context).sheetFill,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(FeedDislikeTheme.sheetRadius)),
               ),
               padding: EdgeInsets.only(
@@ -167,7 +167,7 @@ class _FeedSheetRoute<T> extends PopupRoute<T> {
               ),
               child: Stack(
                 children: [
-                  const Positioned(
+                  Positioned(
                     top: FeedDislikeTheme.grabberTop,
                     left: 0,
                     right: 0,
@@ -177,7 +177,7 @@ class _FeedSheetRoute<T> extends PopupRoute<T> {
                         height: FeedDislikeTheme.grabberHeight,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: FeedDislikeTheme.grabberInk,
+                            color: FeedDislikeTheme.colorsOf(context).grabberInk,
                             borderRadius: BorderRadius.all(Radius.circular(FeedDislikeTheme.grabberHeight / 2)),
                           ),
                         ),
@@ -228,7 +228,7 @@ class FeedSheetCard extends StatelessWidget {
   Widget build(BuildContext context) => ClipRRect(
     borderRadius: BorderRadius.circular(FeedDislikeTheme.cardRadius),
     child: ColoredBox(
-      color: FeedDislikeTheme.cardFill,
+      color: FeedDislikeTheme.colorsOf(context).cardFill,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -241,12 +241,12 @@ class FeedSheetCard extends StatelessWidget {
               Stack(
                 children: [
                   child,
-                  const Positioned(
+                  Positioned(
                     left: FeedDislikeTheme.rowTextLeft,
                     right: 0,
                     bottom: 0,
                     height: FeedDislikeTheme.hairline,
-                    child: ColoredBox(color: FeedDislikeTheme.hairlineInk),
+                    child: ColoredBox(color: FeedDislikeTheme.colorsOf(context).hairlineInk),
                   ),
                 ],
               ),
@@ -266,7 +266,7 @@ class FeedSheetRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = feedSheetStyle(FeedDislikeTheme.rowText, FeedDislikeTheme.ink);
+    final style = feedSheetStyle(FeedDislikeTheme.rowText, FeedDislikeTheme.colorsOf(context).ink);
     return Semantics(
       button: true,
       label: label,

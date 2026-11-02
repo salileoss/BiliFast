@@ -540,8 +540,8 @@ class _UploaderSheetState extends State<UploaderSheet> with SingleTickerProvider
       animation: _drag,
       builder: (context, child) => Transform.translate(offset: Offset(0, _drag.value), child: child),
       child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: UploaderSheetTheme.fill,
+        decoration: BoxDecoration(
+          color: UploaderSheetTheme.colorsOf(context).fill,
           borderRadius: BorderRadius.vertical(top: Radius.circular(UploaderSheetTheme.radius)),
         ),
         child: Stack(
@@ -654,13 +654,13 @@ class _Header extends StatelessWidget {
     const pad = UploaderSheetTheme.targetPad;
     final name = sheetStyle(
       UploaderSheetTheme.nameText,
-      UploaderSheetTheme.nameInk,
+      UploaderSheetTheme.colorsOf(context).nameInk,
       line: UploaderSheetTheme.nameLine,
       weight: UploaderSheetTheme.nameWeight,
     );
     final enter = sheetStyle(
       UploaderSheetTheme.enterText,
-      UploaderSheetTheme.enterInk,
+      UploaderSheetTheme.colorsOf(context).enterInk,
       line: UploaderSheetTheme.enterLine,
     );
     final animate = !MediaQuery.disableAnimationsOf(context);
@@ -676,7 +676,7 @@ class _Header extends StatelessWidget {
               width: UploaderSheetTheme.grabberWidth,
               height: UploaderSheetTheme.grabberHeight,
               decoration: BoxDecoration(
-                color: UploaderSheetTheme.grabber,
+                color: UploaderSheetTheme.colorsOf(context).grabber,
                 borderRadius: BorderRadius.circular(UploaderSheetTheme.grabberHeight / 2),
               ),
             ),
@@ -762,9 +762,9 @@ class _Header extends StatelessWidget {
                         child: Text('进入空间', style: enter, strutStyle: BiliFonts.strut(enter)),
                       ),
                       const SizedBox(width: UploaderSheetTheme.chevronGap),
-                      const CustomPaint(
+                      CustomPaint(
                         size: Size(UploaderSheetTheme.chevronWidth, UploaderSheetTheme.chevronHeight),
-                        painter: _ChevronPainter(),
+                        painter: _ChevronPainter(palette: BiliPalette.of(context)),
                       ),
                     ],
                   ),
@@ -789,7 +789,7 @@ class _Counts extends StatelessWidget {
     final profile = this.profile;
     final style = sheetStyle(
       UploaderSheetTheme.countsText,
-      UploaderSheetTheme.countsInk,
+      UploaderSheetTheme.colorsOf(context).countsInk,
       line: UploaderSheetTheme.countsLine,
     );
     final parts = profile == null
@@ -863,7 +863,7 @@ class _FollowButtonState extends State<_FollowButton> {
     final following = widget.following;
     final animate = !MediaQuery.disableAnimationsOf(context);
     final duration = animate ? UploaderSheetTheme.followMotion : Duration.zero;
-    final ink = following ? UploaderSheetTheme.followedInk : BiliColors.onPink;
+    final ink = following ? UploaderSheetTheme.colorsOf(context).followedInk : BiliColors.onPink;
     final label = Text(
       following ? '已关注' : '关注',
       style: sheetStyle(UploaderSheetTheme.followText, ink).copyWith(height: 1),
@@ -890,7 +890,7 @@ class _FollowButtonState extends State<_FollowButton> {
             width: UploaderSheetTheme.followWidth,
             height: UploaderSheetTheme.followHeight,
             decoration: BoxDecoration(
-              color: following ? UploaderSheetTheme.followedFill : BiliColors.pink,
+              color: following ? UploaderSheetTheme.colorsOf(context).followedFill : BiliColors.colorsOf(context).pink,
               borderRadius: BorderRadius.circular(UploaderSheetTheme.followHeight / 2),
             ),
             alignment: Alignment.center,
@@ -936,7 +936,9 @@ class _PlusPainter extends CustomPainter {
 }
 
 class _ChevronPainter extends CustomPainter {
-  const _ChevronPainter();
+  final BiliPalette palette;
+
+  const _ChevronPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -952,10 +954,10 @@ class _ChevronPainter extends CustomPainter {
         ..strokeWidth = UploaderSheetTheme.chevronStroke
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round
-        ..color = UploaderSheetTheme.chevronInk,
+        ..color = UploaderSheetThemeColors(palette).chevronInk,
     );
   }
 
   @override
-  bool shouldRepaint(_ChevronPainter oldDelegate) => false;
+  bool shouldRepaint(_ChevronPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }

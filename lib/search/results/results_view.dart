@@ -286,7 +286,7 @@ class _ResultsViewState extends State<ResultsView> with TickerProviderStateMixin
     const filterTop = SearchResultTheme.tabRowHeight + SearchResultTheme.hairline;
     final now = DateTime.now();
     return ColoredBox(
-      color: SearchResultTheme.page,
+      color: SearchResultTheme.colorsOf(context).page,
       child: ClipRect(
         child: Stack(
           children: [
@@ -364,7 +364,7 @@ class _ResultsViewState extends State<ResultsView> with TickerProviderStateMixin
                           onTap: _filterOpen ? _toggleFilter : null,
                           child: FadeTransition(
                             opacity: _filterCurve,
-                            child: const ColoredBox(color: SearchResultTheme.filterDim),
+                            child: ColoredBox(color: SearchResultTheme.filterDim),
                           ),
                         ),
                       ),
@@ -460,7 +460,7 @@ class _ResultList<T> extends StatelessWidget {
           child: Text(
             '没有找到相关内容',
             key: const ValueKey('search-empty'),
-            style: searchStyle(SearchResultTheme.stateText, SearchResultTheme.stateInk),
+            style: searchStyle(SearchResultTheme.stateText, SearchResultTheme.colorsOf(context).stateInk),
           ),
         ),
       );
@@ -472,7 +472,7 @@ class _ResultList<T> extends StatelessWidget {
           alignment: Alignment.topCenter,
           child: Padding(
             padding: EdgeInsets.only(top: math.max(0, LoadingTvTheme.stateTop - top)),
-            child: const LoadingTvState(key: ValueKey('search-first-load')),
+            child: LoadingTvState(key: ValueKey('search-first-load')),
           ),
         ),
       );
@@ -543,7 +543,7 @@ class _Failure extends StatelessWidget {
         message,
         key: const ValueKey('search-error'),
         textAlign: TextAlign.center,
-        style: searchStyle(SearchResultTheme.stateText, SearchResultTheme.stateInk),
+        style: searchStyle(SearchResultTheme.stateText, SearchResultTheme.colorsOf(context).stateInk),
       ),
       const SizedBox(height: SearchResultTheme.stateGap),
       _Pill(key: const ValueKey('search-retry'), label: '重试', onTap: onRetry),
@@ -564,7 +564,7 @@ class _Stalled extends StatelessWidget {
       Text(
         '没有找到相关内容',
         key: const ValueKey('search-empty'),
-        style: searchStyle(SearchResultTheme.stateText, SearchResultTheme.stateInk),
+        style: searchStyle(SearchResultTheme.stateText, SearchResultTheme.colorsOf(context).stateInk),
       ),
       const SizedBox(height: SearchResultTheme.stateGap),
       _Pill(key: const ValueKey('search-load-more'), label: '加载更多', onTap: onLoadMore),
@@ -614,12 +614,12 @@ class _PillState extends State<_Pill> {
             height: SearchResultTheme.retryHeight,
             padding: const EdgeInsets.symmetric(horizontal: SearchResultTheme.retryPadX),
             alignment: Alignment.center,
-            decoration: const ShapeDecoration(
+            decoration: ShapeDecoration(
               shape: StadiumBorder(
-                side: BorderSide(color: BiliColors.pink, width: SearchResultTheme.retryRim),
+                side: BorderSide(color: BiliColors.colorsOf(context).pink, width: SearchResultTheme.retryRim),
               ),
             ),
-            child: Text(widget.label, style: searchStyle(SearchResultTheme.retryText, BiliColors.pink)),
+            child: Text(widget.label, style: searchStyle(SearchResultTheme.retryText, BiliColors.colorsOf(context).pink)),
           ),
         ),
       ),
@@ -638,7 +638,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-    color: SearchResultTheme.page,
+    color: SearchResultTheme.colorsOf(context).page,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -671,7 +671,7 @@ class _Header extends StatelessWidget {
                         child: SearchGlyphIcon(
                           SearchGlyph.funnel,
                           size: SearchResultTheme.funnel,
-                          color: filterOpen ? SearchResultTheme.funnelOpen : SearchResultTheme.funnelInk,
+                          color: filterOpen ? SearchResultTheme.colorsOf(context).funnelOpen : SearchResultTheme.colorsOf(context).funnelInk,
                         ),
                       ),
                     ),
@@ -681,9 +681,9 @@ class _Header extends StatelessWidget {
           ),
         ),
         if (tab == SearchTab.users) const _SortRow(),
-        const SizedBox(
+        SizedBox(
           height: SearchResultTheme.hairline,
-          child: ColoredBox(color: SearchResultTheme.hairlineInk),
+          child: ColoredBox(color: SearchResultTheme.colorsOf(context).hairlineInk),
         ),
       ],
     ),
@@ -702,7 +702,7 @@ class _Tab extends StatelessWidget {
     final duration = MediaQuery.disableAnimationsOf(context) ? Duration.zero : SearchResultTheme.tabMotion;
     final style = searchStyle(
       selected ? SearchResultTheme.tabSelectedText : SearchResultTheme.tabText,
-      selected ? SearchResultTheme.tabSelected : SearchResultTheme.tabInk,
+      selected ? SearchResultTheme.colorsOf(context).tabSelected : SearchResultTheme.colorsOf(context).tabInk,
     );
     return Semantics(
       button: true,
@@ -743,7 +743,7 @@ class _Tab extends StatelessWidget {
                   child: DecoratedBox(
                     key: selected ? const ValueKey('search-tab-indicator') : null,
                     decoration: BoxDecoration(
-                      color: SearchResultTheme.tabSelected,
+                      color: SearchResultTheme.colorsOf(context).tabSelected,
                       borderRadius: BorderRadius.circular(SearchResultTheme.indicatorHeight / 2),
                     ),
                   ),
@@ -780,11 +780,11 @@ class _SortRow extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(label, style: searchStyle(SearchResultTheme.sortText, SearchResultTheme.sortInk)),
+                    Text(label, style: searchStyle(SearchResultTheme.sortText, SearchResultTheme.colorsOf(context).sortInk)),
                     const SizedBox(width: SearchResultTheme.sortChevronGap),
-                    const CustomPaint(
+                    CustomPaint(
                       size: Size(SearchResultTheme.sortChevronWidth, SearchResultTheme.sortChevronHeight),
-                      painter: _ChevronPainter(),
+                      painter: _ChevronPainter(palette: BiliPalette.of(context)),
                     ),
                   ],
                 ),
@@ -797,7 +797,9 @@ class _SortRow extends StatelessWidget {
 }
 
 class _ChevronPainter extends CustomPainter {
-  const _ChevronPainter();
+  final BiliPalette palette;
+
+  const _ChevronPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -809,7 +811,7 @@ class _ChevronPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = SearchResultTheme.sortInk
+        ..color = SearchResultThemeColors(palette).sortInk
         ..style = PaintingStyle.stroke
         ..strokeWidth = SearchResultTheme.sortChevronStroke
         ..strokeCap = StrokeCap.round
@@ -818,5 +820,5 @@ class _ChevronPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_ChevronPainter oldDelegate) => false;
+  bool shouldRepaint(_ChevronPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }

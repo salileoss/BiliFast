@@ -5,7 +5,9 @@ import '../../shared/theme.dart';
 
 /// The bar's ‹, its tip [DynamicPostTheme.backTipX] from the left of a box that starts at the screen's edge.
 class PostBackPainter extends CustomPainter {
-  const PostBackPainter();
+  final BiliPalette palette;
+
+  const PostBackPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -18,7 +20,7 @@ class PostBackPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = DynamicPostTheme.barInk
+        ..color = DynamicPostThemeColors(palette).barInk
         ..style = PaintingStyle.stroke
         ..strokeWidth = DynamicPostTheme.backStroke
         ..strokeCap = StrokeCap.round
@@ -27,24 +29,26 @@ class PostBackPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(PostBackPainter oldDelegate) => false;
+  bool shouldRepaint(PostBackPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// The bar's ⋮, centred in its box.
 class PostMorePainter extends CustomPainter {
-  const PostMorePainter();
+  final BiliPalette palette;
+
+  const PostMorePainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final centre = size.center(Offset.zero);
-    final paint = Paint()..color = DynamicPostTheme.barInk;
+    final paint = Paint()..color = DynamicPostThemeColors(palette).barInk;
     for (final step in const [-1, 0, 1]) {
       canvas.drawCircle(centre.translate(0, step * DynamicPostTheme.morePitch), DynamicPostTheme.moreDot / 2, paint);
     }
   }
 
   @override
-  bool shouldRepaint(PostMorePainter oldDelegate) => false;
+  bool shouldRepaint(PostMorePainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// The ⚡ on a verified author's face: blue for an organisation, yellow for a person, in a white ring. Traced from the

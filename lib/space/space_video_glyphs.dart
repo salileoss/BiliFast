@@ -7,16 +7,18 @@ class PlayAllGlyph extends StatelessWidget {
   const PlayAllGlyph({super.key});
 
   @override
-  Widget build(BuildContext context) => const ExcludeSemantics(
+  Widget build(BuildContext context) => ExcludeSemantics(
     child: SizedBox.square(
       dimension: SpaceVideosTheme.playAllRing,
-      child: CustomPaint(painter: _PlayAllPainter()),
+      child: CustomPaint(painter: _PlayAllPainter(palette: BiliPalette.of(context))),
     ),
   );
 }
 
 class _PlayAllPainter extends CustomPainter {
-  const _PlayAllPainter();
+  final BiliPalette palette;
+
+  const _PlayAllPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -26,7 +28,7 @@ class _PlayAllPainter extends CustomPainter {
       centre,
       (size.shortestSide - stroke) / 2,
       Paint()
-        ..color = SpaceVideosTheme.playAllGlyphInk
+        ..color = SpaceVideosThemeColors(palette).playAllGlyphInk
         ..style = PaintingStyle.stroke
         ..strokeWidth = stroke,
     );
@@ -41,14 +43,14 @@ class _PlayAllPainter extends CustomPainter {
     canvas.drawPath(
       triangle,
       Paint()
-        ..color = SpaceVideosTheme.playAllGlyphInk
+        ..color = SpaceVideosThemeColors(palette).playAllGlyphInk
         ..style = PaintingStyle.fill,
     );
     // A thin stroke of the same colour rounds the triangle's corners, as the official one's are.
     canvas.drawPath(
       triangle,
       Paint()
-        ..color = SpaceVideosTheme.playAllGlyphInk
+        ..color = SpaceVideosThemeColors(palette).playAllGlyphInk
         ..style = PaintingStyle.stroke
         ..strokeWidth = SpaceVideosTheme.playAllTriangleRound
         ..strokeJoin = StrokeJoin.round,
@@ -56,7 +58,7 @@ class _PlayAllPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_PlayAllPainter oldDelegate) => false;
+  bool shouldRepaint(_PlayAllPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// The sort's ≡: three grey bars 4 apart (63, 69).
@@ -64,21 +66,23 @@ class SortGlyph extends StatelessWidget {
   const SortGlyph({super.key});
 
   @override
-  Widget build(BuildContext context) => const ExcludeSemantics(
+  Widget build(BuildContext context) => ExcludeSemantics(
     child: SizedBox(
       width: SpaceVideosTheme.sortGlyphWidth,
       height: SpaceVideosTheme.sortGlyphPitch * 2 + SpaceVideosTheme.sortGlyphBar,
-      child: CustomPaint(painter: _SortPainter()),
+      child: CustomPaint(painter: _SortPainter(palette: BiliPalette.of(context))),
     ),
   );
 }
 
 class _SortPainter extends CustomPainter {
-  const _SortPainter();
+  final BiliPalette palette;
+
+  const _SortPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = SpaceVideosTheme.sortGlyphInk;
+    final paint = Paint()..color = SpaceVideosThemeColors(palette).sortGlyphInk;
     for (var i = 0; i < 3; i++) {
       canvas.drawRect(
         Rect.fromLTWH(0, i * SpaceVideosTheme.sortGlyphPitch, size.width, SpaceVideosTheme.sortGlyphBar),
@@ -88,22 +92,24 @@ class _SortPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SortPainter oldDelegate) => false;
+  bool shouldRepaint(_SortPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }
 
 /// A row's ⋮: three grey dots centred in the box it gets.
 class MoreDotsPainter extends CustomPainter {
-  const MoreDotsPainter();
+  final BiliPalette palette;
+
+  const MoreDotsPainter({this.palette = const BiliPalette(Brightness.light)});
 
   @override
   void paint(Canvas canvas, Size size) {
     final centre = size.center(Offset.zero);
-    final paint = Paint()..color = SpaceVideosTheme.moreInk;
+    final paint = Paint()..color = SpaceVideosThemeColors(palette).moreInk;
     for (final step in const [-1, 0, 1]) {
       canvas.drawCircle(centre.translate(0, step * SpaceVideosTheme.morePitch), SpaceVideosTheme.moreDot / 2, paint);
     }
   }
 
   @override
-  bool shouldRepaint(MoreDotsPainter oldDelegate) => false;
+  bool shouldRepaint(MoreDotsPainter oldDelegate) => oldDelegate.palette.brightness != palette.brightness;
 }

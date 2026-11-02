@@ -144,7 +144,7 @@ class _HomeHeaderState extends State<HomeHeader>
           Divider(
             height: PadHomeTheme.hairline,
             thickness: PadHomeTheme.hairline,
-            color: head != null ? HomeTabBarTheme.headDivider : BiliColors.divider,
+            color: head != null ? HomeTabBarTheme.colorsOf(context).headDivider : BiliColors.colorsOf(context).divider,
           ),
         ],
       );
@@ -179,7 +179,7 @@ class _HomeHeaderState extends State<HomeHeader>
                   child: Stack(
                     alignment: Alignment.topCenter,
                     children: [
-                      _RecommendTab(colour: colour ?? BiliColors.pink),
+                      _RecommendTab(colour: colour ?? BiliColors.colorsOf(context).pink),
                       if (!_controller.isDismissed)
                         Positioned(
                           top: 0,
@@ -192,7 +192,7 @@ class _HomeHeaderState extends State<HomeHeader>
                                 colour?.withValues(
                                   alpha: HomeHeaderTheme.skinSearchOpacity,
                                 ) ??
-                                HomeHeaderTheme.searchInk,
+                                HomeHeaderTheme.colorsOf(context).searchInk,
                             onTap: widget.onSearch,
                           ),
                         ),
@@ -207,8 +207,8 @@ class _HomeHeaderState extends State<HomeHeader>
           height: HomeTabBarTheme.hairlineWidth,
           thickness: HomeTabBarTheme.hairlineWidth,
           color: head != null
-              ? HomeTabBarTheme.headDivider
-              : BiliColors.divider,
+              ? HomeTabBarTheme.colorsOf(context).headDivider
+              : BiliColors.colorsOf(context).divider,
         ),
       ],
     );
@@ -392,11 +392,11 @@ class _AccountAvatar extends StatelessWidget {
         child: url != null && url.isNotEmpty
             ? RemoteImage.avatar(url)
             : ColoredBox(
-                color: BiliColors.pageGrey,
+                color: BiliColors.colorsOf(context).pageGrey,
                 child: Icon(
                   Icons.person,
                   size: size * 0.55,
-                  color: BiliColors.divider,
+                  color: BiliColors.colorsOf(context).divider,
                 ),
               ),
       ),
@@ -420,7 +420,7 @@ class _Head extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final head = skin?.headBg;
-    if (head == null) return ColoredBox(color: BiliColors.card, child: child);
+    if (head == null) return ColoredBox(color: BiliColors.colorsOf(context).card, child: child);
     final tab = whole ? null : skin?.headTabBg;
     final rowBottom =
         MediaQuery.paddingOf(context).top + BiliMetrics.topRowHeight;
@@ -523,9 +523,9 @@ class _SearchFieldState extends State<_SearchField> {
 
   @override
   Widget build(BuildContext context) {
-    const word = TextStyle(
+    final word = TextStyle(
       fontSize: HomeTabBarTheme.fieldText,
-      color: HomeTabBarTheme.fieldInk,
+      color: HomeTabBarTheme.colorsOf(context).fieldInk,
     );
     const glyphLead =
         HomeTabBarTheme.fieldGlyphCentre - HomeTabBarTheme.fieldGlyph / 2;
@@ -548,13 +548,13 @@ class _SearchFieldState extends State<_SearchField> {
             width: HomeTabBarTheme.fieldWidth,
             height: BiliMetrics.linkFieldHeight,
             decoration: widget.filled
-                ? const ShapeDecoration(
-                    color: HomeTabBarTheme.headField,
+                ? ShapeDecoration(
+                    color: HomeTabBarTheme.colorsOf(context).headField,
                     shape: StadiumBorder(),
                   )
                 : null,
             foregroundDecoration: ShapeDecoration(
-              color: _pressed ? BiliColors.pressedFill : null,
+              color: _pressed ? BiliColors.colorsOf(context).pressedFill : null,
               shape: widget.filled
                   ? const StadiumBorder()
                   : const StadiumBorder(
@@ -569,10 +569,10 @@ class _SearchFieldState extends State<_SearchField> {
                 const SizedBox(width: glyphLead),
                 Transform.translate(
                   offset: const Offset(0, -HomeTabBarTheme.fieldGlyphRise),
-                  child: const SearchGlyphIcon(
+                  child: SearchGlyphIcon(
                     SearchGlyph.magnifier,
                     size: HomeTabBarTheme.fieldGlyph,
-                    color: HomeTabBarTheme.fieldInk,
+                    color: HomeTabBarTheme.colorsOf(context).fieldInk,
                   ),
                 ),
                 const SizedBox(
@@ -667,8 +667,8 @@ class _PadRow extends StatelessWidget {
     const centre = PadHomeTheme.rowCentre;
     const tabsWidth = PadHomeTheme.tabPitch * 5;
     final colour = skin?.color;
-    final ink = colour?.withValues(alpha: HomeHeaderTheme.skinSearchOpacity) ?? PadHomeTheme.iconInk;
-    final tabInk = colour?.withValues(alpha: HomeHeaderTheme.skinSearchOpacity) ?? PadHomeTheme.tabInk;
+    final ink = colour?.withValues(alpha: HomeHeaderTheme.skinSearchOpacity) ?? PadHomeTheme.colorsOf(context).iconInk;
+    final tabInk = colour?.withValues(alpha: HomeHeaderTheme.skinSearchOpacity) ?? PadHomeTheme.colorsOf(context).tabInk;
     Widget icon(double right, String key, String label, Widget glyph, VoidCallback onTap) => Positioned(
       right: right - PadHomeTheme.icon,
       top: centre - PadHomeTheme.icon,
@@ -727,7 +727,7 @@ class _PadRow extends StatelessWidget {
                       child: Center(
                         child: Transform.translate(
                           offset: const Offset(0, -PadHomeTheme.tabRise),
-                          child: _PadTab(tab, colour: tab == '推荐' ? colour ?? PadHomeTheme.pink : tabInk),
+                          child: _PadTab(tab, colour: tab == '推荐' ? colour ?? PadHomeTheme.colorsOf(context).pink : tabInk),
                         ),
                       ),
                     ),
@@ -811,7 +811,7 @@ class _PadSearchFieldState extends State<_PadSearchField> {
 
   @override
   Widget build(BuildContext context) {
-    const word = TextStyle(fontSize: PadHomeTheme.fieldText, color: PadHomeTheme.fieldInk);
+    final word = TextStyle(fontSize: PadHomeTheme.fieldText, color: PadHomeTheme.colorsOf(context).fieldInk);
     return Semantics(
       button: true,
       label: '搜索',
@@ -828,21 +828,21 @@ class _PadSearchFieldState extends State<_PadSearchField> {
             key: const ValueKey('home-search-field'),
             height: PadHomeTheme.fieldHeight,
             decoration: ShapeDecoration(
-              color: widget.filled ? HomeTabBarTheme.headField : PadHomeTheme.fieldFill,
+              color: widget.filled ? HomeTabBarTheme.colorsOf(context).headField : PadHomeTheme.colorsOf(context).fieldFill,
               shape: const StadiumBorder(),
             ),
             foregroundDecoration: ShapeDecoration(
-              color: _pressed ? BiliColors.pressedFill : null,
+              color: _pressed ? BiliColors.colorsOf(context).pressedFill : null,
               shape: const StadiumBorder(),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(width: PadHomeTheme.fieldGlyphLead),
-                const SearchGlyphIcon(
+                SearchGlyphIcon(
                   SearchGlyph.magnifier,
                   size: PadHomeTheme.fieldGlyph,
-                  color: PadHomeTheme.fieldGlyphInk,
+                  color: PadHomeTheme.colorsOf(context).fieldGlyphInk,
                 ),
                 const SizedBox(
                   width: PadHomeTheme.fieldTextStart - PadHomeTheme.fieldGlyphLead - PadHomeTheme.fieldGlyph,

@@ -119,8 +119,8 @@ class _SpaceUnfollowSheetState extends State<SpaceUnfollowSheet> with SingleTick
                   position: Tween(begin: const Offset(0, 1), end: Offset.zero).animate(_curve),
                   child: DecoratedBox(
                     key: const ValueKey('space-sheet'),
-                    decoration: const BoxDecoration(
-                      color: SpaceTheme.sheetFill,
+                    decoration: BoxDecoration(
+                      color: SpaceTheme.colorsOf(context).sheetFill,
                       boxShadow: [BoxShadow(color: SpaceTheme.sheetShadow, blurRadius: SpaceTheme.sheetShadowBlur)],
                     ),
                     child: Column(
@@ -144,7 +144,7 @@ class _SpaceUnfollowSheetState extends State<SpaceUnfollowSheet> with SingleTick
                           onTap: () => _then(widget.onUnfollow),
                           rule: true,
                         ),
-                        const SizedBox(height: SpaceTheme.sheetGap, child: ColoredBox(color: SpaceTheme.sheetGapFill)),
+                        SizedBox(height: SpaceTheme.sheetGap, child: ColoredBox(color: SpaceTheme.colorsOf(context).sheetGapFill)),
                         PressHighlight(
                           onTap: _close,
                           child: Semantics(
@@ -158,7 +158,7 @@ class _SpaceUnfollowSheetState extends State<SpaceUnfollowSheet> with SingleTick
                               child: Center(
                                 child: spaceLine(
                                   '取消',
-                                  spaceStyle(SpaceTheme.sheetCancelText, SpaceTheme.sheetInk, line: SpaceTheme.sheetCancel),
+                                  spaceStyle(SpaceTheme.sheetCancelText, SpaceTheme.colorsOf(context).sheetInk, line: SpaceTheme.sheetCancel),
                                 ),
                               ),
                             ),
@@ -206,16 +206,16 @@ class _Row extends StatelessWidget {
               bottom: 0,
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: spaceLine(label, spaceStyle(SpaceTheme.sheetText, SpaceTheme.sheetInk, line: SpaceTheme.sheetRow)),
+                child: spaceLine(label, spaceStyle(SpaceTheme.sheetText, SpaceTheme.colorsOf(context).sheetInk, line: SpaceTheme.sheetRow)),
               ),
             ),
             if (rule)
-              const Positioned(
+              Positioned(
                 left: SpaceTheme.sheetInset,
                 right: 0,
                 top: 0,
                 height: SpaceTheme.sheetRule,
-                child: ColoredBox(color: SpaceTheme.sheetRuleInk),
+                child: ColoredBox(color: SpaceTheme.colorsOf(context).sheetRuleInk),
               ),
           ],
         ),

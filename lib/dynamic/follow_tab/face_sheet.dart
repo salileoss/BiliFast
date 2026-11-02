@@ -215,7 +215,7 @@ class _FaceSheetLayerState extends State<FaceSheetLayer> with SingleTickerProvid
     final open = widget.controller.isOpen;
     final chosen = math.max(0, _ups.indexWhere((face) => face.mid == up.mid));
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
+      value: BiliPalette.of(context).isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: AnimatedBuilder(
         animation: _curve,
         builder: (context, sheet) {
@@ -235,7 +235,7 @@ class _FaceSheetLayerState extends State<FaceSheetLayer> with SingleTickerProvid
                           sigmaX: DynamicFeedTheme.sheetBlur,
                           sigmaY: DynamicFeedTheme.sheetBlur,
                         ),
-                        child: const ColoredBox(color: DynamicFeedTheme.sheetFrost),
+                        child: ColoredBox(color: DynamicFeedTheme.colorsOf(context).sheetFrost),
                       ),
                     ),
                   ),
@@ -268,7 +268,7 @@ class _FaceSheetLayerState extends State<FaceSheetLayer> with SingleTickerProvid
                         child: Image.asset(
                           'assets/images/dynamic/follow_pointer.png',
                           fit: BoxFit.fill,
-                          color: DynamicFeedTheme.sheetFill,
+                          color: DynamicFeedTheme.colorsOf(context).sheetFill,
                           excludeFromSemantics: true,
                         ),
                       ),
@@ -294,13 +294,13 @@ class _FaceSheetLayerState extends State<FaceSheetLayer> with SingleTickerProvid
   Widget _sheet(BuildContext context, DynamicUp up) {
     final titleStyle = followStyle(
       DynamicFeedTheme.sheetTitleText,
-      DynamicFeedTheme.sheetTitleInk,
+      DynamicFeedTheme.colorsOf(context).sheetTitleInk,
       weight: DynamicFeedTheme.sheetTitleWeight,
     );
     return DecoratedBox(
       key: const ValueKey('face-sheet'),
-      decoration: const BoxDecoration(
-        color: DynamicFeedTheme.sheetFill,
+      decoration: BoxDecoration(
+        color: DynamicFeedTheme.colorsOf(context).sheetFill,
         borderRadius: BorderRadius.vertical(top: Radius.circular(DynamicFeedTheme.sheetRadius)),
       ),
       child: Column(
@@ -339,11 +339,11 @@ class _FaceSheetLayerState extends State<FaceSheetLayer> with SingleTickerProvid
                     key: const ValueKey('face-sheet-close'),
                     label: '关闭',
                     onTap: widget.controller.close,
-                    child: const Center(
+                    child: Center(
                       child: FollowCross(
                         size: DynamicFeedTheme.closeSize,
                         stroke: DynamicFeedTheme.closeStroke,
-                        color: DynamicFeedTheme.closeInk,
+                        color: DynamicFeedTheme.colorsOf(context).closeInk,
                       ),
                     ),
                   ),
@@ -351,9 +351,9 @@ class _FaceSheetLayerState extends State<FaceSheetLayer> with SingleTickerProvid
               ],
             ),
           ),
-          const SizedBox(
+          SizedBox(
             height: DynamicFeedTheme.sheetRule,
-            child: ColoredBox(color: DynamicFeedTheme.sheetRuleInk),
+            child: ColoredBox(color: DynamicFeedTheme.colorsOf(context).sheetRuleInk),
           ),
           Expanded(
             child: KeyedSubtree(key: _list, child: _posts(context)),
@@ -412,7 +412,7 @@ class _FaceSheetLayerState extends State<FaceSheetLayer> with SingleTickerProvid
           slivers: [
             SliverList.builder(
               itemCount: items.length,
-              itemBuilder: (context, index) => FollowPosts.row(items[index], inline, bandAbove: false),
+              itemBuilder: (context, index) => FollowPosts.row(context, items[index], inline, bandAbove: false),
             ),
             SliverToBoxAdapter(
               child: FollowFooter(

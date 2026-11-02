@@ -55,8 +55,8 @@ class _Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     height: OwnSpaceTabsTheme.cardHeight,
-    decoration: const BoxDecoration(
-      color: OwnSpaceTabsTheme.cardFill,
+    decoration: BoxDecoration(
+      color: OwnSpaceTabsTheme.colorsOf(context).cardFill,
       borderRadius: BorderRadius.all(Radius.circular(OwnSpaceTabsTheme.cardRadius)),
       boxShadow: [
         BoxShadow(
@@ -81,7 +81,7 @@ class FolderCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-    color: OwnSpaceTabsTheme.coverEmpty,
+    color: OwnSpaceTabsTheme.colorsOf(context).coverEmpty,
     child: Stack(
       fit: StackFit.expand,
       children: [
@@ -109,12 +109,12 @@ class OwnFolderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = ownStyle(
       OwnSpaceTabsTheme.cardTitleText,
-      OwnSpaceTabsTheme.cardTitleInk,
+      OwnSpaceTabsTheme.colorsOf(context).cardTitleInk,
       line: OwnSpaceTabsTheme.cardTitleLine,
     );
     final count = ownStyle(
       OwnSpaceTabsTheme.folderCountText,
-      OwnSpaceTabsTheme.folderCountInk,
+      OwnSpaceTabsTheme.colorsOf(context).folderCountInk,
       line: OwnSpaceTabsTheme.folderCountLine,
     );
     final line = folderLine(folder.count, isPrivate: folder.isPrivate);
@@ -132,7 +132,7 @@ class OwnFolderCard extends StatelessWidget {
               child: FolderCover(
                 cover: folder.cover,
                 tv: const Size(OwnSpaceTabsTheme.tvWidth, OwnSpaceTabsTheme.tvHeight),
-                tvInk: OwnSpaceTabsTheme.tvInk,
+                tvInk: OwnSpaceTabsTheme.colorsOf(context).tvInk,
                 badgeBottom: OwnSpaceTabsTheme.stackInset,
               ),
             ),
@@ -173,7 +173,7 @@ class OwnVideoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = ownStyle(
       OwnSpaceTabsTheme.cardTitleText,
-      OwnSpaceTabsTheme.cardTitleInk,
+      OwnSpaceTabsTheme.colorsOf(context).cardTitleInk,
       line: OwnSpaceTabsTheme.cardTitleLine,
     );
     return FavTap(
@@ -433,12 +433,12 @@ class OwnFolderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = ownStyle(
       OwnSpaceTabsTheme.rowTitleText,
-      OwnSpaceTabsTheme.cardTitleInk,
+      OwnSpaceTabsTheme.colorsOf(context).cardTitleInk,
       line: OwnSpaceTabsTheme.rowTitleLine,
     );
     final count = ownStyle(
       OwnSpaceTabsTheme.rowCountText,
-      OwnSpaceTabsTheme.folderCountInk,
+      OwnSpaceTabsTheme.colorsOf(context).folderCountInk,
       line: OwnSpaceTabsTheme.rowCountLine,
     );
     final line = folderLine(folder.count, isPrivate: folder.isPrivate);
@@ -460,7 +460,7 @@ class OwnFolderRow extends StatelessWidget {
                 child: FolderCover(
                   cover: cover,
                   tv: const Size(OwnSpaceTabsTheme.rowTvWidth, OwnSpaceTabsTheme.rowTvHeight),
-                  tvInk: OwnSpaceTabsTheme.rowTvInk,
+                  tvInk: OwnSpaceTabsTheme.colorsOf(context).rowTvInk,
                   badgeBottom: OwnSpaceTabsTheme.rowStackBottom,
                 ),
               ),
@@ -542,7 +542,7 @@ class OwnRetryLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = ownStyle(OwnSpaceTabsTheme.footerText, OwnSpaceTabsTheme.footerInk);
+    final style = ownStyle(OwnSpaceTabsTheme.footerText, OwnSpaceTabsTheme.colorsOf(context).footerInk);
     final failure = '${message ?? '加载失败'}，';
     return FavTap(
       label: '$failure点击重试',
@@ -553,7 +553,7 @@ class OwnRetryLine extends StatelessWidget {
             TextSpan(text: failure, style: style),
             TextSpan(
               text: '点击重试',
-              style: style.copyWith(color: OwnSpaceTabsTheme.footerRetryInk),
+              style: style.copyWith(color: OwnSpaceTabsTheme.colorsOf(context).footerRetryInk),
             ),
           ],
         ),

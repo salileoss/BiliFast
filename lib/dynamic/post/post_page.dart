@@ -411,12 +411,12 @@ class _DynamicPostPageState extends State<DynamicPostPage> {
         if (!didPop) _closeComments();
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.dark,
+        value: BiliPalette.of(context).isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         // A tap on the status bar scrolls the post to its top; nothing else on the page takes the controller.
         child: PrimaryScrollController(
           controller: _threadOpen ? _noScroll : _scroll,
           child: Scaffold(
-            backgroundColor: DynamicPostTheme.page,
+            backgroundColor: DynamicPostTheme.colorsOf(context).page,
             resizeToAvoidBottomInset: false,
             body: PrimaryScrollController.none(
               child: Stack(
@@ -543,7 +543,7 @@ class _DynamicPostPageState extends State<DynamicPostPage> {
             ),
             child: DynamicRichText(
               nodes: post.nodes,
-              style: postStyle(DynamicPostTheme.text, DynamicPostTheme.textInk, line: DynamicPostTheme.textLine),
+              style: postStyle(DynamicPostTheme.text, DynamicPostTheme.colorsOf(context).textInk, line: DynamicPostTheme.textLine),
             ),
           ),
         if (body != null)

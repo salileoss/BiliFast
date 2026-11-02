@@ -80,7 +80,7 @@ class SpaceHeader extends StatelessWidget {
     final official = profile.officialTitle.isNotEmpty;
     return ColoredBox(
       key: const ValueKey('space-header'),
-      color: SpaceTheme.page,
+      color: SpaceTheme.colorsOf(context).page,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -152,12 +152,12 @@ class _Top extends StatelessWidget {
           height: SpaceTheme.bannerHeight + stretch,
           child: ExcludeSemantics(
             child: banner == null || banner.isEmpty
-                ? const ColoredBox(key: ValueKey('space-banner-default'), color: SpaceTheme.bannerDefault)
+                ? ColoredBox(key: ValueKey('space-banner-default'), color: SpaceTheme.colorsOf(context).bannerDefault)
                 : RemoteImage(
                     banner,
                     // A pull stretches the box every frame; the download keeps the resting size.
                     size: Size(MediaQuery.sizeOf(context).width, SpaceTheme.bannerHeight),
-                    placeholder: const ColoredBox(color: SpaceTheme.bannerDefault),
+                    placeholder: ColoredBox(color: SpaceTheme.colorsOf(context).bannerDefault),
                   ),
           ),
         ),
@@ -238,12 +238,12 @@ class _Stats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const ruleTop = SpaceTheme.statsRuleTop - (SpaceTheme.countCentre - SpaceTheme.countLine / 2);
-    const rule = Padding(
+    final rule = Padding(
       padding: EdgeInsets.only(top: ruleTop),
       child: SizedBox(
         width: SpaceTheme.statsRuleWidth,
         height: SpaceTheme.statsRule,
-        child: ColoredBox(color: SpaceTheme.statsRuleInk),
+        child: ColoredBox(color: SpaceTheme.colorsOf(context).statsRuleInk),
       ),
     );
     return Row(
@@ -281,7 +281,7 @@ class _Count extends StatelessWidget {
             child: Center(
               child: spaceLine(
                 value,
-                spaceStyle(SpaceTheme.countText, SpaceTheme.countInk, line: SpaceTheme.countLine),
+                spaceStyle(SpaceTheme.countText, SpaceTheme.colorsOf(context).countInk, line: SpaceTheme.countLine),
               ),
             ),
           ),
@@ -291,7 +291,7 @@ class _Count extends StatelessWidget {
             child: Center(
               child: spaceLine(
                 label,
-                spaceStyle(SpaceTheme.labelText, SpaceTheme.labelInk, line: SpaceTheme.labelLine),
+                spaceStyle(SpaceTheme.labelText, SpaceTheme.colorsOf(context).labelInk, line: SpaceTheme.labelLine),
               ),
             ),
           ),
@@ -330,18 +330,18 @@ class SpaceFollowRow extends StatelessWidget {
             label: '充电',
             onTap: onSoon,
             decoration: BoxDecoration(
-              color: SpaceTheme.page,
-              border: Border.all(color: SpaceTheme.chargeInk, width: SpaceTheme.chargeBorder),
+              color: SpaceTheme.colorsOf(context).page,
+              border: Border.all(color: SpaceTheme.colorsOf(context).chargeInk, width: SpaceTheme.chargeBorder),
               borderRadius: BorderRadius.circular(SpaceTheme.followRadius),
             ),
-            glyph: const SpaceGlyphIcon(
+            glyph: SpaceGlyphIcon(
               SpaceGlyph.bolt,
               width: SpaceTheme.chargeBoltWidth,
               height: SpaceTheme.chargeBoltHeight,
-              color: SpaceTheme.chargeInk,
+              color: SpaceTheme.colorsOf(context).chargeInk,
             ),
             glyphGap: SpaceTheme.chargeBoltGap,
-            ink: SpaceTheme.chargeInk,
+            ink: SpaceTheme.colorsOf(context).chargeInk,
             text: SpaceTheme.chargeText,
             shift: SpaceTheme.chargeShift,
           ),
@@ -355,17 +355,17 @@ class SpaceFollowRow extends StatelessWidget {
             label: '已关注',
             onTap: onFollowed,
             decoration: BoxDecoration(
-              color: SpaceTheme.followedFill,
+              color: SpaceTheme.colorsOf(context).followedFill,
               borderRadius: BorderRadius.circular(SpaceTheme.followRadius),
             ),
-            glyph: const SpaceGlyphIcon(
+            glyph: SpaceGlyphIcon(
               SpaceGlyph.list,
               width: SpaceTheme.followedListWidth,
               height: SpaceTheme.followedListHeight,
-              color: SpaceTheme.followedInk,
+              color: SpaceTheme.colorsOf(context).followedInk,
             ),
             glyphGap: SpaceTheme.followedListGap,
-            ink: SpaceTheme.followedInk,
+            ink: SpaceTheme.colorsOf(context).followedInk,
           ),
         ),
         const SizedBox(width: SpaceTheme.moreGap),
@@ -382,17 +382,17 @@ class SpaceFollowRow extends StatelessWidget {
               onTap: onSoon,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: SpaceTheme.followedFill,
+                  color: SpaceTheme.colorsOf(context).followedFill,
                   borderRadius: BorderRadius.circular(SpaceTheme.followRadius),
                 ),
                 child: Center(
                   child: Transform.translate(
                     offset: const Offset(0, SpaceTheme.moreChevronDrop),
-                    child: const SpaceGlyphIcon(
+                    child: SpaceGlyphIcon(
                       SpaceGlyph.chevronDown,
                       width: SpaceTheme.moreChevronWidth,
                       height: SpaceTheme.moreChevronHeight,
-                      color: SpaceTheme.followedInk,
+                      color: SpaceTheme.colorsOf(context).followedInk,
                     ),
                   ),
                 ),
@@ -407,7 +407,7 @@ class SpaceFollowRow extends StatelessWidget {
             label: '关注',
             onTap: onFollow,
             decoration: BoxDecoration(
-              color: SpaceTheme.followFill,
+              color: SpaceTheme.colorsOf(context).followFill,
               borderRadius: BorderRadius.circular(SpaceTheme.followRadius),
             ),
             glyph: const SpaceGlyphIcon(
@@ -490,7 +490,7 @@ class _NameRow extends StatelessWidget {
               profile.name,
               spaceStyle(
                 SpaceTheme.nameText,
-                profile.vip ? SpaceTheme.nameVipInk : SpaceTheme.nameInk,
+                profile.vip ? SpaceTheme.colorsOf(context).nameVipInk : SpaceTheme.colorsOf(context).nameInk,
                 line: SpaceTheme.nameBox,
               ),
               key: const ValueKey('space-name'),
@@ -531,7 +531,7 @@ class _Detail extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.only(left: SpaceTheme.gutter),
-        child: spaceLine('详情', spaceStyle(SpaceTheme.detailText, SpaceTheme.detailInk, line: SpaceTheme.bioBox)),
+        child: spaceLine('详情', spaceStyle(SpaceTheme.detailText, SpaceTheme.colorsOf(context).detailInk, line: SpaceTheme.bioBox)),
       ),
     ),
   );
@@ -560,7 +560,7 @@ class _OfficialLine extends StatelessWidget {
             child: DecoratedBox(
               key: const ValueKey('space-official'),
               decoration: BoxDecoration(
-                color: SpaceTheme.officialFill,
+                color: SpaceTheme.colorsOf(context).officialFill,
                 borderRadius: BorderRadius.circular(SpaceTheme.officialHeight / 2),
               ),
               child: Row(
@@ -583,7 +583,7 @@ class _OfficialLine extends StatelessWidget {
                   Flexible(
                     child: spaceLine(
                       profile.officialTitle,
-                      spaceStyle(SpaceTheme.officialText, SpaceTheme.officialInk, line: SpaceTheme.officialHeight),
+                      spaceStyle(SpaceTheme.officialText, SpaceTheme.colorsOf(context).officialInk, line: SpaceTheme.officialHeight),
                     ),
                   ),
                   const SizedBox(width: SpaceTheme.officialPadRight),
@@ -625,7 +625,7 @@ class _BioLine extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: spaceLine(
               sign.trim().isEmpty ? spaceEmptyBio : sign.replaceAll('\n', ' '),
-              spaceStyle(SpaceTheme.bioText, SpaceTheme.bioInk, line: SpaceTheme.bioBox),
+              spaceStyle(SpaceTheme.bioText, SpaceTheme.colorsOf(context).bioInk, line: SpaceTheme.bioBox),
               key: const ValueKey('space-bio'),
             ),
           ),
@@ -644,7 +644,7 @@ class _TagRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = spaceStyle(SpaceTheme.tagText, SpaceTheme.tagInk, line: SpaceTheme.tagBox);
+    final style = spaceStyle(SpaceTheme.tagText, SpaceTheme.colorsOf(context).tagInk, line: SpaceTheme.tagBox);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: SpaceTheme.gutter),
       child: ClipRect(
@@ -672,11 +672,11 @@ class _Tag extends StatelessWidget {
   Widget build(BuildContext context) {
     final icon = tag.icon;
     final Widget? glyph = tag.text.startsWith('IP属地')
-        ? const SpaceGlyphIcon(
+        ? SpaceGlyphIcon(
             SpaceGlyph.ip,
             width: SpaceTheme.tagIconWidth,
             height: SpaceTheme.tagIconHeight,
-            color: SpaceTheme.tagInk,
+            color: SpaceTheme.colorsOf(context).tagInk,
           )
         : icon != null && icon.isNotEmpty
         ? SizedBox(
@@ -696,11 +696,11 @@ class _Tag extends StatelessWidget {
         Flexible(child: spaceLine(tag.text, style)),
         if (tag.link) ...[
           const SizedBox(width: SpaceTheme.tagChevronGap),
-          const SpaceGlyphIcon(
+          SpaceGlyphIcon(
             SpaceGlyph.chevron,
             width: SpaceTheme.tagChevronWidth,
             height: SpaceTheme.tagChevronHeight,
-            color: SpaceTheme.tagInk,
+            color: SpaceTheme.colorsOf(context).tagInk,
           ),
         ],
       ],
@@ -775,7 +775,7 @@ class _Entry extends StatelessWidget {
         onTap: onTap,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: SpaceTheme.entryFill,
+            color: SpaceTheme.colorsOf(context).entryFill,
             borderRadius: BorderRadius.circular(SpaceTheme.entryRadius),
           ),
           child: Padding(
@@ -788,14 +788,14 @@ class _Entry extends StatelessWidget {
                   offset: const Offset(0, SpaceTheme.entryTextDrop),
                   child: spaceLine(
                     entry.title,
-                    spaceStyle(SpaceTheme.entryText, SpaceTheme.entryInk, line: SpaceTheme.entryHeight),
+                    spaceStyle(SpaceTheme.entryText, SpaceTheme.colorsOf(context).entryInk, line: SpaceTheme.entryHeight),
                   ),
                 ),
                 const SizedBox(width: SpaceTheme.entryPad),
                 Expanded(
                   child: spaceLine(
                     entry.note,
-                    spaceStyle(SpaceTheme.entryNoteText, SpaceTheme.entryNoteInk, line: SpaceTheme.entryHeight),
+                    spaceStyle(SpaceTheme.entryNoteText, SpaceTheme.colorsOf(context).entryNoteInk, line: SpaceTheme.entryHeight),
                     align: TextAlign.right,
                   ),
                 ),

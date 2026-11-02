@@ -25,7 +25,7 @@ class HomeTabIcon extends StatelessWidget {
     child: tab == HomeTab.post
         ? SizedBox.square(
             dimension: TabIconTheme.postSquare,
-            child: CustomPaint(painter: PostButtonPainter()),
+            child: CustomPaint(painter: PostButtonPainter(palette: BiliPalette.of(context))),
           )
         : SizedBox.square(
             dimension: TabIconTheme.size,
@@ -33,7 +33,7 @@ class HomeTabIcon extends StatelessWidget {
               painter: HomeTabGlyphPainter(
                 tab,
                 selected: selected,
-                color: selected ? TabIconTheme.selectedInk : TabIconTheme.ink,
+                color: selected ? TabIconTheme.colorsOf(context).selectedInk : TabIconTheme.colorsOf(context).ink,
               ),
             ),
           ),
@@ -51,7 +51,7 @@ class PadTabIcon extends StatelessWidget {
   Widget build(BuildContext context) => Image.asset(
     tab.art(selected: selected),
     width: tab.iconWidth,
-    color: selected ? PadHomeTheme.pink : PadHomeTheme.barIconInk,
+    color: selected ? PadHomeTheme.colorsOf(context).pink : PadHomeTheme.colorsOf(context).barIconInk,
     colorBlendMode: BlendMode.srcIn,
     excludeFromSemantics: true,
   );
@@ -187,6 +187,10 @@ class HomeTabGlyphPainter extends CustomPainter {
 
 /// 发布's pink square, lighter at the top, with its white +.
 class PostButtonPainter extends CustomPainter {
+  const PostButtonPainter({this.palette = const BiliPalette(Brightness.light)});
+
+  final BiliPalette palette;
+
   @override
   void paint(Canvas canvas, Size size) {
     final side = size.shortestSide;
@@ -199,7 +203,7 @@ class PostButtonPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: const [TabIconTheme.postTop, TabIconTheme.postBottom],
+          colors: [palette.choose(TabIconTheme.postTop, palette.accent), palette.choose(TabIconTheme.postBottom, palette.accent)],
         ).createShader(square),
     );
     final line = TabIconTheme.postPlusLine * scale;
@@ -215,7 +219,7 @@ class PostButtonPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(PostButtonPainter old) => false;
+  bool shouldRepaint(PostButtonPainter old) => old.palette.brightness != palette.brightness;
 }
 
 /// A place's icon in a bar dressed by the 装扮 (109, 110): its picture, or its selected one while [selected]. A

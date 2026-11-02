@@ -55,6 +55,7 @@ class SpaceDynamicsSliver extends StatefulWidget {
 
   /// What the cards lie on.
   static const fill = BiliColors.softGrey;
+  static Color fillOf(BuildContext context) => BiliColors.colorsOf(context).softGrey;
 
   @override
   State<SpaceDynamicsSliver> createState() => _SpaceDynamicsSliverState();
@@ -72,7 +73,7 @@ class _SpaceDynamicsSliverState extends State<SpaceDynamicsSliver> with OwnPager
     final posts = pager.items;
     final failed = pager.failed;
     return DecoratedSliver(
-      decoration: const BoxDecoration(color: SpaceDynamicsSliver.fill),
+      decoration: BoxDecoration(color: SpaceDynamicsSliver.fillOf(context)),
       sliver: SliverMainAxisGroup(
         slivers: [
           if (posts.isEmpty && (!pager.loaded || failed))
@@ -92,7 +93,7 @@ class _SpaceDynamicsSliverState extends State<SpaceDynamicsSliver> with OwnPager
               itemBuilder: (context, index) {
                 final post = posts[index];
                 return ColoredBox(
-                  color: BiliColors.card,
+                  color: BiliColors.colorsOf(context).card,
                   child: DynamicCard(key: ValueKey('space-dynamic-${post.id}'), item: post, space: true),
                 );
               },
@@ -123,7 +124,7 @@ class _End extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = spaceVideosStyle(
       SpaceVideosTheme.endText,
-      SpaceVideosTheme.endInk,
+      SpaceVideosTheme.colorsOf(context).endInk,
       line: SpaceVideosTheme.footerLine,
     );
     return Text(
