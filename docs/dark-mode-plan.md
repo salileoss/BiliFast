@@ -91,7 +91,7 @@ Treat these as implementation starting points, not measured official tokens. Che
 - Render representative light and dark states with fake data: Home, My, Following, search, settings, a library list, space, video intro/comments, composer, portrait sheets, fullscreen and offline playback. Include loading/error/empty/disabled/pressed states, plain and dressed headers, and iPad Home/video layouts. Use existing system-font stand-ins and image comparison helpers; keep reference images and generated screenshots out of commits.
 - During implementation run focused feature tests, then `fvm flutter analyze` and `fvm flutter test`. Run `python scripts/gate.py` for release validation and operate every changed control on Windows with fake account data and muted playback. This planning pass does not claim those checks passed.
 
-## Ownership for a later implementation round
+## Implementation ownership
 
 The repository's running-a-slice workflow calls for shared contracts first and independent builders afterward. Keep one owner per file, especially the central theme file.
 
@@ -102,7 +102,7 @@ The repository's running-a-slice workflow calls for shared contracts first and i
 | Builder B | `shared/` consumers excluding theme contract files, `settings/` excluding appearance store, `account/`, `history/`, `favourites/`, `watch_later/`, `offline/` excluding playback-page UI, `devtools/`, `screens/`, matching tests | Shared feedback, inputs, lists, settings/login/library visuals |
 | Builder C | `video/`, `player_ui/`, `player/`, `playback/` UI consumers, `comments/`, `danmaku/`, `skin/`, offline playback-page UI and matching tests | Player identity, portrait/fullscreen, skins/status measurement and media visuals |
 
-Freeze the exact file manifest before dispatch. Builders report any central token additions to its owner. No delegation or implementation has started in this planning pass.
+The local implementation followed this division, with central token additions handled by the coordinator. The feature work is integrated on `feat/dark-mode`.
 
 ## Reference requirements and decisions
 
@@ -110,7 +110,7 @@ Freeze the exact file manifest before dispatch. Builders report any central toke
 
 The proposed manual toggle, light default and skin precedence above remain the working product choices. Validate layout against BiliFast's current light UI and contrast/color relationships against the supplied examples. Pixel matching the references' geometry is outside this change.
 
-The requested deliverable is this plan. A later implementation/release follows the repository's approval and shipping workflow. The local status records 1.3.0 (6) as last shipped, making (7) the tentative next build only if no newer build exists when release work begins.
+The user approved implementation on a local branch after reviewing this plan and supplying the color references. Publishing and release work are outside that approval. The local status records 1.3.0 (6) as last shipped, making (7) the tentative next build only if no newer build exists when release work begins.
 
 ## Phone acceptance steps
 

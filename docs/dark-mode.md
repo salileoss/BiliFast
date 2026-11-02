@@ -16,3 +16,16 @@ The supplied screenshots guide the charcoal surfaces, soft white text, grey meta
 When adding UI, use the appropriate context-resolved color view for adaptive surfaces and text. Keep fixed media, badge lettering, shadows and content colors explicit. Resolve colors before passing them into a painter, include them in repaint decisions, and avoid caching theme-dependent styles across dependency changes.
 
 The implementation is local development work on `feat/dark-mode`. No TestFlight release or remote publication is part of this change. Device checks for native keyboards, WebView, HDR and PiP remain separate from local Flutter and Windows verification.
+
+## Local verification
+
+Verified with the pinned Flutter 3.47.7 / Dart 3.13.5 SDK:
+
+- Flutter analysis: no issues.
+- Full app suite: 4,429 tests passed, followed by the new dark launch-failure regression and focused appearance checks.
+- Core: analysis clean; 1,174 tests passed, one skipped.
+- Windows integration: 11 player tests passed, plus an appearance test that operates the real moon action, checks retained page/Navigator state, visits settings, switches back, and restores the saved choice in a newly constructed app. This test uses fake API responses and a temporary preference file.
+- Windows release build succeeded. Home, My, settings, watch later, a library sheet, video introduction, comments and a portrait panel were rendered and inspected with the system-font stand-ins.
+- Workflow checks: 36 passed. Tool checks: 86 passed.
+
+The Windows Computer Use helper could not connect to its native pipe, so external click/screenshot automation was unavailable. The Windows appearance integration test supplies the interaction check. This is not an iOS device or TestFlight verification.
