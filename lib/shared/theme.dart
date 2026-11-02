@@ -8424,6 +8424,7 @@ class WatchLaterThemeColors {
   const WatchLaterThemeColors(this._palette);
 
   final BiliPalette _palette;
+  Color get artShade => _palette.choose(WatchLaterTheme.artShade, _palette.raised);
   Color get chipChosenFillOff => _palette.choose(WatchLaterTheme.chipChosenFillOff, _palette.raised);
   Color get chipChosenFill => _palette.choose(WatchLaterTheme.chipChosenFill, _palette.accentTint);
   Color get pinkOff => _palette.choose(WatchLaterTheme.pinkOff, const Color(0xFF643044));
