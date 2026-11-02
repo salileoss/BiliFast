@@ -22,10 +22,11 @@ void main() {
     for (final file in Directory('lib').listSync(recursive: true).whereType<File>()) {
       if (!file.path.endsWith('.dart')) continue;
       final source = file.readAsStringSync();
-      expect(setter.allMatches(source).length, file.path.endsWith('theme.dart') ? 1 : 0, reason: file.path);
+      final isFontTheme = file.uri.pathSegments.last == 'theme.dart';
+      expect(setter.allMatches(source).length, isFontTheme ? 1 : 0, reason: file.path);
       for (final line in source.split('\n').where((line) => line.contains('fontFamilyFallback:'))) {
         // The launch check's own measuring style.
-        if (file.path.endsWith('theme.dart') && line.contains('fontFamilyFallback: fallback,')) continue;
+        if (isFontTheme && line.contains('fontFamilyFallback: fallback,')) continue;
         expect(line, contains('BiliFonts.fallback'), reason: '${file.path}: $line');
       }
     }

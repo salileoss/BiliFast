@@ -7912,6 +7912,7 @@ class CommentRowThemeColors {
   const CommentRowThemeColors(this._palette);
 
   final BiliPalette _palette;
+  Color get vipName => _palette.choose(CommentRowTheme.vipName, _palette.accent);
   Color get vipMarkFill => _palette.choose(CommentRowTheme.vipMarkFill, _palette.accent);
   Color get name => _palette.choose(CommentRowTheme.name, _palette.secondary);
   Color get upFill => _palette.choose(CommentRowTheme.upFill, _palette.accent);
@@ -7965,6 +7966,8 @@ class ComposerThemeColors {
   const ComposerThemeColors(this._palette);
 
   final BiliPalette _palette;
+  Color get accentFaded => _palette.choose(ComposerTheme.accentFaded, const Color(0xFF643044));
+  Color get accent => _palette.choose(ComposerTheme.accent, _palette.accent);
   Color get sheet => _palette.choose(ComposerTheme.sheet, _palette.surface);
   Color get text => _palette.choose(ComposerTheme.text, _palette.text);
   Color get placeholder => _palette.choose(ComposerTheme.placeholder, _palette.disabled);
@@ -8018,6 +8021,9 @@ class MeThemeColors {
   const MeThemeColors(this._palette);
 
   final BiliPalette _palette;
+  Color get vipLabelFill => _palette.choose(MeTheme.vipLabelFill, _palette.accent);
+  Color get listenGlyph => _palette.choose(MeTheme.listenGlyph, _palette.accent);
+  Color get serviceGlyph => _palette.choose(MeTheme.serviceGlyph, _palette.accent);
   Color get background => _palette.choose(MeTheme.background, _palette.surface);
   Color get topGlyph => _palette.choose(MeTheme.topGlyph, _palette.icon);
   Color get vipDiscFill => _palette.choose(MeTheme.vipDiscFill, _palette.accent);
@@ -8047,6 +8053,7 @@ class DanmakuPanelThemeColors {
   const DanmakuPanelThemeColors(this._palette);
 
   final BiliPalette _palette;
+  Color get lightFill => _palette.choose(DanmakuPanelTheme.lightFill, const Color(0x80643044));
   Color get lightBackground => _palette.choose(DanmakuPanelTheme.lightBackground, _palette.raised);
   Color get lightCard => _palette.choose(DanmakuPanelTheme.lightCard, _palette.surface);
   Color get lightSquare => _palette.choose(DanmakuPanelTheme.lightSquare, _palette.divider);
@@ -8087,7 +8094,7 @@ class DanmakuListThemeColors {
 
   final BiliPalette _palette;
   Color get liked => _palette.choose(DanmakuListTheme.liked, _palette.accent);
-  Color get divider => _palette.choose(DanmakuListTheme.divider, _palette.text);
+  Color get divider => DanmakuListTheme.divider;
   Color get emptyColor => _palette.choose(DanmakuListTheme.emptyColor, _palette.secondary);
 }
 
@@ -8194,6 +8201,7 @@ class SearchThemeColors {
   const SearchThemeColors(this._palette);
 
   final BiliPalette _palette;
+  Color get dim => _palette.choose(SearchTheme.dim, _palette.icon);
   Color get page => _palette.choose(SearchTheme.page, _palette.surface);
   Color get text => _palette.choose(SearchTheme.text, _palette.text);
   Color get grey => _palette.choose(SearchTheme.grey, _palette.secondary);
@@ -8243,6 +8251,7 @@ class SearchFilterThemeColors {
   const SearchFilterThemeColors(this._palette);
 
   final BiliPalette _palette;
+  Color get chipChosenLabel => _palette.choose(SearchFilterTheme.chipChosenLabel, _palette.accent);
   Color get panel => _palette.choose(SearchFilterTheme.panel, _palette.surface);
   Color get title => _palette.choose(SearchFilterTheme.title, _palette.text);
   Color get chip => _palette.choose(SearchFilterTheme.chip, _palette.raised);
@@ -8281,6 +8290,7 @@ class SpaceThemeColors {
   const SpaceThemeColors(this._palette);
 
   final BiliPalette _palette;
+  Color get pillFill => _palette.choose(SpaceTheme.pillFill, _palette.accentTint);
   Color get page => _palette.choose(SpaceTheme.page, _palette.surface);
   Color get bannerDefault => _palette.choose(SpaceTheme.bannerDefault, _palette.divider);
   Color get barInk => _palette.choose(SpaceTheme.barInk, _palette.icon);
@@ -8321,6 +8331,7 @@ class SpaceVideosThemeColors {
   const SpaceVideosThemeColors(this._palette);
 
   final BiliPalette _palette;
+  Color get chipChosenFill => _palette.choose(SpaceVideosTheme.chipChosenFill, _palette.accentTint);
   Color get chipInk => _palette.choose(SpaceVideosTheme.chipInk, _palette.icon);
   Color get chipChosenInk => _palette.choose(SpaceVideosTheme.chipChosenInk, _palette.accent);
   Color get chipRim => _palette.choose(SpaceVideosTheme.chipRim, _palette.divider);
@@ -8359,6 +8370,8 @@ class FavouritesThemeColors {
   const FavouritesThemeColors(this._palette);
 
   final BiliPalette _palette;
+  Color get newSwitchOn => _palette.choose(FavouritesTheme.newSwitchOn, _palette.accent);
+  Color get playFillOff => _palette.choose(FavouritesTheme.playFillOff, _palette.raised);
   Color get tabInk => _palette.choose(FavouritesTheme.tabInk, _palette.text);
   Color get tabChosenInk => _palette.choose(FavouritesTheme.tabChosenInk, _palette.accent);
   Color get chipInk => _palette.choose(FavouritesTheme.chipInk, _palette.icon);
@@ -8411,6 +8424,9 @@ class WatchLaterThemeColors {
   const WatchLaterThemeColors(this._palette);
 
   final BiliPalette _palette;
+  Color get chipChosenFillOff => _palette.choose(WatchLaterTheme.chipChosenFillOff, _palette.raised);
+  Color get chipChosenFill => _palette.choose(WatchLaterTheme.chipChosenFill, _palette.accentTint);
+  Color get pinkOff => _palette.choose(WatchLaterTheme.pinkOff, const Color(0xFF643044));
   Color get ink => _palette.choose(WatchLaterTheme.ink, _palette.text);
   Color get grey => _palette.choose(WatchLaterTheme.grey, _palette.icon);
   Color get greyOff => _palette.choose(WatchLaterTheme.greyOff, _palette.disabled);
@@ -8637,6 +8653,7 @@ class PadHomeThemeColors {
   const PadHomeThemeColors(this._palette);
 
   final BiliPalette _palette;
+  Color get pink => _palette.choose(PadHomeTheme.pink, _palette.accent);
   Color get page => _palette.choose(PadHomeTheme.page, _palette.surface);
   Color get fieldFill => _palette.choose(PadHomeTheme.fieldFill, _palette.page);
   Color get fieldGlyphInk => _palette.choose(PadHomeTheme.fieldGlyphInk, _palette.secondary);
