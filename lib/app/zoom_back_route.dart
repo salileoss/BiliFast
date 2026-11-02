@@ -424,12 +424,12 @@ class _ZoomFrame extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) => AnimatedBuilder(
       animation: Listenable.merge([route._zoom, route.animation]),
-      builder: (context, child) => _frame(constraints.biggest, child!),
+      builder: (context, child) => _frame(context, constraints.biggest, child!),
       child: child,
     ),
   );
 
-  Widget _frame(Size screen, Widget page) {
+  Widget _frame(BuildContext context, Size screen, Widget page) {
     final zoom = route._zoom;
     const clear = Color(0x00000000);
     var rect = Offset.zero & screen;
@@ -474,7 +474,7 @@ class _ZoomFrame extends StatelessWidget {
           rect = Rect.lerp(zoom.from, to, eased)!;
           radius = ui.lerpDouble(fromRadius, BiliMetrics.cardRadius, eased)!;
           if (zoom.picture != null) {
-            backing = BiliColors.card;
+            backing = BiliColors.colorsOf(context).card;
             pictureOpacity = const Interval(0, ZoomBackTheme.pictureIn).transform(t);
             pageOpacity = ZoomBackTheme.pageUnder * (1 - const Interval(0, ZoomBackTheme.pageOut).transform(t));
           } else {

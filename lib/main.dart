@@ -286,36 +286,36 @@ class BiliFastApp extends StatelessWidget {
       builder: (context) => ListenableBuilder(
         listenable: services.appearance,
         builder: (context, _) => MaterialApp(
-        title: 'BiliFast',
-        debugShowCheckedModeBanner: false,
-        locale: BiliFonts.locale,
-        supportedLocales: const [BiliFonts.locale],
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        theme: biliTheme(Brightness.light),
-        darkTheme: biliTheme(Brightness.dark),
-        themeMode: services.appearance.mode,
-        themeAnimationDuration: Duration.zero,
-        navigatorKey: services.navigator,
-        navigatorObservers: [pageRoutes],
-        // The official app keeps its sizes whatever iOS Text Size says, and every size here is measured off it.
-        builder: (context, child) => AppScope(
-          services: services,
-          child: PhoneFrame.wrap(
-              context, ReduceMotion(child: MediaQuery.withNoTextScaling(child: DefaultStatusBar(child: child!)))),
-        ),
-        home: MainShell(
-          initialLink: initialLink,
-          developerPage: services.logs == null
-              ? null
-              : (context) => PlayerTestPage(
-                    environment: services.environment,
-                    startPlayback: services.playback.create,
-                    releasePlayback: services.playback.release,
-                    logs: services.logs,
-                    speedTestHooks: appSpeedTestHooksOn(services.playback.engine),
-                    appAuth: services.appAuth,
-                  ),
-        ),
+          title: 'BiliFast',
+          debugShowCheckedModeBanner: false,
+          locale: BiliFonts.locale,
+          supportedLocales: const [BiliFonts.locale],
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          theme: biliTheme(Brightness.light),
+          darkTheme: biliTheme(Brightness.dark),
+          themeMode: services.appearance.mode,
+          themeAnimationDuration: Duration.zero,
+          navigatorKey: services.navigator,
+          navigatorObservers: [pageRoutes],
+          // The official app keeps its sizes whatever iOS Text Size says, and every size here is measured off it.
+          builder: (context, child) => AppScope(
+            services: services,
+            child: PhoneFrame.wrap(
+                context, ReduceMotion(child: MediaQuery.withNoTextScaling(child: DefaultStatusBar(child: child!)))),
+          ),
+          home: MainShell(
+            initialLink: initialLink,
+            developerPage: services.logs == null
+                ? null
+                : (context) => PlayerTestPage(
+                      environment: services.environment,
+                      startPlayback: services.playback.create,
+                      releasePlayback: services.playback.release,
+                      logs: services.logs,
+                      speedTestHooks: appSpeedTestHooksOn(services.playback.engine),
+                      appAuth: services.appAuth,
+                    ),
+          ),
         ),
       ),
     );
