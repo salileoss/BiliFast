@@ -10,6 +10,15 @@ List<String> _urls(String primary, List<String> backups, NodeMode mode, [MediaUR
     NodeCatalog.representationURLs(primary: primary, backups: backups, mode: mode, policy: policy);
 
 void main() {
+  test('auto preserves exact ordinary addresses and includes both regional pools', () {
+    const edge = 'https://upos-hz-mirrorakam.akamaized.net/upgcxcode/v.m4s?hdnts=a%2Fb&deadline=9';
+    final urls = _urls(edge, [_primary, _backup], NodeMode.auto);
+    expect(urls.take(3), [edge, _primary, _backup]);
+    expect(urls.map(NodeCatalog.host).toSet(), containsAll([...NodeCatalog.overseas, ...NodeCatalog.mainland]));
+    expect(urls.toSet(), hasLength(urls.length));
+    expect(_urls('https://evil.example.com/v.m4s', [], NodeMode.auto), isEmpty);
+  });
+
   test('overseas swaps the signed address onto overseas nodes', () {
     final urls = _urls(_primary, [_backup], NodeMode.overseas);
     expect(urls.map(NodeCatalog.host), NodeCatalog.overseas);

@@ -21,6 +21,12 @@ sealed class NodeMode {
 
   static const mainland = MainlandNodes();
   static const overseas = OverseasNodes();
+  static const auto = AutoNodes();
+}
+
+/// The exact API addresses plus both regional node sets, selected by measured performance.
+final class AutoNodes extends NodeMode {
+  const AutoNodes();
 }
 
 final class MainlandNodes extends NodeMode {
@@ -189,6 +195,7 @@ abstract final class NodeCatalog {
   }
 
   static List<NodeAddress> nodes(NodeMode mode) => switch (mode) {
+    AutoNodes() => [for (final host in {...overseas, ...mainland}) NodeAddress(host)],
     MainlandNodes() => [for (final host in mainland) NodeAddress(host)],
     OverseasNodes() => [for (final host in overseas) NodeAddress(host)],
     CustomNodes(:final nodes) => nodes,
@@ -219,6 +226,7 @@ abstract final class NodeCatalog {
               for (final original in ordinary) ?swapHost(original, node, allowAkamai: true),
           ];
     final allowedOriginals = switch (effective) {
+      AutoNodes() => ordinary,
       CustomNodes(:final nodes) => originals.where((url) => nodes.any((node) => node.host == host(url))),
       OverseasNodes() => originals.where((url) => !mainland.contains(host(url))),
       MainlandNodes() => originals.where((url) => mainland.contains(host(url))),

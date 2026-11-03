@@ -557,6 +557,7 @@ final class _EngineHost {
         Logger.shared.info(LogCategory.engine, 'node mode', {
           'mode': switch (mode) {
             MainlandNodes() => 'mainland',
+            AutoNodes() => 'auto',
             OverseasNodes() => 'overseas',
             CustomNodes(:final nodes) => 'custom ${nodes.length}',
           },
