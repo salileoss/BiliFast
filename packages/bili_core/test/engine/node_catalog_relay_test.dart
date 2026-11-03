@@ -43,7 +43,7 @@ void main() {
   });
 
   test('a track handed out only through relays is downloaded from them, in every mode', () {
-    for (final mode in [NodeMode.mainland, NodeMode.overseas]) {
+    for (final mode in [NodeMode.auto, NodeMode.mainland, NodeMode.overseas]) {
       expect(_urls(_relay, [_edge], mode), [_relay, _edge], reason: '$mode');
     }
     final custom = CustomNodes([NodeAddress('upos-sz-mirrorali.bilivideo.com')]);
