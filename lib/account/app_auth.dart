@@ -234,7 +234,10 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
       _toast(context.mounted ? context : null, '授权成功');
       return true;
     } catch (error) {
-      if (!_current(generation) || error is BiliSessionChangedError) return false;
+      if (!_current(generation) || error is BiliSessionChangedError) {
+        _logger.info(LogCategory.app, 'app auth discarded', {'reason': 'account changed'});
+        return false;
+      }
       _logger.warn(LogCategory.app, 'app auth failed', _failure(error));
       final reason = error is _AuthFailure ? error.message : requestFailureMessage(error, fallback: '请稍后重试');
       _toast(context.mounted ? context : null, '授权失败：$reason');
