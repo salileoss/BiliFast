@@ -102,6 +102,9 @@ class QrLoginModel extends ChangeNotifier {
   Map<String, String>? _session;
   bool _started = false;
   bool _disposed = false;
+  String? _problemMessage;
+  bool _retrySession = false;
+  String? get problemMessage => _problemMessage;
 
   QrLoginPhase get phase => _phase;
 
@@ -200,19 +203,25 @@ class QrLoginModel extends ChangeNotifier {
 
   Future<void> _signIn(Map<String, String> cookies) async {
     _session = null;
+    _problemMessage = null;
+    _retrySession = false;
     _set(QrLoginPhase.signingIn);
     bool loggedIn;
     try {
       loggedIn = await didLogin(cookies);
     } catch (error) {
       _logger.warn(LogCategory.ui, 'qr login sign in failed', {'error': _describe(error)});
+      if (error is AccountSwitchFailure) {
+        _problemMessage = error.message;
+        _retrySession = !error.requiresLogin;
+      }
       loggedIn = false;
     }
     if (_disposed) return;
     if (loggedIn) {
       _set(QrLoginPhase.done);
       onLoggedIn();
-    } else if (_checkFailed()) {
+    } else if (_retrySession || (_problemMessage == null && _checkFailed())) {
       _session = cookies;
       _set(QrLoginPhase.checkFailed);
     } else {
@@ -245,10 +254,11 @@ class QrLoginModel extends ChangeNotifier {
 
 /// The QR login page's body: the code over what to do with it, or what went wrong with 刷新 or 重试.
 class QrLogin extends StatefulWidget {
-  const QrLogin({super.key, required this.environment, required this.onLoggedIn, this.api});
+  const QrLogin({super.key, required this.environment, required this.onLoggedIn, this.api, this.expectedMid});
 
   final AppEnvironment environment;
   final VoidCallback onLoggedIn;
+  final int? expectedMid;
 
   /// The client's calls unless a test brings its own.
   final QrLoginApi? api;
@@ -260,7 +270,8 @@ class QrLogin extends StatefulWidget {
 class _QrLoginState extends State<QrLogin> {
   late final _model = QrLoginModel(
     api: widget.api ?? ClientQrLoginApi(widget.environment.client),
-    didLogin: widget.environment.didLogin,
+    didLogin: (cookies) => widget.environment.didLogin(cookies,
+      expectedMid: widget.expectedMid, isCurrent: () => mounted),
     checkFailed: () => widget.environment.accountCheckFailed,
     onLoggedIn: () {
       if (!widget.environment.loginSaved) showToast(context, '登录未能保存，下次启动需重新扫码');
@@ -298,8 +309,8 @@ class _QrLoginState extends State<QrLogin> {
     QrLoginPhase.scanned => _code(context, scanned: true),
     QrLoginPhase.expired => _problem(context, '二维码已失效', '刷新', const ValueKey('qr-login-refresh')),
     QrLoginPhase.failed => _problem(context, '加载失败', '重试', const ValueKey('qr-login-retry')),
-    QrLoginPhase.checkFailed => _problem(context, '网络错误，请重试', '重试', const ValueKey('qr-login-retry')),
-    QrLoginPhase.rejected => _problem(context, '登录失败', '重试', const ValueKey('qr-login-retry')),
+    QrLoginPhase.checkFailed => _problem(context, _model.problemMessage ?? '网络错误，请重试', '重试', const ValueKey('qr-login-retry')),
+    QrLoginPhase.rejected => _problem(context, _model.problemMessage ?? '登录失败', '重试', const ValueKey('qr-login-retry')),
   };
 
   Widget _code(BuildContext context, {required bool scanned}) => Column(

@@ -16,7 +16,10 @@ import 'web_cookies.dart';
 /// website's QR login (`qr_login.dart`) in a `--real-account` run, else a note to log in on the phone. Pops true once
 /// the account is logged in.
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({super.key, this.expectedMid});
+
+  /// Reauthentication must return the account whose saved row was selected.
+  final int? expectedMid;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -37,11 +40,13 @@ class _LoginPageState extends State<LoginPage> {
     body: Platform.isIOS
         ? _WebLogin(
             environment: AppScope.of(context).environment,
+            expectedMid: widget.expectedMid,
             onLoggedIn: () => Navigator.of(context).pop(true),
           )
         : AppScope.of(context).environment.pcLogin
         ? QrLogin(
             environment: AppScope.of(context).environment,
+            expectedMid: widget.expectedMid,
             onLoggedIn: () => Navigator.of(context).pop(true),
           )
         : Center(
@@ -76,10 +81,11 @@ class _CloseButton extends StatelessWidget {
 
 /// Bilibili's page, with the account taken from its cookies once it logs in.
 class _WebLogin extends StatefulWidget {
-  const _WebLogin({required this.environment, required this.onLoggedIn});
+  const _WebLogin({required this.environment, required this.onLoggedIn, this.expectedMid});
 
   final AppEnvironment environment;
   final VoidCallback onLoggedIn;
+  final int? expectedMid;
 
   @override
   State<_WebLogin> createState() => _WebLoginState();
@@ -92,7 +98,8 @@ class _WebLoginState extends State<_WebLogin> {
   static const _ignoredErrors = {-999, 102};
 
   final _web = WebViewController();
-  late final _flow = LoginFlow(environment: widget.environment, load: _load, onLoggedIn: widget.onLoggedIn);
+  late final _flow = LoginFlow(environment: widget.environment, load: _load,
+      onLoggedIn: widget.onLoggedIn, expectedMid: widget.expectedMid);
   var _loading = true;
   Color? _background;
 
@@ -213,6 +220,7 @@ class LoginFlow extends ChangeNotifier {
     required this.environment,
     required this.load,
     required this.onLoggedIn,
+    this.expectedMid,
     Duration interval = const Duration(seconds: 1),
   }) {
     watcher = LoginWatcher(
@@ -228,6 +236,7 @@ class LoginFlow extends ChangeNotifier {
   /// Loads Bilibili's login page; throws when it couldn't.
   final Future<void> Function() load;
   final VoidCallback onLoggedIn;
+  final int? expectedMid;
   late final LoginWatcher watcher;
   bool _signingIn = false;
   LoginProblem? _problem;
@@ -280,7 +289,21 @@ class LoginFlow extends ChangeNotifier {
     _signingIn = true;
     _problem = null;
     notifyListeners();
-    final loggedIn = await environment.didLogin(cookies);
+    final bool loggedIn;
+    try {
+      loggedIn = await environment.didLogin(cookies, expectedMid: expectedMid, isCurrent: () => !_disposed);
+    } on AccountSwitchFailure catch (error) {
+      if (_disposed) return;
+      _signingIn = false;
+      _show(LoginProblem(error.message,
+          () => unawaited(error.requiresLogin ? start() : _signIn(cookies))));
+      return;
+    } catch (_) {
+      if (_disposed) return;
+      _signingIn = false;
+      _show(LoginProblem('登录失败，请重试', () => unawaited(_signIn(cookies))));
+      return;
+    }
     if (_disposed) return;
     if (loggedIn) {
       onLoggedIn();
