@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemUiOverlayStyle, appBuildName, appBuildNumber;
 
 import '../app/app_environment.dart';
+import '../account/account_switch_page.dart';
 import '../app/app_scope.dart';
 import '../app/swipe_back_route.dart';
 import '../shared/image_disk_cache.dart';
@@ -242,6 +243,12 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
                           value: environment.accountLabel,
                         ),
                       },
+                      if (environment.hasAccountVault || environment.savedAccounts.isNotEmpty)
+                        SettingsRow(
+                          key: const ValueKey('settings-switch-account'),
+                          title: '切换账号',
+                          onTap: () => _push((_) => const AccountSwitchPage()),
+                        ),
                     ],
                   ),
                   SettingsSection(

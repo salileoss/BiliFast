@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bili_core/devlog.dart';
 import 'package:bilifast/account/login_gate.dart';
+import 'package:bilifast/account/account_vault.dart';
 import 'package:bilifast/app/app_environment.dart';
 import 'package:bilifast/app/app_scope.dart';
 import 'package:bilifast/devtools/log_files.dart';
@@ -66,6 +67,12 @@ class FakeEnvironment extends ChangeNotifier implements AppEnvironment {
 
   @override
   bool loginSaved = true;
+
+  @override
+  bool get hasAccountVault => false;
+
+  @override
+  List<SavedAccount> get savedAccounts => const [];
 
   /// As the real one: every step runs and the account ends logged out, then a keychain that kept the login throws.
   @override

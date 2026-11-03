@@ -372,8 +372,9 @@ class AppEnvironment extends ChangeNotifier {
 String _encodeAppToken(AppToken token) => jsonEncode(token.toJson());
 
 final class AccountSwitchFailure implements Exception {
-  const AccountSwitchFailure(this.message);
+  const AccountSwitchFailure(this.message, {this.requiresLogin = false});
   final String message;
+  final bool requiresLogin;
   @override
   String toString() => 'AccountSwitchFailure';
 }
