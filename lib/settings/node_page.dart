@@ -5,7 +5,7 @@ import '../shared/theme.dart';
 import '../video/player_prefs.dart';
 import 'settings_page.dart';
 
-/// 设置 → CDN 节点: the two node sets, picked with a tap as 字体's fonts are.
+/// 设置 → CDN 节点: automatic selection or a regional set, picked as 字体's fonts are.
 class NodePage extends StatefulWidget {
   const NodePage({super.key, required this.choice, required this.onChanged});
 
@@ -30,7 +30,7 @@ class _NodePageState extends State<NodePage> {
     title: 'CDN 节点',
     children: [
       SettingsSection(
-        footer: '从下一个视频开始使用。',
+        footer: '自动优选会比较原始地址、海外及大陆节点。从下一个视频开始使用。',
         children: [
           for (final choice in NodeChoice.values)
             MergeSemantics(

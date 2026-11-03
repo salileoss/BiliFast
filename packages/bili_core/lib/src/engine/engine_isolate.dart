@@ -557,6 +557,7 @@ final class _EngineHost {
         Logger.shared.info(LogCategory.engine, 'node mode', {
           'mode': switch (mode) {
             MainlandNodes() => 'mainland',
+            AutoNodes() => 'auto',
             OverseasNodes() => 'overseas',
             CustomNodes(:final nodes) => 'custom ${nodes.length}',
           },
@@ -564,8 +565,8 @@ final class _EngineHost {
     }
   }
 
-  /// One connection to each node, three to Akamai: it answers only HTTP/1.1, where each request in flight needs
-  /// a connection of its own. Bilibili's own addresses are warmed too, since the header race starts on them.
+  /// Auto warms at most three hosts, favouring the current network's measurements. Regional modes keep one
+  /// connection per node, three to Akamai, whose HTTP/1.1 requests each need their own connection.
   void _preconnect(List<String> urls) {
     if (urls.isEmpty) return;
     final policy = _options.policy;
@@ -585,15 +586,36 @@ final class _EngineHost {
       final uri = Uri.tryParse(url);
       if (node.isNotEmpty && uri != null) byNode.putIfAbsent(node, () => uri);
     }
+    var targets = byNode.values.toList();
+    if (mode is AutoNodes) {
+      final priors = _memory?.priors;
+      final ranked = [
+        for (var index = 0; index < targets.length; index++)
+          (
+            uri: targets[index],
+            order: index,
+            prior: priors?.of(NodeCatalog.nodeKey('${targets[index]}')),
+          ),
+      ];
+      double finishMs(NodePrior? prior) => prior == null || prior.bps <= 0
+          ? double.infinity
+          : prior.ttfbMs + 8192 * 1000 / prior.bps;
+      ranked.sort((a, b) {
+        final compared = finishMs(a.prior).compareTo(finishMs(b.prior));
+        return compared == 0 ? a.order.compareTo(b.order) : compared;
+      });
+      targets = [for (final entry in ranked.take(3)) entry.uri];
+    }
     final started = MonotonicClock.system.nowMs();
     final warming = [
-      for (final uri in byNode.values)
-        for (var copy = 0; copy < (NodeCatalog.isAkamai('$uri') ? 3 : 1); copy++) warmConnection(_transport, uri),
+      for (final uri in targets)
+        for (var copy = 0; copy < (mode is! AutoNodes && NodeCatalog.isAkamai('$uri') ? 3 : 1); copy++)
+          warmConnection(_transport, uri),
     ];
     unawaited(
       Future.wait(warming).then((answered) {
         Logger.shared.info(LogCategory.engine, 'preconnect', {
-          'nodes': byNode.length,
+          'nodes': targets.length,
           'requests': warming.length,
           'answered': answered.where((ok) => ok).length,
           'ms': (MonotonicClock.system.nowMs() - started).roundToDouble(),

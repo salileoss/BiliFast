@@ -195,9 +195,9 @@ void main() {
   });
 
   group('加速', () {
-    testWidgets('CDN 节点 starts on 海外节点; 大陆节点 is saved and goes to the engine for the next video', (tester) async {
+    testWidgets('CDN 节点 starts on 自动优选; each mode reaches the engine for the next video', (tester) async {
       await show(tester);
-      expect(find.descendant(of: row('settings-node'), matching: find.text('海外节点')), findsOneWidget);
+      expect(find.descendant(of: row('settings-node'), matching: find.text('自动优选')), findsOneWidget);
       await tapRow(tester, 'settings-node');
       expect(find.byType(NodePage), findsOneWidget);
       await tester.tap(row('node-mainland'));
@@ -216,6 +216,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(prefs.node, NodeChoice.overseas);
       expect(world.engine.nodeModes.last, isA<OverseasNodes>());
+      await tester.tap(row('node-auto'));
+      await tester.pumpAndSettle();
+      expect(prefs.node, NodeChoice.auto);
+      expect(world.engine.nodeModes.last, isA<AutoNodes>());
+      expect(find.descendant(of: row('node-auto'), matching: find.byIcon(Icons.check)), findsOneWidget);
     });
 
     testWidgets('a change while the engine is still starting reaches it once it has started, with no player made', (
@@ -239,7 +244,7 @@ void main() {
     testWidgets('picking the node already in use changes nothing', (tester) async {
       await show(tester);
       await tapRow(tester, 'settings-node');
-      await tester.tap(row('node-overseas'));
+      await tester.tap(row('node-auto'));
       await tester.pumpAndSettle();
       expect(world.engine.nodeModes, isEmpty);
     });
@@ -530,7 +535,7 @@ void main() {
     addTearDown(() => folder.delete(recursive: true));
     final path = '${folder.path}${Platform.pathSeparator}player_prefs.json';
     final saved = await PlayerPrefs.load(path);
-    expect(saved.node, NodeChoice.overseas);
+    expect(saved.node, NodeChoice.auto);
     saved.node = NodeChoice.mainland;
     await saved.settle();
     expect(await File(path).readAsString(), contains('"node":"mainland"'));

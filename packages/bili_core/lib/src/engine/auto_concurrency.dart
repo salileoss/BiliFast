@@ -48,13 +48,15 @@ final class _Bucket {
 
 typedef _Span = ({double from, double to});
 typedef _Startup = ({int base, double until});
+typedef _LowerTrial = ({int from, double at, double baseline});
 typedef _Change = ({int threads, int previous, String reason});
 
 /// BTR `createAutoConcurrency`. The connection count climbs a ladder whenever downloading is not
 /// keeping up (a stall, a low buffer that stops growing while bytes arrive, connections queueing
-/// too long). Every step up is a trial: if throughput has not grown ten seconds later it is taken
+/// too long). Every step up is a trial: if throughput has not grown by 10% ten seconds later it is taken
 /// back and that level rests. 412/429 step down and block the level for three minutes. Each new
 /// playback starts with at least 16 connections and comes back down once the buffer is ahead.
+/// A comfortable buffer also lets it try fewer connections, restoring them if playback loses ground.
 final class AutoConcurrency {
   AutoConcurrency({MonotonicClock? clock}) : _clock = clock ?? MonotonicClock.system;
 
@@ -71,6 +73,10 @@ final class AutoConcurrency {
   static const lowBufferSeconds = 6.0;
   static const pressureMs = 1000.0;
   static const activityMs = 1500.0;
+  static const minimumGain = 1.1;
+  static const comfortableSeconds = 20.0;
+  static const downshiftMs = 30000.0;
+  static const restoreSeconds = 10.0;
 
   final MonotonicClock _clock;
 
@@ -87,6 +93,8 @@ final class AutoConcurrency {
   final _aheadSamples = <({double at, double ahead})>[];
   double _pressureSince = 0;
   _Startup? _startup;
+  _LowerTrial? _lowerTrial;
+  double? _comfortableSince;
 
   /// Called once per step, after the state changed and the call that made the step has finished with it.
   /// Steps made by one call arrive in order.
@@ -132,8 +140,9 @@ final class AutoConcurrency {
     return _stepUp(reason, strong: true, at, changes);
   });
 
-  /// The buffer ahead of the playhead, a few times a second while playing.
+  /// Playable wall-clock seconds ahead (media seconds divided by playback rate), a few times a second.
   bool buffer({required double ahead, required bool playing}) => _mutate((at, changes) {
+    final adjusted = _adjustComfort(ahead, playing, at, changes);
     _aheadSamples.add((at: at, ahead: ahead));
     while (_aheadSamples.isNotEmpty && at - _aheadSamples.first.at > pressureMs + bucketMs) {
       _aheadSamples.removeAt(0);
@@ -155,16 +164,51 @@ final class AutoConcurrency {
         playing && downloading && ahead < lowBufferSeconds && earlier != null && ahead <= earlier.ahead + 0.05;
     if (!pressed) {
       _pressureSince = 0;
-      return false;
+      return adjusted;
     }
     if (_pressureSince == 0) {
       _pressureSince = at;
+      return adjusted;
+    }
+    if (at - _pressureSince < pressureMs) return adjusted;
+    _pressureSince = 0;
+    return _stepUp('缓冲跟不上播放', strong: false, at, changes) || adjusted;
+  });
+
+  bool _restoreLower(String reason, double at, List<_Change> changes) {
+    final trial = _lowerTrial;
+    if (trial == null) return false;
+    _lowerTrial = null;
+    _setLevel(trial.from, reason, null, at, changes);
+    return true;
+  }
+
+  bool _adjustComfort(double ahead, bool playing, double at, List<_Change> changes) {
+    final trial = _lowerTrial;
+    if (trial != null) {
+      if (playing && ahead < restoreSeconds) {
+        return _restoreLower('减少线程后缓冲不足，恢复线程数', at, changes);
+      }
+      if (playing && at - trial.at >= trialMs) {
+        if (_saturation(at) >= 0.6 && trial.baseline > 0 && _throughput(at) < trial.baseline * 0.9) {
+          return _restoreLower('减少线程后速度下降，恢复线程数', at, changes);
+        }
+        _lowerTrial = null;
+        _comfortableSince = null;
+      }
+    }
+    if (!playing || ahead < comfortableSeconds || _startup != null || _trial != null || _lowerTrial != null || _level == 0) {
+      _comfortableSince = null;
       return false;
     }
-    if (at - _pressureSince < pressureMs) return false;
-    _pressureSince = 0;
-    return _stepUp('缓冲跟不上播放', strong: false, at, changes);
-  });
+    _comfortableSince ??= at;
+    if (at - _comfortableSince! < downshiftMs) return false;
+    final from = _level;
+    final baseline = _throughput(at);
+    _setLevel(from - 1, '缓冲充足，试用更少线程', null, at, changes);
+    _lowerTrial = (from: from, at: at, baseline: baseline);
+    return true;
+  }
 
   /// A connection waited too long for its first byte while every slot was busy.
   bool slow() =>
@@ -186,6 +230,8 @@ final class AutoConcurrency {
     _aheadSamples.clear();
     _pressureSince = 0;
     _trial = null;
+    _lowerTrial = null;
+    _comfortableSince = null;
     _buckets.clear();
     _saturatedSpans.clear();
     if (_saturated) _saturatedSince = at;
@@ -247,11 +293,13 @@ final class AutoConcurrency {
     _changedAt = at;
     _reason = reason;
     _trial = trial;
+    _comfortableSince = null;
     _pressureSince = 0;
     changes.add((threads: ladder[level], previous: previous, reason: reason));
   }
 
   bool _stepUp(String reason, double at, List<_Change> changes, {required bool strong}) {
+    if (_restoreLower('减少线程后缓冲不足，恢复线程数', at, changes)) return true;
     if (at - _changedAt < stepCooldownMs) return false;
     if (_restingAt(_level, at)?.hard ?? false) return false;
     var next = _level + 1;
@@ -286,6 +334,8 @@ final class AutoConcurrency {
     required double restMs,
     required bool hard,
   }) {
+    _lowerTrial = null;
+    _comfortableSince = null;
     _resting[restLevel] = _Rest(until: at + restMs, hard: hard);
     if (target >= _level) return false;
     _setLevel(target, reason, null, at, changes);
@@ -297,7 +347,7 @@ final class AutoConcurrency {
     if (trial == null || at - trial.at < trialMs) return;
     _trial = null;
     if (trial.stalled || _saturation(at) < 0.6 || trial.baseline <= 0) return;
-    if (_throughput(at) < trial.baseline) {
+    if (_throughput(at) < trial.baseline * minimumGain) {
       _stepDown(
         target: trial.from,
         restLevel: trial.level,

@@ -1110,6 +1110,7 @@ void main() {
       'loop': 'list',
       'fit': 'fit',
       'btr': false,
+      'node': 'auto',
       'showStats': true,
       'danmakuOn': false,
       'coinAlsoLike': true,

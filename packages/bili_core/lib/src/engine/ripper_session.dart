@@ -198,6 +198,7 @@ final class RipperSession {
           policy: policy,
           bans: _bans,
           clock: _ctx.clock,
+          nodes: _ctx.nodes,
           priors: priors,
           exploreInHurry: _ctx.config.exploreInHurry,
         ),
@@ -379,13 +380,14 @@ final class RipperSession {
 
   void updatePlayhead({required double seconds, required double rate}) {
     _playhead = seconds;
-    _rate = rate > 0 ? rate : 1;
+    _rate = rate.isFinite && rate > 0 ? rate : 1;
     _cache.removeWhere((_, entry) => entry.endTime < seconds - _ctx.config.keepBehindSeconds);
     if (_retains) _trimKept();
   }
 
+  /// The controller reports media seconds; concurrency pressure follows time left at the current speed.
   void reportBuffer({required double aheadSeconds, required bool playing}) =>
-      _ctx.auto?.buffer(ahead: aheadSeconds, playing: playing);
+      _ctx.auto?.buffer(ahead: max(0, aheadSeconds) / _rate, playing: playing);
 
   void reportStall() => _ctx.auto?.stall();
 

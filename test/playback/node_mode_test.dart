@@ -60,6 +60,8 @@ void main() {
     final saved = PlayerPrefs.shared;
     addTearDown(() => PlayerPrefs.shared = saved);
     PlayerPrefs.shared = PlayerPrefs.memory();
+    expect(appEngineOptions().nodeMode, isA<AutoNodes>());
+    PlayerPrefs.shared.node = NodeChoice.overseas;
     expect(appEngineOptions().nodeMode, isA<OverseasNodes>());
     PlayerPrefs.shared.node = NodeChoice.mainland;
     expect(appEngineOptions().nodeMode, isA<MainlandNodes>());

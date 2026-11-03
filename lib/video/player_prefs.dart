@@ -10,6 +10,7 @@ import 'player_session.dart';
 
 /// 设置's CDN 节点 (Swift `AppSettings.NodeChoice`).
 enum NodeChoice {
+  auto('自动优选'),
   overseas('海外节点'),
   mainland('大陆节点');
 
@@ -17,7 +18,11 @@ enum NodeChoice {
 
   final String label;
 
-  NodeMode get mode => this == overseas ? NodeMode.overseas : NodeMode.mainland;
+  NodeMode get mode => switch (this) {
+    auto => NodeMode.auto,
+    overseas => NodeMode.overseas,
+    mainland => NodeMode.mainland,
+  };
 }
 
 /// The player settings Swift's AppSettings kept in UserDefaults (自动连播, 循环播放, 画面尺寸, BTR 加速, CDN 节点,
@@ -44,7 +49,8 @@ class PlayerPrefs {
     try {
       final json = jsonDecode(await file.readAsString());
       if (json is! Map<String, Object?>) throw const FormatException('not an object');
-      return PlayerPrefs._(path, json, log);
+      // Older versions omitted the overseas default. Keep it until the user chooses Auto.
+      return PlayerPrefs._(path, {'node': NodeChoice.overseas.name, ...json}, log);
     } catch (error) {
       log.warn(LogCategory.app, 'player prefs unreadable, using defaults', {'error': _reason(error)});
     }
@@ -64,7 +70,7 @@ class PlayerPrefs {
   LoopMode _loop = LoopMode.off;
   FitMode _fit = FitMode.fit;
   bool _btr = true;
-  NodeChoice _node = NodeChoice.overseas;
+  NodeChoice _node = NodeChoice.auto;
   bool _showStats = false;
   bool _danmakuOn = true;
   bool _coinAlsoLike = true;
@@ -157,7 +163,7 @@ class PlayerPrefs {
     'loop': _loop.name,
     'fit': _fit.name,
     'btr': _btr,
-    if (_node != NodeChoice.overseas) 'node': _node.name,
+    'node': _node.name,
     'showStats': _showStats,
     'danmakuOn': _danmakuOn,
     'coinAlsoLike': _coinAlsoLike,

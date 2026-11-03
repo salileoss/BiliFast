@@ -613,6 +613,27 @@ void main() {
     }
   });
 
+  test('concurrency comfort uses wall seconds at the playback rate', () {
+    for (final rate in [1.0, 2.0, 0.0, double.nan, double.infinity]) {
+      final manual = ManualClock(100000);
+      final auto = AutoConcurrency(clock: manual.clock);
+      final session = RipperSession(
+        sources: {TrackKind.video: (primary: TestEngine.primary, backups: const <String>[])},
+        mode: NodeMode.auto,
+        transport: SimCDN(size: 1024),
+        config: automaticConfig(),
+        auto: auto,
+        clock: manual.clock,
+        logger: Logger(session: 'test'),
+      );
+      session.updatePlayhead(seconds: 0, rate: rate);
+      manual.advance(3000);
+      session.reportBuffer(aheadSeconds: 20, playing: true);
+      expect(auto.threads, rate == 2 ? 16 : 12, reason: 'rate=$rate');
+      session.close();
+    }
+  });
+
   // Not in RipperSessionTests.swift.
 
   test('without a fixed count the pool starts at the shared count, and a fixed count ignores it', () {

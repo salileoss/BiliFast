@@ -30,6 +30,7 @@ void main() {
     expect(prefs.loop, LoopMode.off);
     expect(prefs.fit, FitMode.fit);
     expect(prefs.btr, isTrue);
+    expect(prefs.node, NodeChoice.auto);
     expect(prefs.showStats, isFalse);
     expect(prefs.danmakuOn, isTrue);
     expect(prefs.coinAlsoLike, isTrue);
@@ -37,6 +38,28 @@ void main() {
     expect(prefs.quality, isNull);
     expect(prefs.codec, isNull);
     expect(File(path).existsSync(), isFalse, reason: 'nothing is written until something changes');
+  });
+
+  test('legacy overseas defaults and explicit regional choices survive an upgrade', () async {
+    for (final (json, expected) in [
+      ('{}', NodeChoice.overseas),
+      ('{"node":"overseas"}', NodeChoice.overseas),
+      ('{"node":"mainland"}', NodeChoice.mainland),
+      ('{"node":"auto"}', NodeChoice.auto),
+    ]) {
+      File(path).writeAsStringSync(json);
+      final prefs = await PlayerPrefs.load(path, logger: logger);
+      expect(prefs.node, expected);
+      prefs.showStats = true;
+      await prefs.settle();
+      expect((await PlayerPrefs.load(path, logger: logger)).node, expected);
+    }
+  });
+
+  test('a new install keeps Auto when another preference is saved', () async {
+    final prefs = await PlayerPrefs.load(path, logger: logger)..showStats = true;
+    await prefs.settle();
+    expect((await PlayerPrefs.load(path, logger: logger)).node, NodeChoice.auto);
   });
 
   test('what is set comes back on the next launch', () async {
