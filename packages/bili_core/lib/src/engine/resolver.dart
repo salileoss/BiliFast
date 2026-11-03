@@ -7,6 +7,7 @@ import '../shared/clock.dart';
 import 'ban_list.dart';
 import 'node_catalog.dart';
 import 'node_memory.dart';
+import 'node_stats.dart';
 import 'playback_engine.dart';
 
 final class _Health {
@@ -32,6 +33,7 @@ final class Resolver {
     MonotonicClock? clock,
     this.priors = NodePriors.empty,
     this.exploreInHurry = true,
+    this.nodes,
   }) : _clock = clock ?? MonotonicClock.system;
 
   /// A node left out for being slow goes back to the untested ones after this and gets another try.
@@ -52,6 +54,10 @@ final class Resolver {
   /// What earlier sessions measured (`NodeMemory.priors`). A node with a prior speed counts as measured until this
   /// session measures it: no warm-up range goes wide for it, no range explores it, and [speed] gives the prior's.
   final NodePriors priors;
+
+  /// Shared latency and body-speed measurements across both tracks. Auto mode ranks the actual
+  /// request size against these estimates; manual modes retain their original speed ordering.
+  final NodeStats? nodes;
 
   /// Off: a range in a hurry goes only to measured (or remembered) nodes, so unknown and stale ones are explored on
   /// prefetch ranges alone. On (Swift): every range carries its exploration slots.
@@ -124,26 +130,44 @@ final class Resolver {
   /// The prior's speed in this class's units, 0 without one.
   double _priorBps(String url) => priors.isEmpty ? 0 : priors.of(NodeCatalog.nodeKey(url))?.routeBps ?? 0;
 
-  /// Measured within [measurementTTL], or remembered from earlier sessions.
-  bool _known(String url, double now) => _measuredNow(url, now) || _priorBps(url) > 0;
+  /// Measured within [measurementTTL], remembered from earlier sessions, or shared by the other track
+  /// in Auto mode. The shared stats are reset by the session when the network changes.
+  bool _known(String url, double now) =>
+      _measuredNow(url, now) || _priorBps(url) > 0 || (mode is AutoNodes && (nodes?.isKnown(url) ?? false));
 
   bool _open(String url, double now) => (_health[url]?.blockedUntil ?? 0) <= now;
 
   /// Proven addresses first, then by speed: this session's measurement while fresh, else the prior's, else the
-  /// stale measurement. Stable (List.sort does not promise it), so equally fast nodes keep the catalog's order.
-  List<String> _sortedFasterFirst(Iterable<String> urls) {
+  /// stale measurement. Auto compares expected completion time first. Stable (List.sort does not promise it),
+  /// so equally fast nodes keep the catalog's order.
+  List<String> _sortedFasterFirst(Iterable<String> urls, {int bytes = NodePrior.routeReferenceBytes}) {
     final list = urls.toList();
     final now = _clock.nowMs();
     final proven = <bool>[];
     final speeds = <double>[];
+    final finishes = <double>[];
     for (final url in list) {
       final route = _routes[routeKey(url)];
       proven.add((route?.lastSuccessAt ?? 0) > 0);
       final prior = _measuredNow(url, now) ? 0.0 : _priorBps(url);
       speeds.add(prior > 0 ? prior : route?.bps ?? 0);
+      if (mode is AutoNodes) {
+        final remembered = priors.of(NodeCatalog.nodeKey(url));
+        final expected = nodes?.expectedMs(url, pieceBytes: bytes);
+        finishes.add(expected ??
+            (remembered != null && remembered.bps > 0
+                ? remembered.ttfbMs + bytes * 1000 / remembered.bps
+                : _measuredNow(url, now) && (route?.bps ?? 0) > 0
+                    ? bytes * 1000 / route!.bps
+                    : double.infinity));
+      }
     }
     final order = List<int>.generate(list.length, (index) => index)
       ..sort((a, b) {
+        if (mode is AutoNodes) {
+          final byFinish = finishes[a].compareTo(finishes[b]);
+          if (byFinish != 0) return byFinish;
+        }
         if (proven[a] != proven[b]) return proven[a] ? -1 : 1;
         final bySpeed = speeds[b].compareTo(speeds[a]);
         return bySpeed != 0 ? bySpeed : a.compareTo(b);
@@ -167,13 +191,15 @@ final class Resolver {
   /// stale node rides along per range as exploration. With priors, remembered nodes count as
   /// measured and the warm-up is skipped. A [hurried] range explores nothing when [exploreInHurry]
   /// is off: it goes to the known nodes once two are known (one alone would carry every piece).
-  List<String> rangeCandidates({bool hurried = false}) {
+  /// Auto limits the first range to four nodes and later adds only one unknown node to the known set.
+  List<String> rangeCandidates({bool hurried = false, int bytes = NodePrior.routeReferenceBytes}) {
     final list = _usable();
     final now = _clock.nowMs();
-    final warmup = mode is MainlandNodes ? 1 : 4;
-    final pool = _sortedFasterFirst(list.where((url) => _open(url, now)));
-    if (pool.isEmpty) return List.of(list);
-    final width = min(_mediaRangeCount == 0 ? pool.length : 6, pool.length);
+    final automatic = mode is AutoNodes;
+    final warmup = mode is MainlandNodes || automatic ? 1 : 4;
+    final pool = _sortedFasterFirst(list.where((url) => _open(url, now)), bytes: bytes);
+    if (pool.isEmpty) return automatic ? _sortedFasterFirst(list, bytes: bytes).take(4).toList() : List.of(list);
+    final width = min(automatic ? 4 : (_mediaRangeCount == 0 ? pool.length : 6), pool.length);
     if (hurried && !exploreInHurry) {
       final known = pool.where((url) => _known(url, now)).take(width).toList();
       if (known.length >= 2) {
@@ -181,7 +207,7 @@ final class Resolver {
         return known;
       }
     }
-    final remembered = !priors.isEmpty && pool.any((url) => _priorBps(url) > 0);
+    final remembered = pool.any((url) => _priorBps(url) > 0 || (automatic && (nodes?.isKnown(url) ?? false)));
     List<String> selected;
     if (_mediaRangeCount < warmup && !remembered) {
       selected = pool.take(width).toList();
@@ -189,13 +215,15 @@ final class Resolver {
     } else {
       final measured = pool.where((url) => _known(url, now)).toList();
       final rest = pool.where((url) => !_known(url, now)).toList();
-      final places = min(rest.length, max(1, width - measured.length));
+      final places = min(rest.length, automatic ? 1 : max(1, width - measured.length));
       final explore = [for (var index = 0; index < places; index++) rest[(_rangeCursor + index) % rest.length]];
       _rangeCursor = (_rangeCursor + places) % max(1, pool.length);
       selected = [...measured.take(max(0, width - explore.length)), ...explore];
-      for (final url in pool) {
-        if (selected.length >= min(3, pool.length)) break;
-        if (!selected.contains(url)) selected.add(url);
+      if (!automatic) {
+        for (final url in pool) {
+          if (selected.length >= min(3, pool.length)) break;
+          if (!selected.contains(url)) selected.add(url);
+        }
       }
     }
     _mediaRangeCount++;
@@ -207,12 +235,13 @@ final class Resolver {
     final now = _clock.nowMs();
     final originals = mode is CustomNodes ? const <String>[] : [_primary, ..._backups].where(policy.allowsURL);
     final candidates = _unbanned(NodeCatalog.deduplicated([...originals, ..._allURLs]));
-    return candidates.where((url) => _open(url, now)).take(8).toList();
+    final open = candidates.where((url) => _open(url, now));
+    return (mode is AutoNodes ? _sortedFasterFirst(open, bytes: 8 * 1024) : open).take(8).toList();
   }
 
   List<String> rescueCandidates() {
     final now = _clock.nowMs();
-    return _sortedFasterFirst(_usable().where((url) => _open(url, now)));
+    return _sortedFasterFirst(_usable().where((url) => _open(url, now)), bytes: 128 * 1024);
   }
 
   /// With `BanList.probation` on, a banned node's address for one backup copy of [piece] once that node's turn has
