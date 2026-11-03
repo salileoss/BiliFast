@@ -218,6 +218,7 @@ final class AttemptProgress {
   double startedAt = 0;
   bool gotHeaders = false;
   double headersAt = 0;
+  double? firstBodyAt;
   double lastProgressAt = 0;
   Prefix base = Prefix.empty;
   int received = 0;
@@ -246,6 +247,8 @@ final class AttemptProgress {
   }
 
   void append(List<int> chunk, {required double at}) {
+    if (chunk.isEmpty) return;
+    firstBodyAt ??= at;
     received += chunk.length;
     chunks.add(chunk);
     lastProgressAt = at;
@@ -326,7 +329,7 @@ final class AttemptRunner {
         if (part == null) throw const RipperError(RipperErrorKind.invalidURL);
         return await _attempt(url, part, base, progress, resolver, copy, cancel);
       } finally {
-        ctx.nodes.end(url, receiving: progress.gotHeaders);
+        ctx.nodes.end(url, receiving: progress.firstBodyAt != null);
       }
     } finally {
       permit.release();
@@ -352,12 +355,13 @@ final class AttemptRunner {
       final now = ctx.clock.nowMs();
       final elapsed = max(1.0, now - started);
       ctx.meter.record(bytes: part.length, elapsedMs: elapsed);
-      ctx.nodes.body(url, bytes: part.length, ms: now - progress.headersAt);
+      ctx.nodes.body(url, bytes: part.length, ms: now - (progress.firstBodyAt ?? now));
       resolver.success(url, bps: part.length >= Meter.sampleMinBytes ? part.length * 1000 / elapsed : 0);
       ctx.logger.debug(LogCategory.engine, 'piece', {
         'node': node,
         'range': '$part',
-        'firstByteMs': (progress.headersAt - started).roundToDouble(),
+        'headersMs': (progress.headersAt - started).roundToDouble(),
+        'firstByteMs': ((progress.firstBodyAt ?? now) - started).roundToDouble(),
         'bytes': part.length,
         'ms': elapsed.roundToDouble(),
         'resumed': base.bytes,
@@ -373,8 +377,8 @@ final class AttemptRunner {
         // BTR PR 11: only a copy that lost a duplicate race says anything about its node. A seek or a
         // cancelled read would blend a queued request's whole wait into the estimate.
         if (progress.outrun) {
-          if (progress.gotHeaders) {
-            ctx.nodes.crawl(url, bytes: received, ms: now - progress.headersAt);
+          if (progress.firstBodyAt case final firstBodyAt?) {
+            ctx.nodes.crawl(url, bytes: received, ms: now - firstBodyAt);
           } else {
             ctx.nodes.outrun(url, waitedMs: elapsed);
           }
@@ -490,8 +494,6 @@ final class AttemptRunner {
       }
       final now = ctx.clock.nowMs();
       progress.headers(at: now);
-      ctx.stats.firstByte(node, ms: now - started);
-      ctx.nodes.firstByte(url, ms: now - started);
       final contentRange = ContentRange.parse(response.headers['content-range']);
       if (response.status != 206 || contentRange == null || contentRange.range != part) {
         unawaited(response.body.listen(null).cancel());
@@ -499,7 +501,13 @@ final class AttemptRunner {
       }
       body = response.body.listen(
         (chunk) {
-          progress.append(chunk, at: ctx.clock.nowMs());
+          if (chunk.isEmpty) return;
+          final at = ctx.clock.nowMs();
+          if (progress.firstBodyAt == null) {
+            ctx.stats.firstByte(node, ms: at - started);
+            ctx.nodes.firstByte(url, ms: at - started);
+          }
+          progress.append(chunk, at: at);
           ctx.auto?.activity();
         },
         onError: fail,

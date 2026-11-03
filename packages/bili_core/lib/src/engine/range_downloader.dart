@@ -121,7 +121,7 @@ final class RangeDownloader {
     final hurried = hurryCheck?.call() ?? false;
     final check = _TotalCheck(expectedTotal);
 
-    var preferred = resolver.rangeCandidates(hurried: hurried);
+    var preferred = resolver.rangeCandidates(hurried: hurried, bytes: range.length);
     if (startup && burst) {
       return _burst(
         range,
@@ -378,7 +378,7 @@ final class RangeDownloader {
     CancelToken? cancel,
     RequestLane lane = RequestLane.any,
   }) async {
-    final preferred = resolver.rangeCandidates(hurried: ctx.config.hurry && (hurry?.call() ?? false));
+    final preferred = resolver.rangeCandidates(hurried: ctx.config.hurry && (hurry?.call() ?? false), bytes: range.length);
     final ordered = preferred.any(ctx.nodes.isKnown)
         ? HurryPlacement.byExpectedFinish(
             preferred,
