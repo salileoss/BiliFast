@@ -9,6 +9,8 @@ import 'package:flutter/foundation.dart';
 
 import '../account/cookie_persistence.dart';
 import '../account/account_vault.dart';
+import '../account/account_vault_store.dart';
+import '../account/dpapi_keychain_store.dart';
 import '../account/keychain_store.dart';
 import '../account/web_cookies.dart';
 
@@ -48,7 +50,15 @@ class AppEnvironment extends ChangeNotifier {
       required this.webCookies,
       required this._serverLogout,
       required this.pcLogin,
-      required this._logger});
+      required this._logger,
+      required this._transport,
+      AccountVaultStore? accountStore,
+      AccountVault? vault,
+      this._vaultUnreadable = false})
+      : _vaultStore = accountStore,
+        _vault = vault ?? AccountVault(),
+        _vaultPresent = vault != null,
+        _selectedMid = vault?.activeMid;
 
   /// `http`, `httpFactory`, `keychain` and `webCookies` are for tests; the app passes none, except the Windows
   /// build's keychain. [guarded] (Windows, where KaiC's real login is read only) sends every call through
@@ -65,24 +75,47 @@ class AppEnvironment extends ChangeNotifier {
       bool pcLogin = false,
       Logger? logger}) async {
     final log = logger ?? Logger.shared;
-    final store = _GuardedKeychain(keychain ?? KeychainStore.platform(), log);
+    final rawStore = keychain ?? KeychainStore.platform();
+    final store = _GuardedKeychain(rawStore, log);
+    final vaultStore = accountStore ?? switch (rawStore) {
+      ChannelKeychainStore() => ChannelAccountVaultStore(),
+      DpapiKeychainStore(:final path) => DpapiAccountVaultStore('$path.accounts'),
+      _ => null,
+    };
+    AccountVault? vault;
+    var vaultUnreadable = false;
+    if (vaultStore != null) {
+      try {
+        switch (await vaultStore.load()) {
+          case StoredAccountVault(vault: final stored):
+            vault = stored;
+          case NoAccountVault():
+            break;
+          case AccountVaultLoadFailed():
+            vaultUnreadable = true;
+        }
+      } catch (_) {
+        vaultUnreadable = true;
+      }
+    }
     final persistence = CookiePersistence(store, logger: log);
-    final jar = CookieJar(await persistence.load());
+    final jar = CookieJar(vault?.accounts[vault.activeMid]?.cookies ??
+        (vault != null || vaultUnreadable ? const <String, String>{} : await persistence.load()));
     if (persistence.blocked) log.warn(LogCategory.app, 'keychain read failed, cookie writes held back');
-    jar.onChange = (_) => unawaited(persistence.save(jar.all));
     final transport = http ?? httpTransportOrFallback(httpFactory, log);
-    final client = BiliClient(
-        transport: guarded
+    final guardedHttp = guarded
             ? GuardedTransport(
                 transport,
                 writesAllowed: {'passport.bilibili.com/login/exit/v2'},
                 uncounted: {'/x/passport-login/web/qrcode/generate', '/x/passport-login/web/qrcode/poll'},
                 logger: log,
               )
-            : transport,
+            : transport;
+    final client = BiliClient(
+        transport: guardedHttp,
         cookies: jar,
         logger: log);
-    return AppEnvironment._(
+    final environment = AppEnvironment._(
         cookies: jar,
         client: client,
         persistence: persistence,
@@ -90,13 +123,38 @@ class AppEnvironment extends ChangeNotifier {
         webCookies: webCookies ?? WebCookies.platform(),
         serverLogout: serverLogout,
         pcLogin: pcLogin,
-        logger: log);
+        logger: log,
+        transport: guardedHttp,
+        accountStore: vaultStore,
+        vault: vault,
+        vaultUnreadable: vaultUnreadable);
+    final token = vault?.accounts[vault.activeMid]?.appToken;
+    client.appToken = token != null && !token.expired(DateTime.now()) ? token : null;
+    jar.onChange = environment._cookiesChanged;
+    return environment;
   }
 
   final CookieJar cookies;
   final BiliClient client;
   final CookiePersistence _persistence;
   final KeychainStore _keychain;
+  final HTTPTransport _transport;
+  final AccountVaultStore? _vaultStore;
+  AccountVault _vault;
+  bool _vaultPresent;
+  bool _vaultUnreadable;
+  int? _selectedMid;
+  bool _publishing = false;
+  bool _transitioning = false;
+  Future<void> _vaultWriting = Future.value();
+  Future<void>? _migration;
+  bool _demo = false;
+  final Map<int, SavedAccount> _demoAccounts = {};
+  bool _preparedChange = false;
+
+  /// Services quiesce old playback and native downloads before credentials are committed.
+  Future<void> Function()? beforeAccountChange;
+  VoidCallback? accountChangeAborted;
 
   /// The keychain the login came from, for the app token's item beside it.
   KeychainStore get keychain => _keychain;
@@ -139,22 +197,55 @@ class AppEnvironment extends ChangeNotifier {
   ValueListenable<int> get sessions => _sessions;
   final _sessions = ValueNotifier<int>(0);
   int get sessionGeneration => _epoch;
-  int? get activeAccountMid => _mid;
-  List<SavedAccount> get savedAccounts => const [];
-  bool get hasAccountVault => false;
-  bool get accountTransitioning => false;
-  bool get appAuthDeclined => false;
+  int? get activeAccountMid => _selectedMid ?? _mid;
+  List<SavedAccount> get savedAccounts => List.unmodifiable((_demo ? _demoAccounts : _vault.accounts).values);
+  bool get hasAccountVault => _vaultStore != null || _demo;
+  bool get accountTransitioning => _transitioning;
+  bool get appAuthDeclined => _vault.accounts[_selectedMid]?.authDeclined ?? false;
 
-  Future<void> switchAccount(int mid) async => throw const AccountSwitchFailure('账号不可用');
-  Future<void> removeAccount(int mid) async => throw const AccountSwitchFailure('账号不可用');
-  Future<String?> loadAppToken() => _keychain.loadAppToken();
-  Future<bool> saveAppToken(AppToken token, {required int generation}) => generation == _epoch
-      ? _keychain.saveAppToken(_encodeAppToken(token))
-      : Future.value(false);
-  Future<void> deleteAppToken({required int generation}) async {
-    if (generation == _epoch) await _keychain.deleteAppToken();
+  Future<String?> loadAppToken() async {
+    if (_vaultUnreadable) throw const AccountSwitchFailure('无法读取已保存账号，请重试');
+    if (!_vaultPresent) return _keychain.loadAppToken();
+    final token = _vault.accounts[_selectedMid]?.appToken;
+    return token == null ? null : _encodeAppToken(token);
   }
-  Future<void> setAppAuthDeclined(bool declined, {required int generation}) async {}
+
+  Future<bool> saveAppToken(AppToken token, {required int generation}) async {
+    if (generation != _epoch) return false;
+    if (!_vaultPresent) return _keychain.saveAppToken(_encodeAppToken(token));
+    if (token.mid != activeAccountMid) return false;
+    return _writeVault((vault) {
+      final account = vault.accounts[token.mid];
+      if (generation != _epoch || account == null) return null;
+      return AccountVault(activeMid: vault.activeMid,
+          accounts: {...vault.accounts, token.mid: account.copyWith(appToken: token)});
+    });
+  }
+
+  Future<void> deleteAppToken({required int generation}) async {
+    if (generation != _epoch) return;
+    if (!_vaultPresent) return _keychain.deleteAppToken();
+    final owner = _selectedMid;
+    if (!await _writeVault((vault) {
+      final account = vault.accounts[owner];
+      if (generation != _epoch || account == null) return null;
+      return AccountVault(activeMid: vault.activeMid,
+          accounts: {...vault.accounts, owner!: account.copyWith(clearToken: true)});
+    })) {
+      throw const AccountSwitchFailure('授权状态未能保存');
+    }
+  }
+
+  Future<void> setAppAuthDeclined(bool declined, {required int generation}) async {
+    if (!_vaultPresent || generation != _epoch) return;
+    final owner = _selectedMid;
+    await _writeVault((vault) {
+      final account = vault.accounts[owner];
+      if (generation != _epoch || account == null) return null;
+      return AccountVault(activeMid: vault.activeMid,
+          accounts: {...vault.accounts, owner!: account.copyWith(authDeclined: declined)});
+    });
+  }
 
   String get accountLabel => switch (_account) {
         LoggedIn(:final name) => name.isEmpty ? '已登录' : name,
@@ -182,6 +273,12 @@ class AppEnvironment extends ChangeNotifier {
   bool get fake => _fake;
 
   void useFakeAccount() {
+    _demo = true;
+    _demoAccounts.addAll({
+      1: SavedAccount(mid: 1, name: '测试账号', cookies: const {}),
+      2: SavedAccount(mid: 2, name: '测试账号二', cookies: const {}),
+    });
+    _selectedMid = 1;
     _fake = true;
     _account = const LoggedIn(name: '测试账号', vip: false);
     _mid = 1;
@@ -198,8 +295,40 @@ class AppEnvironment extends ChangeNotifier {
   /// The login page's cookies once Bilibili set SESSDATA (BiliNative `AppEnvironment.didLogin`): they join the jar
   /// and the keychain, and the account is checked again, up to 3 times. Completes with whether it is now logged in.
   Future<bool> didLogin(Map<String, String> cookies, {int? expectedMid, bool Function()? isCurrent}) async {
-    final epoch = ++_epoch;
-    _checking = null;
+    if (_vaultStore != null) {
+      return _transition(() async {
+        await _readyForTransition();
+        final epoch = _epoch;
+        final candidate = _candidate(cookies);
+        NavInfo? nav;
+        for (var attempt = 0; attempt < 3; attempt++) {
+          if (attempt > 0) await Future<void>.delayed(Duration(seconds: attempt));
+          if (epoch != _epoch || isCurrent?.call() == false) return false;
+          try {
+            await candidate.ensureRiskCookies();
+            nav = await candidate.nav();
+            if (nav.isLogin) break;
+          } catch (error) {
+            _logger.warn(LogCategory.app, 'candidate check failed', {'error': '${error.runtimeType}'});
+            _accountCheckFailed = true;
+          }
+        }
+        if (epoch != _epoch || isCurrent?.call() == false) return false;
+        if (nav == null) throw const AccountSwitchFailure('网络错误，请重试');
+        if (!nav.isLogin || (nav.mid ?? 0) <= 0) {
+          _accountCheckFailed = false;
+          throw const AccountSwitchFailure('登录已失效，请重新登录', requiresLogin: true);
+        }
+        if (expectedMid != null && nav.mid != expectedMid) {
+          throw const AccountSwitchFailure('登录的账号不一致，请使用所选账号重新登录', requiresLogin: true);
+        }
+        final account = _accountFromNav(nav, candidate.cookies.all);
+        return _commitAccount(account, nav, isCurrent: isCurrent);
+      });
+    }
+    if (isCurrent?.call() == false) return false;
+    _beginSession();
+    final epoch = _epoch;
     _fake = false;
     _logoutIncomplete = false;
     _persistence.unblock();
@@ -220,8 +349,259 @@ class AppEnvironment extends ChangeNotifier {
     // The session works from the jar either way; only the next launch would find itself logged out.
     _loginSaved = await saved;
     if (!_loginSaved) _logger.error(LogCategory.app, 'login not saved to the keychain', {'loggedIn': loggedIn});
-    if (loggedIn && epoch == _epoch) _logins.value += 1;
+    if (epoch == _epoch) {
+      _sessions.value = _epoch;
+      if (loggedIn) _logins.value += 1;
+    }
     return loggedIn;
+  }
+
+  /// Validates a remembered session without replacing the working session first.
+  Future<void> switchAccount(int mid) => _transition(() async {
+    if (activeAccountMid == mid && _account is LoggedIn) return;
+    if (_demo) {
+      final target = _demoAccounts[mid];
+      if (target == null) throw const AccountSwitchFailure('账号不可用');
+      await _prepareAccountChange();
+      _beginSession();
+      _selectedMid = mid;
+      _mid = mid;
+      _face = target.face;
+      _accountNav = null;
+      _fake = true;
+      _account = LoggedIn(name: target.name, vip: target.vip);
+      _finishSession(loggedIn: true);
+      return;
+    }
+    await _readyForTransition();
+    final target = _vault.accounts[mid];
+    if (target == null) throw const AccountSwitchFailure('账号不可用');
+    final candidate = _candidate(target.cookies);
+    final NavInfo nav;
+    try {
+      await candidate.ensureRiskCookies();
+      nav = await candidate.nav();
+    } catch (_) {
+      throw const AccountSwitchFailure('网络错误，账号未切换，请重试');
+    }
+    if (!nav.isLogin || nav.mid != mid) {
+      await _writeVault((vault) => AccountVault(activeMid: vault.activeMid,
+          accounts: {...vault.accounts, mid: target.copyWith(expired: true)}));
+      notifyListeners();
+      throw const AccountSwitchFailure('登录已失效，请重新登录', requiresLogin: true);
+    }
+    await _commitAccount(_accountFromNav(nav, candidate.cookies.all), nav);
+  });
+
+  Future<void> removeAccount(int mid) async {
+    if (mid == activeAccountMid) return logout();
+    await _transition(() async {
+      if (_demo) {
+        _demoAccounts.remove(mid);
+        notifyListeners();
+        return;
+      }
+      await _readyForTransition();
+      final target = _vault.accounts[mid];
+      if (target == null) return;
+      if (_serverLogout) await _endServerSession(_candidate(target.cookies));
+      if (!await _writeVault((vault) => AccountVault(activeMid: vault.activeMid,
+          accounts: Map.of(vault.accounts)..remove(mid)))) {
+        throw const AccountSwitchFailure('账号未能移除，请重试');
+      }
+      notifyListeners();
+    });
+  }
+
+  BiliClient _candidate(Map<String, String> cookies) =>
+      BiliClient(transport: _transport, cookies: CookieJar(cookies), logger: _logger);
+
+  SavedAccount _accountFromNav(NavInfo nav, Map<String, String> cookies) {
+    final old = _vault.accounts[nav.mid];
+    final token = old?.appToken;
+    return SavedAccount(mid: nav.mid!, name: nav.uname ?? '', face: nav.face, vip: nav.isVip,
+        cookies: cookies, appToken: token != null && !token.expired(DateTime.now()) ? token : null,
+        authDeclined: old?.authDeclined ?? false);
+  }
+
+  Future<T> _transition<T>(Future<T> Function() run) async {
+    if (_transitioning) throw const AccountSwitchFailure('正在切换账号，请稍后');
+    _transitioning = true;
+    notifyListeners();
+    try {
+      return await run();
+    } finally {
+      if (_preparedChange) {
+        _preparedChange = false;
+        accountChangeAborted?.call();
+      }
+      _transitioning = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _readyForTransition() async {
+    if (_vaultUnreadable) {
+      final loaded = await _vaultStore?.load();
+      if (loaded is! StoredAccountVault) throw const AccountSwitchFailure('无法读取已保存账号，请重试');
+      _vaultUnreadable = false;
+      _vault = loaded.vault;
+      _vaultPresent = true;
+      _selectedMid = _vault.activeMid;
+    }
+    await _migration;
+    if (!_vaultPresent && cookies.value('SESSDATA') != null) {
+      final nav = _accountNav?.nav;
+      if (nav == null || !nav.isLogin || nav.mid == null) {
+        throw const AccountSwitchFailure('请先确认当前账号后重试');
+      }
+      await _migrateLegacy(nav, _epoch);
+      if (!_vaultPresent) throw const AccountSwitchFailure('当前账号未能保存，请重试');
+    }
+    await _vaultWriting;
+  }
+
+  Future<bool> _commitAccount(SavedAccount account, NavInfo nav, {bool Function()? isCurrent}) async {
+    if (isCurrent?.call() == false) return false;
+    await _prepareAccountChange();
+    if (isCurrent?.call() == false) return false;
+    final previous = _vault;
+    // A single writer orders the outgoing session's latest cookie/token updates before this selection.
+    final ok = await _writeVault((vault) {
+      if (isCurrent?.call() == false) return null;
+      return AccountVault(activeMid: account.mid, accounts: {...vault.accounts, account.mid: account});
+    });
+    _loginSaved = ok;
+    if (!ok) throw const AccountSwitchFailure('账号未能保存，请重试');
+    if (isCurrent?.call() == false) {
+      await _writeVault((_) => previous);
+      return false;
+    }
+    await _clearLegacy();
+    if (isCurrent?.call() == false) {
+      await _writeVault((_) => previous);
+      return false;
+    }
+    _beginSession();
+    _publishing = true;
+    cookies.replaceAll(account.cookies);
+    _publishing = false;
+    client.appToken = account.appToken;
+    _selectedMid = account.mid;
+    _mid = account.mid;
+    _face = account.face;
+    _account = LoggedIn(name: account.name, vip: account.vip);
+    _accountNav = (nav: nav, at: DateTime.now());
+    _accountCheckFailed = false;
+    _logoutIncomplete = false;
+    _fake = false;
+    _finishSession(loggedIn: true);
+    return true;
+  }
+
+  void _beginSession() {
+    _epoch++;
+    _checking = null;
+    client.invalidateSession();
+  }
+
+  Future<void> _prepareAccountChange() async {
+    _preparedChange = true;
+    await beforeAccountChange?.call();
+  }
+
+  void _finishSession({bool loggedIn = false}) {
+    _preparedChange = false;
+    _transitioning = false;
+    notifyListeners();
+    _sessions.value = _epoch;
+    if (loggedIn) _logins.value++;
+  }
+
+  void _cookiesChanged(Map<String, String> snapshot) {
+    if (_publishing || _vaultUnreadable) return;
+    if (!_vaultPresent) {
+      unawaited(_persistence.save(snapshot));
+      return;
+    }
+    final owner = _selectedMid;
+    final generation = _epoch;
+    unawaited(_writeVault((vault) {
+      final account = vault.accounts[owner];
+      if (generation != _epoch || account == null) return null;
+      return AccountVault(activeMid: vault.activeMid,
+          accounts: {...vault.accounts, owner!: account.copyWith(cookies: snapshot)});
+    }));
+  }
+
+  Future<bool> _writeVault(AccountVault? Function(AccountVault vault) change) {
+    final store = _vaultStore;
+    if (store == null || _vaultUnreadable) return Future.value(false);
+    final result = _vaultWriting.then((_) async {
+      final next = change(_vault);
+      if (next == null) return true;
+      try {
+        if (!await store.save(next)) return false;
+        _vault = next;
+        _vaultPresent = true;
+        return true;
+      } catch (_) {
+        _logger.warn(LogCategory.app, 'account vault not saved');
+        return false;
+      }
+    });
+    _vaultWriting = result.then<void>((_) {});
+    return result;
+  }
+
+  Future<void> _migrateLegacy(NavInfo nav, int epoch) async {
+    if (_vaultStore == null || _vaultPresent || _vaultUnreadable || (nav.mid ?? 0) <= 0) return;
+    if (_migration case final running?) return running;
+    final work = () async {
+      AppToken? token = client.appToken;
+      try {
+        final stored = await _keychain.loadAppToken();
+        if (token == null && stored != null) token = AppToken.fromJson(jsonDecode(stored));
+      } catch (_) {
+        // The cookie session is usable; retain the legacy token until storage can be read safely.
+        return;
+      }
+      if (epoch != _epoch) return;
+      final account = SavedAccount(mid: nav.mid!, name: nav.uname ?? '', face: nav.face, vip: nav.isVip,
+          cookies: cookies.all, appToken: token?.mid == nav.mid ? token : null);
+      await _persistence.flush();
+      if (epoch != _epoch) return;
+      if (!await _writeVault((_) => AccountVault(activeMid: account.mid, accounts: {account.mid: account}))) return;
+      final readback = await _vaultStore.load();
+      if (readback is! StoredAccountVault || readback.vault.activeMid != account.mid ||
+          readback.vault.accounts[account.mid]?.cookies['SESSDATA'] != account.cookies['SESSDATA']) {
+        _vaultUnreadable = true;
+        return;
+      }
+      _selectedMid = account.mid;
+      await _clearLegacy();
+    }();
+    _migration = work;
+    try {
+      await work;
+    } finally {
+      _migration = null;
+    }
+  }
+
+  Future<void> _clearLegacy() async {
+    if (!_vaultPresent) return;
+    await _persistence.flush();
+    await _logoutStep('legacy cookies', _keychain.deleteCookies);
+    await _logoutStep('legacy token', _keychain.deleteAppToken);
+  }
+
+  Future<void> _endServerSession(BiliClient client) async {
+    try {
+      await client.webLogout();
+    } catch (error) {
+      if (error is! BiliAPIError || error.code != -101) throw const ServerLogoutFailed();
+    }
   }
 
   /// 退出登录 (BiliNative `AppEnvironment.logout`): empties the jar, deletes the keychain cookies and app token, and
@@ -236,8 +616,37 @@ class AppEnvironment extends ChangeNotifier {
   /// logged out, which is true of this run (the jar sends no login), but the keychain may hold the login for the
   /// next launch, so the caller hears of it instead of a logout that only seemed to work.
   Future<void> logout() async {
-    _epoch += 1;
-    _checking = null;
+    if (_vaultStore != null || _demo) {
+      return _transition(() async {
+        final demo = _demo;
+        await _prepareAccountChange();
+        if (_demo) {
+          _demoAccounts.remove(activeAccountMid);
+        } else {
+          await _readyForTransition();
+          if (_serverLogout && cookies.value('SESSDATA') != null) await _endServerSession(client);
+          final owner = _selectedMid;
+          if (!await _writeVault((vault) => AccountVault(accounts: Map.of(vault.accounts)..remove(owner)))) {
+            _logoutIncomplete = true;
+            throw const LogoutIncomplete();
+          }
+        }
+        _beginSession();
+        _publishing = true;
+        cookies.removeAll();
+        _publishing = false;
+        client.appToken = null;
+        _selectedMid = null;
+        _fake = false;
+        _logoutIncomplete = false;
+        _signedOut();
+        if (!demo) {
+          await _clearLegacy();
+          await _logoutStep('web data', webCookies.clearAll);
+        }
+      });
+    }
+    _beginSession();
     _logoutIncomplete = false;
     if (_fake) {
       _fake = false;
@@ -302,7 +711,7 @@ class AppEnvironment extends ChangeNotifier {
     _face = null;
     _accountNav = null;
     _logger.info(LogCategory.app, 'logout');
-    notifyListeners();
+    _finishSession();
   }
 
   Future<bool> _checkAccount() async {
@@ -320,6 +729,26 @@ class AppEnvironment extends ChangeNotifier {
         _accountNav = (nav: nav, at: DateTime.now());
         final mid = nav.mid;
         _logger.info(LogCategory.app, 'account', {'user': mid == null ? '?' : Redactor.mid(mid), 'vip': nav.isVip});
+        await _migrateLegacy(nav, epoch);
+        if (epoch != _epoch) return false;
+        if (_vaultPresent && _selectedMid != null && nav.mid != _selectedMid) {
+          _account = const LoginExpired();
+          _mid = null;
+          _face = null;
+          _accountNav = null;
+        } else if (_vaultPresent && nav.mid != null) {
+          final account = _vault.accounts[nav.mid];
+          if (account != null) {
+            final snapshot = cookies.all;
+            unawaited(_writeVault((vault) {
+              final current = vault.accounts[nav.mid];
+              if (current == null || epoch != _epoch) return null;
+              return AccountVault(activeMid: vault.activeMid,
+                  accounts: {...vault.accounts, nav.mid!: current.copyWith(name: nav.uname, face: nav.face,
+                      vip: nav.isVip, cookies: snapshot, expired: false)});
+            }));
+          }
+        }
       } else if (_keychainUnread) {
         _account = const AccountUnknown();
         _accountCheckFailed = true;
@@ -351,7 +780,7 @@ class AppEnvironment extends ChangeNotifier {
 
   /// The keychain couldn't be read and the jar has no session: the login may well be stored, so this isn't 未登录 (that
   /// would invite a second login). The account stays unknown, which coming back to the app or to home asks again.
-  bool get _keychainUnread => _persistence.blocked && cookies.value('SESSDATA') == null;
+  bool get _keychainUnread => _vaultUnreadable || (_persistence.blocked && cookies.value('SESSDATA') == null);
 
   /// After a failed read the stored cookies may still be there; once a read works they join the jar.
   Future<void> _retryBlockedKeychainLoad(int epoch) async {
@@ -372,8 +801,9 @@ class AppEnvironment extends ChangeNotifier {
 String _encodeAppToken(AppToken token) => jsonEncode(token.toJson());
 
 final class AccountSwitchFailure implements Exception {
-  const AccountSwitchFailure(this.message);
+  const AccountSwitchFailure(this.message, {this.requiresLogin = false});
   final String message;
+  final bool requiresLogin;
   @override
   String toString() => 'AccountSwitchFailure';
 }

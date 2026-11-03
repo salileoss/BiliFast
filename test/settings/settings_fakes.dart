@@ -39,6 +39,22 @@ class FakeEnvironment extends ChangeNotifier implements AppEnvironment {
   ValueListenable<int> get logins => _logins;
   final _logins = ValueNotifier<int>(0);
 
+  @override
+  ValueListenable<int> get sessions => _sessions;
+  final _sessions = ValueNotifier<int>(0);
+  @override
+  int get sessionGeneration => _sessions.value;
+  @override
+  bool get hasAccountVault => false;
+  @override
+  bool get accountTransitioning => false;
+  @override
+  int? get activeAccountMid => null;
+  @override
+  Future<void> Function()? beforeAccountChange;
+  @override
+  VoidCallback? accountChangeAborted;
+
   set account(Account value) {
     _account = value;
     notifyListeners();

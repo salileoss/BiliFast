@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app/app_scope.dart';
+import '../app/app_environment.dart';
 import '../dynamic/follow_tab/face_sheet.dart';
 import '../dynamic/follow_tab/follow_tab_page.dart';
 import '../me/me_page.dart';
@@ -35,9 +36,34 @@ class _MainShellState extends State<MainShell> {
   final _followReloads = _Reloads();
   final _faceSheet = FaceSheetController();
   HomeTab _tab = HomeTab.home;
+  AppEnvironment? _environment;
+  int _session = 0;
+  bool _initialLink = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final environment = AppScope.of(context).environment;
+    if (identical(_environment, environment)) return;
+    _environment?.sessions.removeListener(_sessionChanged);
+    _environment = environment;
+    _session = environment.sessionGeneration;
+    environment.sessions.addListener(_sessionChanged);
+  }
+
+  void _sessionChanged() {
+    if (!mounted) return;
+    _faceSheet.close();
+    setState(() {
+      _session = _environment!.sessionGeneration;
+      _tab = HomeTab.mine;
+      _initialLink = false;
+    });
+  }
 
   @override
   void dispose() {
+    _environment?.sessions.removeListener(_sessionChanged);
     _reloads.dispose();
     _followReloads.dispose();
     _faceSheet.dispose();
@@ -94,6 +120,7 @@ class _MainShellState extends State<MainShell> {
             child: MediaQuery(
               data: pages,
               child: IndexedStack(
+                key: ValueKey(_session),
                 index: _tab == HomeTab.home ? 0 : (follow ? 1 : 2),
                 sizing: StackFit.expand,
                 children: [
@@ -101,7 +128,7 @@ class _MainShellState extends State<MainShell> {
                     shown: _tab == HomeTab.home,
                     child: HomePage(
                       developerPage: widget.developerPage,
-                      initialLink: widget.initialLink,
+                      initialLink: _initialLink ? widget.initialLink : null,
                       reloads: _reloads,
                       skin: skin,
                     ),

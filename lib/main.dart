@@ -145,6 +145,8 @@ Future<void> main(List<String> args) async {
           : DiskOfflineLibrary(
               folder: offlineFolder,
               client: () => environment.client,
+              accountMid: () => environment.activeAccountMid,
+              accountGeneration: () => environment.sessionGeneration,
               engine: engine.lease,
               host: Platform.isIOS ? IosOfflineHost() : const NoOfflineHost(),
               codecMemory: codecMemory,

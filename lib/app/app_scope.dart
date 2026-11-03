@@ -75,6 +75,33 @@ class AppPlayback with WidgetsBindingObserver {
   late final StreamSubscription<bool> _network;
 
   final Set<PlaybackController> _pages = {};
+  final Set<PlaybackController> _accountPaused = {};
+
+  Future<void> pauseForAccountChange() async {
+    _accountPaused.clear();
+    for (final controller in List.of(_pages)) {
+      if (controller.clock.running || controller.loadWillPlay) _accountPaused.add(controller);
+      controller.holdAutoplay(true);
+      await controller.player.pause();
+      await controller.stopPictureInPicture();
+    }
+  }
+
+  void resumeAfterAccountChangeFailed() {
+    for (final controller in List.of(_pages)) {
+      final resume = _accountPaused.contains(controller);
+      controller.holdAutoplay(false, play: resume);
+      if (resume) unawaited(controller.player.play());
+    }
+    _accountPaused.clear();
+  }
+
+  void closeAccountSession() {
+    _accountPaused.clear();
+    for (final controller in List.of(_pages)) {
+      controller.close();
+    }
+  }
 
   /// A controller of its own for one video page (BiliNative's one AVPlayer per page), on the shared engine.
   Future<PlaybackController> create() async {
@@ -204,6 +231,10 @@ class AppServices {
     _account = environment.account;
     environment.addListener(_accountChanged);
     environment.logins.addListener(_loggedIn);
+    environment.sessions.addListener(_sessionChanged);
+    environment.beforeAccountChange = _prepareAccountChange;
+    environment.accountChangeAborted = playback.resumeAfterAccountChangeFailed;
+    _knownAccounts = environment.hasAccountVault ? environment.savedAccounts.map((account) => account.mid).toSet() : {};
     _authorized = this.appAuth.authorized;
     this.appAuth.addListener(_authChanged);
     _historyFlusher = HistoryOutboxFlusher(outbox: this.historyOutbox, environment: environment, network: network);
@@ -221,6 +252,25 @@ class AppServices {
   }
 
   late Account _account;
+  late Set<int> _knownAccounts;
+
+  Future<void> _prepareAccountChange() async {
+    await playback.pauseForAccountChange();
+    await offline.accountWillChange();
+  }
+
+  void _sessionChanged() {
+    playback.closeAccountSession();
+    pipKeeper.release();
+    follows.clear();
+    _dynamicLikes?.clear();
+    blockRules.resetAccount();
+    if (meProfile.kept?.mid != environment.activeAccountMid) meProfile.delete();
+    // LoginPage closes itself in its completion callback; navigation waits until that callback has run.
+    Timer.run(() {
+      navigator.currentState?.popUntil((route) => route.isFirst);
+    });
+  }
 
   /// Every login fetches the account's 屏蔽词 at once (Swift's didLogin); the launch's check is left to the first
   /// page, which refreshes them itself. A login can replace an account without a logout between (the gate after a
@@ -233,6 +283,13 @@ class AppServices {
 
   /// A logout, or a login Bilibili no longer accepts, drops the old account's 屏蔽词.
   void _accountChanged() {
+    if (environment.hasAccountVault) {
+      final known = environment.savedAccounts.map((account) => account.mid).toSet();
+      for (final removed in _knownAccounts.difference(known)) {
+        historyOutbox.removeOwner(removed);
+      }
+      _knownAccounts = known;
+    }
     final now = environment.account;
     // didLogin passes through unknown on its way to logged in.
     if (now is AccountUnknown) return;
@@ -250,6 +307,9 @@ class AppServices {
     appAuth.dispose();
     environment.removeListener(_accountChanged);
     environment.logins.removeListener(_loggedIn);
+    environment.sessions.removeListener(_sessionChanged);
+    environment.beforeAccountChange = null;
+    environment.accountChangeAborted = null;
     _historyFlusher.dispose();
   }
 

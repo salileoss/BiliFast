@@ -174,6 +174,12 @@ class BlockRuleStore extends ChangeNotifier {
     }
   }
 
+  /// Invalidates old reads before the next account fetches its own synced rules.
+  void resetAccount() {
+    _inflight = null;
+    _clear();
+  }
+
   void _clear() {
     _generation++;
     _lastSuccess = null;
