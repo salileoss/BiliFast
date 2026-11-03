@@ -36,6 +36,15 @@ class _Environment extends ChangeNotifier implements AppEnvironment {
   final _Logins logins = _Logins();
 
   @override
+  final ValueNotifier<int> sessions = ValueNotifier(0);
+  @override
+  int get sessionGeneration => sessions.value;
+  @override
+  bool hasAccountVault = false;
+  @override
+  int? get activeAccountMid => mid;
+
+  @override
   int? mid = 1;
 
   /// How many listeners were added, so a model can be shown to listen to nothing before it starts.
@@ -86,6 +95,19 @@ class _FixedSkinModel extends SkinModel {
 class _TransportError implements Exception {
   @override
   String toString() => 'HttpException: Connection closed, uri = https://i0.hdslb.com/bfs/garb/secret.zip';
+}
+
+class _QueuedSkinApi extends FakeSkinApi {
+  bool held = false;
+  final answers = <Completer<SkinWorn>>[];
+
+  @override
+  Future<SkinWorn> equipped() {
+    if (!held) return super.equipped();
+    final answer = Completer<SkinWorn>();
+    answers.add(answer);
+    return answer.future;
+  }
 }
 
 const loggedIn = LoggedIn(name: 'test', vip: false);
@@ -213,6 +235,68 @@ void main() {
   }
 
   bool versionExists(int id, int ver) => versionFolders(id, ver).isNotEmpty;
+
+  test('vault switches clear skin and loading immediately and retain account-specific caches', () async {
+    final api = apiWith(1)
+      ..loading = DemoSkin.loading
+      ..loadingPicture = DemoSkin.loadingGif();
+    final (:model, :environment) = make(api);
+    environment.hasAccountVault = true;
+    await settle(model);
+    await model.settle();
+    expect(model.value, isNotNull);
+    expect(model.loading.value, isNotNull);
+    expect(File('${folder.path}/current-1.json').existsSync(), isTrue);
+    expect(File('${folder.path}/loading/current-1.json').existsSync(), isTrue);
+
+    api.failures['equipped'] = BiliError.noAppToken;
+    environment.mid = 2;
+    environment.sessions.value++;
+    expect(model.value, isNull);
+    expect(model.loading.value, isNull);
+    await model.refresh();
+    expect(model.value, isNull);
+    expect(model.loading.value, isNull);
+    expect(versionExists(7, 1), isTrue, reason: 'other saved accounts still reference installed packages');
+
+    environment.mid = 1;
+    environment.sessions.value++;
+    await model.refresh();
+    await model.settle();
+    expect(model.value?.equip.ver, 1);
+    expect(model.loading.value, isNotNull, reason: 'only A restores its own loading animation');
+  });
+
+  test('late skin results cannot cross A to B to A even with the same uid restored', () async {
+    final first = packageFor(1);
+    final api = _QueuedSkinApi()..equip = equipFor(first)..package = first;
+    final (:model, :environment) = make(api);
+    environment.hasAccountVault = true;
+    await settle(model);
+    api.held = true;
+    final old = model.refresh();
+    await until(() => api.answers.length == 1);
+    environment.mid = 2;
+    environment.sessions.value++;
+    expect(model.value, isNull);
+    await until(() => api.answers.length == 2);
+    environment.mid = 1;
+    environment.sessions.value++;
+    await until(() => api.answers.length == 3);
+    final newest = packageFor(3);
+    api.package = newest;
+    api.answers[2].complete(SkinWorn(equip: equipFor(newest, ver: 3)));
+    await until(() => model.value?.equip.ver == 3);
+    api.answers[1].complete(const SkinWorn());
+    api.answers[0].complete(SkinWorn(equip: equipFor(packageFor(2), ver: 2)));
+    await old;
+    await model.settle();
+    expect(model.value?.equip.ver, 3);
+    expect(versionExists(7, 1), isTrue);
+    expect(versionExists(7, 2), isFalse, reason: 'the old result starts no install');
+    final current = jsonDecode(File('${folder.path}/current-1.json').readAsStringSync()) as Map<String, Object?>;
+    expect((current['equip']! as Map<String, Object?>)['ver'], 3);
+  });
 
   test('logged in, it downloads, checks and unpacks the package and shows it', () async {
     final api = apiWith(1);

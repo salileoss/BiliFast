@@ -28,6 +28,16 @@ class _Environment extends ChangeNotifier implements AppEnvironment {
   final ValueNotifier<int> logins = ValueNotifier(0);
 
   @override
+  final ValueNotifier<int> sessions = ValueNotifier(0);
+  @override
+  int get sessionGeneration => sessions.value;
+  @override
+  bool hasAccountVault = false;
+  @override
+  int? get activeAccountMid => savedMid ?? mid;
+  int? savedMid;
+
+  @override
   bool accountCheckFailed = false;
 
   @override
@@ -56,6 +66,17 @@ class _Environment extends ChangeNotifier implements AppEnvironment {
 class _TransportError implements Exception {
   @override
   String toString() => 'ClientException: Connection reset, uri=https://api.bilibili.com/x/web-interface/nav';
+}
+
+class _QueuedMeApi extends FakeMeApi {
+  _QueuedMeApi() : super(navInfo: const NavInfo(isLogin: true), counts: const NavStat(following: 0, follower: 0, dynamicCount: 0));
+  final answers = <Completer<NavInfo>>[];
+  @override
+  Future<NavInfo> nav() {
+    final answer = Completer<NavInfo>();
+    answers.add(answer);
+    return answer.future;
+  }
 }
 
 void main() {
@@ -90,6 +111,30 @@ void main() {
     expect(model.view, isA<MeShown>());
     return model.view as MeShown;
   }
+
+  test('held profile replies cannot cross A to B to A session boundaries', () async {
+    final queued = _QueuedMeApi();
+    api = queued;
+    final model = make(mid: 1);
+    environment.hasAccountVault = true;
+    final old = model.refresh();
+    await idle();
+    environment.mid = 2;
+    environment.sessions.value++;
+    await idle();
+    environment.mid = 1;
+    environment.sessions.value++;
+    await idle();
+    expect(queued.answers, hasLength(3));
+    queued.answers[2].complete(const NavInfo(isLogin: true, mid: 1, uname: 'fresh A'));
+    await idle();
+    expect(shownView(model).profile.name, 'fresh A');
+    queued.answers[1].complete(const NavInfo(isLogin: true, mid: 2, uname: 'B'));
+    queued.answers[0].complete(const NavInfo(isLogin: true, mid: 1, uname: 'stale A'));
+    await old;
+    await idle();
+    expect(shownView(model).profile.name, 'fresh A');
+  });
 
   test('logged in, it waits for the tab, then asks nav and stat side by side and shows the account', () async {
     final model = make();
@@ -462,6 +507,16 @@ void main() {
     const kept = MeShown(keptProfile, MeCounts(dynamics: 1, following: 2, followers: 3));
 
     MeProfileStore keeping({int mid = 1}) => MeProfileStore.memory(logger: logger)..save(mid, kept);
+
+    test('an offline vault restore uses the saved active uid before nav answers', () {
+      environment = _Environment(const AccountUnknown())
+        ..hasAccountVault = true
+        ..savedMid = 1;
+      final model = MeModel(api: api, environment: environment, store: keeping(), logger: logger);
+      addTearDown(model.dispose);
+      expect(environment.mid, isNull);
+      expect(model.view, kept);
+    });
 
     test(
       'at launch, before the check answers, the login cookie\'s account shows at once; the load replaces it',

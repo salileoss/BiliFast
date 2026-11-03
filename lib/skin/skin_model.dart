@@ -27,6 +27,7 @@ import 'skin_status_bar.dart';
 /// never replaced in place. Logging out shows the stock look and the next launch starts stock, but the files stay for
 /// the next login. Each version's headers are measured behind the status bar on its first showing and the result kept
 /// in its `.status.json`, so later launches have it with the cache.
+/// Saved accounts use `current-<mid>.json`; their installed package versions stay shared.
 ///
 /// The 加载动画 worn with it (or alone) is [loading], kept by [SkinLoadingKeeper] in the folder's `loading`, asked,
 /// shown and hidden at the same moments.
@@ -83,6 +84,7 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
 
   /// Bumped by every login and logout, so an answer for the account before never shows.
   int _generation = 0;
+  int _sessionGeneration = 0;
   bool _toldNoToken = false;
   String? _logged;
   bool _disposed = false;
@@ -90,7 +92,8 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
   @override
   Skin? get value => _value;
 
-  late final SkinLoadingKeeper _loading = SkinLoadingKeeper(api: _api, root: _root, logger: _logger);
+  late final SkinLoadingKeeper _loading = SkinLoadingKeeper(api: _api, root: _root, logger: _logger,
+      accountMid: _environment.hasAccountVault ? () => _environment.activeAccountMid : null);
   Future<void> _loadingRead = Future.value();
 
   /// The account whose 加载动画 is shown.
@@ -113,13 +116,16 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
     _account = _environment.account;
     _environment.addListener(_accountChanged);
     _environment.logins.addListener(_loginCompleted);
+    _sessionGeneration = _environment.sessionGeneration;
+    _environment.sessions.addListener(_sessionChanged);
     _loading.shown.addListener(_loadingShown);
     // Not awaited: it shows only in a refresh, never in the first frame.
     _loadingRead = _readLoadingCache(_generation);
+    final generation = _generation;
     final read = _readCache();
     _cacheRead = read;
     final cached = await read;
-    if (cached != null && _signedIn && _value == null) _showDressed(cached, from: 'cache');
+    if (cached != null && _current(generation) && _signedIn && _value == null) _showDressed(cached, from: 'cache');
     if (_environment.account is LoggedIn) unawaited(refresh());
   }
 
@@ -177,6 +183,7 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
   }
 
   Future<void> _wear(SkinWorn worn, int generation) async {
+    final owner = _environment.activeAccountMid;
     if (worn.equipError case final reason?) {
       _logger.warn(LogCategory.ui, 'skin answer not understood, keeping what is shown', {'reason': reason});
       return;
@@ -186,7 +193,8 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
       _logger.info(LogCategory.ui, 'skin stays stock', {'reason': 'none equipped'});
       _show(null);
       await _exclusive(() async {
-        await _writeCurrent(null);
+        if (!_current(generation)) return;
+        await _writeCurrent(null, ownerMid: owner);
         await _deleteVersions(keep: null);
       });
       return;
@@ -211,7 +219,8 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
       final (skin, from) = installed;
       _showDressed(skin, from: from);
       await _exclusive(() async {
-        await _writeCurrent(next);
+        if (!_current(generation)) return;
+        await _writeCurrent(next, ownerMid: owner);
         await _deleteVersions(keep: next);
       });
     } on Exception catch (error) {
@@ -345,8 +354,10 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
   Future<Skin?> _readCache() async {
     final folder = _folder;
     if (folder == null) return null;
+    final owner = _environment.activeAccountMid;
+    if (_environment.hasAccountVault && owner == null) return null;
     try {
-      final file = File('$folder/$_currentName');
+      final file = File('$folder/${_currentFile(owner)}');
       if (!await file.exists()) return null;
       final json = jsonDecode(await file.readAsString());
       if (json is! Map<String, Object?>) throw const FormatException('not an object');
@@ -371,14 +382,19 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
     }
   }
 
-  Future<void> _writeCurrent(SkinEquip? equip) async {
+  String _currentFile(int? owner) => _environment.hasAccountVault ? 'current-$owner.json' : _currentName;
+
+  Future<void> _writeCurrent(SkinEquip? equip, {int? ownerMid}) async {
     final folder = _folder;
     if (folder == null) return;
+    final owner = ownerMid ?? _environment.activeAccountMid;
+    if (_environment.hasAccountVault && owner == null) return;
+    final current = _currentFile(owner);
     try {
       await Directory(folder).create(recursive: true);
-      final temporary = File('$folder/$_currentName.tmp');
+      final temporary = File('$folder/$current.tmp');
       await temporary.writeAsString(jsonEncode({'equip': equip == null ? null : _cacheJson(equip)}), flush: true);
-      await _retried(() => temporary.rename('$folder/$_currentName'));
+      await _retried(() => temporary.rename('$folder/$current'));
     } on Exception catch (error) {
       _logger.warn(LogCategory.ui, 'skin choice not saved', {'error': _describe(error)});
     }
@@ -386,6 +402,8 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
 
   /// Every unpacked version but [keep]'s, and any unpack left half done.
   Future<void> _deleteVersions({required SkinEquip? keep}) async {
+    // A different saved account may still reference any installed version.
+    if (_environment.hasAccountVault) return;
     var failed = 0;
     try {
       final root = Directory(await _root());
@@ -452,6 +470,7 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
   }
 
   void _accountChanged() {
+    if (_environment.hasAccountVault && _sessionGeneration != _environment.sessionGeneration) return;
     final now = _environment.account;
     if (now is AccountUnknown) {
       // didLogin passes through here on its way to logged in; the login count after it then knows whether the turn
@@ -475,6 +494,7 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
   /// A login over an account that already read logged in leaves the account where it was, and may be another one.
   /// Another account's skin goes at once: its refresh can't replace it until that account's own token is confirmed.
   void _loginCompleted() {
+    if (_environment.hasAccountVault) return;
     if (_loginRefreshed) {
       _loginRefreshed = false;
     } else if (_account is LoggedIn) {
@@ -491,6 +511,23 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
     }
   }
 
+  void _sessionChanged() {
+    if (!_environment.hasAccountVault) return;
+    _sessionGeneration = _environment.sessionGeneration;
+    final generation = ++_generation;
+    _refreshing = null;
+    _account = _environment.account;
+    _toldNoToken = false;
+    _appearanceGeneration++;
+    _show(null);
+    _loading.show(null);
+    _loadingRead = _readLoadingCache(generation);
+    _cacheRead = _readCache().then((cached) {
+      if (cached != null && _current(generation) && _signedIn) _showDressed(cached, from: 'cache');
+    });
+    if (_signedIn) unawaited(refresh());
+  }
+
   void _restart() {
     _generation++;
     _refreshing = null;
@@ -504,6 +541,10 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
     if (was is LoggedOut || was is LoginExpired) return;
     _logger.info(LogCategory.ui, 'skin stays stock', {'reason': 'logged out', 'shown': _value != null});
     _show(null);
+    if (_environment.hasAccountVault) {
+      _loading.show(null);
+      return;
+    }
     unawaited(_exclusive(() => _writeCurrent(null)));
     _loading.hide();
   }
@@ -657,6 +698,7 @@ class SkinModel extends ChangeNotifier implements ValueListenable<Skin?> {
       appearance?.removeListener(_appearanceChanged);
       _environment.removeListener(_accountChanged);
       _environment.logins.removeListener(_loginCompleted);
+      _environment.sessions.removeListener(_sessionChanged);
       _loading.shown.removeListener(_loadingShown);
     }
     _loading.dispose();

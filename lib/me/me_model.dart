@@ -167,6 +167,8 @@ class MeModel extends ChangeNotifier {
     }
     environment.addListener(_accountChanged);
     environment.logins.addListener(_loginCompleted);
+    _sessionGeneration = environment.sessionGeneration;
+    environment.sessions.addListener(_sessionChanged);
   }
 
   /// How long after launch the hidden page loads ([preload]): 推荐's first load and playback go first.
@@ -190,6 +192,7 @@ class MeModel extends ChangeNotifier {
 
   /// Bumped by every login and logout.
   int _generation = 0;
+  int _sessionGeneration = 0;
 
   /// The account's turn to logged in has loaded already, so the login count that follows asks nothing more.
   bool _loginLoaded = false;
@@ -294,7 +297,8 @@ class MeModel extends ChangeNotifier {
   }
 
   /// The account's uid: the check's once it has answered, the login cookie's before that.
-  int? get _accountMid => _environment.mid ?? int.tryParse(_environment.cookies.value('DedeUserID') ?? '');
+  int? get _accountMid =>
+      _environment.activeAccountMid ?? _environment.mid ?? int.tryParse(_environment.cookies.value('DedeUserID') ?? '');
 
   /// The kept account, when it is this login's; another account's is deleted.
   MeShown? _keptView() {
@@ -336,6 +340,7 @@ class MeModel extends ChangeNotifier {
   }
 
   void _accountChanged() {
+    if (_environment.hasAccountVault && _sessionGeneration != _environment.sessionGeneration) return;
     final now = _environment.account;
     if (now is AccountUnknown) {
       // didLogin passes through here on its way to logged in; the login count after it then knows whether the
@@ -360,11 +365,28 @@ class MeModel extends ChangeNotifier {
 
   /// A login over an account that already read logged in leaves the account where it was, and may be another one.
   void _loginCompleted() {
+    if (_environment.hasAccountVault) return;
     if (_loginLoaded) {
       _loginLoaded = false;
     } else if (_account is LoggedIn) {
       _restart();
     }
+  }
+
+  void _sessionChanged() {
+    if (!_environment.hasAccountVault) return;
+    _sessionGeneration = _environment.sessionGeneration;
+    _generation++;
+    _loading = null;
+    _lastLoad = null;
+    _loginLoaded = false;
+    _account = _environment.account;
+    if (!_signedIn) {
+      _show(const MeLoggedOut());
+      return;
+    }
+    _show(_keptView() ?? const MeLoading());
+    unawaited(_load());
   }
 
   /// The page may already be on screen when the login page closes, so a login loads at once.
@@ -401,6 +423,7 @@ class MeModel extends ChangeNotifier {
     _disposed = true;
     _environment.removeListener(_accountChanged);
     _environment.logins.removeListener(_loginCompleted);
+    _environment.sessions.removeListener(_sessionChanged);
     super.dispose();
   }
 }
