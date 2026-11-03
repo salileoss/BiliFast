@@ -34,6 +34,7 @@ extension BiliClientOfficial on BiliClient {
     bool account = true,
     Map<String, String> headers = const {},
   }) async {
+    final generation = _requestGeneration;
     final token = _officialToken(account);
     final envelope = await _getEnvelope(
       path,
@@ -44,6 +45,7 @@ extension BiliClientOfficial on BiliClient {
       extraHeaders: _officialHeaders(headers),
       decode: decode,
     );
+    _checkSession(generation);
     return _checked(_officialChecked(envelope, token));
   }
 
@@ -56,6 +58,7 @@ extension BiliClientOfficial on BiliClient {
     bool account = true,
     Map<String, String> headers = const {},
   }) async {
+    final generation = _requestGeneration;
     final token = _officialToken(account);
     final envelope = await _postEnvelope(
       path,
@@ -65,6 +68,7 @@ extension BiliClientOfficial on BiliClient {
       extraHeaders: _officialHeaders(headers),
       decode: decode,
     );
+    _checkSession(generation);
     return _checked(_officialChecked(envelope, token));
   }
 
@@ -76,6 +80,7 @@ extension BiliClientOfficial on BiliClient {
     bool account = true,
     Map<String, String> headers = const {},
   }) async {
+    final generation = _requestGeneration;
     final token = _officialToken(account);
     final envelope = await _postEnvelope(
       path,
@@ -85,6 +90,7 @@ extension BiliClientOfficial on BiliClient {
       extraHeaders: _officialHeaders(headers),
       decode: (_) => null,
     );
+    _checkSession(generation);
     final checked = _officialChecked(envelope, token);
     if (checked.code != 0) throw BiliError.api(code: checked.code, message: checked.message ?? '');
   }

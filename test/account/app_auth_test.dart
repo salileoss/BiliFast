@@ -384,6 +384,30 @@ void main() {
   });
 
   group('a token that stops working', () {
+    testWidgets('an A to B to A login cannot accept the first A renewal', (tester) async {
+      final h = await mount(tester, token: stored(days: 10), confirm: (_) async => false);
+      h.http.routes[renewPath] = (200, renewed);
+      final renewal = h.http.gates[renewPath] = Completer<void>();
+      await h.auth.start();
+      await h.environment.refreshAccount();
+      await tester.pumpAndSettle();
+      expect(h.http.to(renewPath), hasLength(1));
+
+      h.http.routes[Canned.navPath] = (200, Canned.navLoggedIn.replaceFirst('"mid":12345', '"mid":67890'));
+      expect(await h.environment.didLogin({'SESSDATA': 'session-b', 'bili_jct': 'csrf-b'}), isTrue);
+      await tester.pumpAndSettle();
+      h.http.routes[Canned.navPath] = (200, Canned.navLoggedIn);
+      expect(await h.environment.didLogin(Canned.cookies), isTrue);
+      final restored = AppToken.fromJson(jsonDecode(stored(days: 100)));
+      h.client.appToken = restored;
+      renewal.complete();
+      await tester.pumpAndSettle();
+
+      expect(h.client.appToken, restored);
+      expect(h.keychain.saves, isEmpty);
+      expectNoSecretsLogged();
+    });
+
     testWidgets('a rejected token is dropped and the confirm asked once a launch', (tester) async {
       final h = await mount(tester, token: stored());
       h.http.routes[likePath] = (200, '{"code":-101,"message":"账号未登录"}');
@@ -640,6 +664,28 @@ void main() {
       expect(h.client.appToken, isNull);
       expect(h.keychain.saves, isEmpty);
       await settle(tester);
+    });
+
+    testWidgets('a confirm crossing A to B to A does not authorize the restored A session', (tester) async {
+      final h = await mount(tester, confirm: (_) async => true);
+      await h.environment.refreshAccount();
+      final poll = h.http.gates[pollPath] = Completer<void>();
+      final answer = h.auth.request(host);
+      await tester.pumpAndSettle();
+      expect(h.http.to(pollPath), hasLength(1));
+
+      h.http.routes[Canned.navPath] = (200, Canned.navLoggedIn.replaceFirst('"mid":12345', '"mid":67890'));
+      expect(await h.environment.didLogin({'SESSDATA': 'session-b', 'bili_jct': 'csrf-b'}), isTrue);
+      h.http.routes[Canned.navPath] = (200, Canned.navLoggedIn);
+      expect(await h.environment.didLogin(Canned.cookies), isTrue);
+      poll.complete();
+      await settle(tester);
+
+      expect(await answer, isFalse);
+      expect(h.keychain.saves, isEmpty);
+      expect(h.client.appToken, isNull);
+      expect(find.text('授权成功'), findsNothing);
+      expectNoSecretsLogged();
     });
 
     testWidgets('logged out it answers false without asking', (tester) async {

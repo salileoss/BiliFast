@@ -57,11 +57,13 @@ extension BiliClientDanmaku on BiliClient {
 
   /// The segment's protobuf bytes, for a caller that decodes them off its own isolate.
   Future<Uint8List> danmakuSegmentData({required int cid, required int index}) async {
+    final generation = _requestGeneration;
     final query = {'type': '1', 'oid': '$cid', 'segment_index': '$index'};
     try {
       return await getData('/x/v2/dm/web/seg.so', query: query, signed: false);
     } on BiliHTTPError catch (error) {
       if (error.status != 403 && error.status != 412) rethrow;
+      _checkSession(generation);
       // Risk control sometimes refuses the plain endpoint while the signed twin still answers.
       return getData('/x/v2/dm/wbi/web/seg.so', query: query, signed: true);
     }

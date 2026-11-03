@@ -158,16 +158,26 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
   Future<void> start() async {
     if (_started) return;
     _started = true;
+    final generation = environment.sessionGeneration;
+    environment.sessions.addListener(_sessionChanged);
     _client.onAppTokenRejected = _rejected;
     _client.appBuvid = await _deviceId();
-    var token = await _stored();
+    if (environment.hasAccountVault) _declined = environment.appAuthDeclined;
+    var token = await _stored(generation);
     if (_disposed) return;
+    if (generation != environment.sessionGeneration) {
+      environment.addListener(_accountChanged);
+      environment.logins.addListener(_loggedIn);
+      _sessionChanged();
+      return;
+    }
     final now = _now();
     if (token != null && token.expired(now)) {
       _logger.info(LogCategory.app, 'app token dropped', {'reason': 'expired'});
-      await _deleteStored();
+      await _deleteStored(generation);
       token = null;
     }
+    if (_disposed || generation != environment.sessionGeneration) return;
     if (token != null) {
       _client.appToken = token;
       notifyListeners();
@@ -199,26 +209,32 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
   }
 
   Future<bool> _ask(BuildContext context) async {
-    if (environment.account is! LoggedIn) return false;
-    if (!await confirm(context)) {
+    final generation = environment.sessionGeneration;
+    if (environment.account is! LoggedIn || environment.accountTransitioning) return false;
+    final accepted = await confirm(context);
+    if (!_current(generation)) return false;
+    if (!accepted) {
       _logger.info(LogCategory.app, 'app auth declined');
-      _setDeclined(true);
+      _setDeclined(true, generation: generation);
       return authorized;
     }
     _logger.info(LogCategory.app, 'app auth asked');
     try {
-      final token = await _fetch();
+      final token = await _client.runInSession(_client.sessionGeneration, () => _fetch(generation));
       // A logout, or another account, while the confirm was out: the token isn't this login's to keep.
-      if (environment.account is! LoggedIn || environment.mid != token.mid) {
+      if (!_current(generation) || environment.account is! LoggedIn || environment.mid != token.mid) {
         _logger.info(LogCategory.app, 'app auth discarded', {'reason': 'account changed'});
-        return authorized;
+        if (_current(generation) && environment.mid != token.mid) _toast(context.mounted ? context : null, '授权账号与当前账号不一致');
+        return false;
       }
-      await _hold(token);
-      _setDeclined(false);
+      await _hold(token, generation: generation);
+      if (!_current(generation)) return false;
+      _setDeclined(false, generation: generation);
       _logger.info(LogCategory.app, 'app auth done', {'days': _daysLeft(token, _now())});
       _toast(context.mounted ? context : null, '授权成功');
       return true;
     } catch (error) {
+      if (!_current(generation) || error is BiliSessionChangedError) return false;
       _logger.warn(LogCategory.app, 'app auth failed', _failure(error));
       final reason = error is _AuthFailure ? error.message : requestFailureMessage(error, fallback: '请稍后重试');
       _toast(context.mounted ? context : null, '授权失败：$reason');
@@ -227,15 +243,18 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
   }
 
   /// The code, its confirm page in the official app, then a few polls once the user is back.
-  Future<AppToken> _fetch() async {
+  Future<AppToken> _fetch(int generation) async {
     final code = await _client.tvAuthCode();
+    if (!_current(generation)) throw const BiliSessionChangedError();
     final page = Uri.tryParse(code.url);
     if (page == null || page.scheme != 'https') throw const _AuthFailure('bad page', '请稍后重试');
     final opened = await confirmInClient(page);
+    if (!_current(generation)) throw const BiliSessionChangedError();
     _logger.info(LogCategory.app, 'app auth client', {'opened': opened});
     if (!opened) throw const _AuthFailure('no client', '请先安装哔哩哔哩客户端');
     for (var poll = 0; poll < quickPolls; poll++) {
       if (poll > 0) await Future<void>.delayed(pollInterval);
+      if (!_current(generation)) throw const BiliSessionChangedError();
       switch (await _client.tvPoll(code.authCode)) {
         case TVLoginConfirmed(:final token):
           return token;
@@ -250,10 +269,13 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
 
   /// One call; a failure keeps the token, which is good until its date. A rejection drops it through [_rejected].
   Future<void> _renew() async {
+    final generation = environment.sessionGeneration;
+    final original = _client.appToken;
+    if (original == null || !_current(generation)) return;
     try {
       final renewed = await _client.renewAppToken();
-      if (_disposed || !authorized) return;
-      await _hold(renewed);
+      if (!_current(generation) || _client.appToken != original) return;
+      await _hold(renewed, generation: generation);
       _logger.info(LogCategory.app, 'app token renewed', {'days': _daysLeft(renewed, _now())});
     } catch (error) {
       _logger.warn(LogCategory.app, 'app token renewal failed', _failure(error));
@@ -297,17 +319,45 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
     if (!authorized) _askLater();
   }
 
+  bool _current(int generation) => !_disposed && generation == environment.sessionGeneration && !environment.accountTransitioning;
+
+  /// The environment has already restored the selected account's own token.
+  void _sessionChanged() {
+    if (_disposed) return;
+    _request = null;
+    _launchAsked = false;
+    _rejectionAsked = false;
+    _loginUnderway = false;
+    _storeUnreadable = false;
+    _declined = environment.hasAccountVault ? environment.appAuthDeclined : false;
+    notifyListeners();
+    final token = _client.appToken;
+    if (token != null && token.dueForRenewal(_now())) unawaited(_renew());
+    if (environment.account is LoggedIn) {
+      _launchAsked = true;
+      if (!authorized) _askLater();
+    }
+  }
+
   /// The token belongs to the account it was confirmed with; another account logging in can't use it.
   void _dropOtherAccount() {
     final token = _client.appToken;
     final mid = environment.mid;
-    if (token != null && mid != null && token.mid != mid) unawaited(_drop('other account'));
+    if (token != null && mid != null && token.mid != mid) {
+      if (environment.hasAccountVault) {
+        _client.appToken = null;
+        notifyListeners();
+      } else {
+        unawaited(_drop('other account'));
+      }
+    }
   }
 
   /// After the current turn, so a login page popping as it hands over its login closes itself, not the confirm.
   void _askLater() {
+    final generation = environment.sessionGeneration;
     Timer.run(() {
-      if (_disposed || authorized || _declined || environment.account is! LoggedIn) return;
+      if (!_current(generation) || authorized || _declined || environment.account is! LoggedIn) return;
       final context = navigator.currentContext;
       if (context == null) {
         _logger.warn(LogCategory.app, 'app auth not asked', {'reason': 'no navigator'});
@@ -317,12 +367,13 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
     });
   }
 
-  Future<void> _hold(AppToken token) async {
+  Future<void> _hold(AppToken token, {required int generation}) async {
+    if (!_current(generation)) return;
     _client.appToken = token;
     if (!_disposed) notifyListeners();
     var saved = false;
     try {
-      saved = await environment.keychain.saveAppToken(jsonEncode(token.toJson()));
+      saved = await environment.saveAppToken(token, generation: generation);
     } catch (_) {
       saved = false;
     }
@@ -330,22 +381,23 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
   }
 
   Future<void> _drop(String reason) async {
+    final generation = environment.sessionGeneration;
     _client.appToken = null;
     _logger.info(LogCategory.app, 'app token dropped', {'reason': reason});
     if (!_disposed) notifyListeners();
-    await _deleteStored();
+    await _deleteStored(generation);
   }
 
-  Future<AppToken?> _stored() async {
+  Future<AppToken?> _stored(int generation) async {
     final String? stored;
     try {
-      stored = await environment.keychain.loadAppToken();
+      stored = await environment.loadAppToken();
     } catch (error) {
-      _storeUnreadable = true;
+      if (generation == environment.sessionGeneration) _storeUnreadable = true;
       _logger.warn(LogCategory.app, 'app token unreadable', {'error': '${error.runtimeType}'});
       return null;
     }
-    if (stored == null) return null;
+    if (stored == null || generation != environment.sessionGeneration) return null;
     AppToken? token;
     try {
       token = AppToken.fromJson(jsonDecode(stored));
@@ -357,13 +409,13 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
     if (token != null) return token;
     // The Swift app kept a bare access token here, with no refresh token or expiry to go on.
     _logger.info(LogCategory.app, 'app token dropped', {'reason': 'not json'});
-    await _deleteStored();
+    await _deleteStored(generation);
     return null;
   }
 
-  Future<void> _deleteStored() async {
+  Future<void> _deleteStored(int generation) async {
     try {
-      await environment.keychain.deleteAppToken();
+      await environment.deleteAppToken(generation: generation);
     } catch (error) {
       _logger.warn(LogCategory.app, 'app token not deleted', {'error': '${error.runtimeType}'});
     }
@@ -378,7 +430,7 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
         if (await file.exists()) {
           final json = jsonDecode(await file.readAsString());
           final fields = json is Map<String, Object?> ? json : const <String, Object?>{};
-          if (fields[_declinedField] == true) _declined = true;
+          if (!environment.hasAccountVault && fields[_declinedField] == true) _declined = true;
           final id = fields['buvid'];
           if (id is String && _buvidShape.hasMatch(id)) return id;
         }
@@ -400,12 +452,20 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
 
   static const _declinedField = 'authDeclined';
 
-  Map<String, Object> _deviceFile(String id) => {'buvid': id, if (_declined) _declinedField: true};
+  Map<String, Object> _deviceFile(String id) => {'buvid': id, if (_declined && !environment.hasAccountVault) _declinedField: true};
 
   /// Written at once: it changes only on a confirm's answer or a logout, and the file is a few bytes.
-  void _setDeclined(bool declined) {
+  void _setDeclined(bool declined, {int? generation}) {
+    final owner = generation ?? environment.sessionGeneration;
+    if (!_current(owner)) return;
     if (_declined == declined) return;
     _declined = declined;
+    if (environment.hasAccountVault) {
+      unawaited(environment.setAppAuthDeclined(declined, generation: owner).catchError((Object error) {
+        _logger.warn(LogCategory.app, 'app auth preference not saved', {'error': '${error.runtimeType}'});
+      }));
+      return;
+    }
     final id = _client.appBuvid;
     final path = devicePath();
     if (id == null || path == null) return;
@@ -444,6 +504,7 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
     _disposed = true;
     environment.removeListener(_accountChanged);
     environment.logins.removeListener(_loggedIn);
+    environment.sessions.removeListener(_sessionChanged);
     if (_client.onAppTokenRejected == _rejected) _client.onAppTokenRejected = null;
     super.dispose();
   }
