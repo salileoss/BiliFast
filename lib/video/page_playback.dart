@@ -227,6 +227,7 @@ class PagePlayback extends ChangeNotifier implements KeptPlayback {
         if (!_inline) services.recents.recordProgress(bvid: bvid, cid: cid, seconds: seconds);
       },
       outbox: services.historyOutbox,
+      ownerMid: services.environment.hasAccountVault ? services.environment.activeAccountMid : null,
     );
   }
 
@@ -254,6 +255,7 @@ class PagePlayback extends ChangeNotifier implements KeptPlayback {
       client: environment.client,
       loggedIn: () => WatchReporter.canReport(environment),
       outbox: services.historyOutbox,
+      ownerMid: environment.hasAccountVault ? environment.activeAccountMid : null,
     );
   }
 
@@ -265,7 +267,8 @@ class PagePlayback extends ChangeNotifier implements KeptPlayback {
     return offlineResume(
       item,
       ask: () => environment.client.playerInfo(bvid: item.request.bvid, cid: item.cid),
-      unsent: services.historyOutbox.holds(item.request.bvid, item.cid),
+      unsent: services.historyOutbox.holds(item.request.bvid, item.cid,
+          ownerMid: environment.hasAccountVault ? environment.activeAccountMid : null),
     );
   }
 
