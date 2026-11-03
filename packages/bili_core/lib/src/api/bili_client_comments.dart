@@ -3,6 +3,7 @@ part of 'bili_client.dart';
 extension BiliClientComments on BiliClient {
   /// `offset` is the previous page's `nextOffset`; null or empty asks for the first page.
   Future<CommentPage> comments({required int aid, required CommentSort sort, String? offset, int type = 1}) async {
+    final generation = _requestGeneration;
     final cursor = offset ?? '';
     final query = {
       'oid': '$aid',
@@ -15,6 +16,7 @@ extension BiliClientComments on BiliClient {
       page = await get('/x/v2/reply/wbi/main', query: query, signed: true, decode: decodeCommentList);
     } on BiliError catch (error) {
       if (!_isRiskControl(error)) rethrow;
+      _checkSession(generation);
       page = await get('/x/v2/reply/main', query: query, signed: false, decode: decodeCommentList);
     }
     return cursor.isEmpty ? page : page.copyWith(pinned: () => null);

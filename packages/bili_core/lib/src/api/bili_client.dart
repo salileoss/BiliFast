@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' show Random;
 import 'dart:typed_data';
@@ -77,6 +78,38 @@ final class BiliClient {
   final Logger _logger;
   ({String day, String mixin})? _wbiCache;
 
+  int _sessionGeneration = 0;
+  final Object _sessionZoneKey = Object();
+
+  int get sessionGeneration => _sessionGeneration;
+
+  /// Called before publishing a different login, even when its uid is unchanged.
+  void invalidateSession() {
+    _sessionGeneration++;
+    _navOut = null;
+    _wbiCache = null;
+  }
+
+  int get _requestGeneration => Zone.current[_sessionZoneKey] as int? ?? _sessionGeneration;
+
+  void _checkSession(int generation) {
+    if (generation != _sessionGeneration) throw const BiliSessionChangedError();
+  }
+
+  /// Keeps queued or multi-call work with the login that started it. A switch cancels
+  /// subsequent sends and results without replaying the operation for another account.
+  Future<T> runInSession<T>(int generation, Future<T> Function() body) => runZoned(() async {
+    _checkSession(generation);
+    try {
+      final result = await body();
+      _checkSession(generation);
+      return result;
+    } catch (_) {
+      _checkSession(generation);
+      rethrow;
+    }
+  }, zoneValues: {_sessionZoneKey: generation});
+
   /// The official API's login, set by the app once it has one; account calls to `app.bilibili.com` need it.
   AppToken? appToken;
 
@@ -100,6 +133,7 @@ final class BiliClient {
   /// A call while one is out for the same login shares its answer: at launch the account check and the first signed
   /// call's WBI keys (首页's search word) would otherwise ask twice, 40 ms apart.
   Future<NavInfo> nav() {
+    _checkSession(_requestGeneration);
     final session = cookies.value('SESSDATA');
     if (_navOut case (session: final asked, :final answer) when asked == session) return answer;
     late final Future<NavInfo> answer;
@@ -113,7 +147,9 @@ final class BiliClient {
   ({String? session, Future<NavInfo> answer})? _navOut;
 
   Future<NavInfo> _fetchNav() async {
+    final generation = _requestGeneration;
     final envelope = await _getEnvelope('/x/web-interface/nav', signed: false, decode: NavInfo.fromJson);
+    _checkSession(generation);
     final nav = envelope.data;
     if (nav == null) throw BiliError.api(code: envelope.code, message: envelope.message ?? '');
     final imgKey = WBI.keyFromURL(nav.imgURL);
@@ -126,9 +162,12 @@ final class BiliClient {
 
   /// The web API answers 412 to requests without the website's fingerprint cookies.
   Future<void> ensureRiskCookies() async {
+    final generation = _requestGeneration;
+    _checkSession(generation);
     if (cookies.value('buvid3') != null && cookies.value('buvid4') != null) return;
     final envelope = await _getEnvelope(_spiPath, signed: false, decode: SPIInfo.fromJson);
     final spi = _checked(envelope);
+    _checkSession(generation);
     if (cookies.value('buvid3') == null) cookies.set('buvid3', spi.b3);
     if (cookies.value('buvid4') == null) cookies.set('buvid4', spi.b4);
   }
@@ -141,6 +180,8 @@ final class BiliClient {
   }
 
   Future<({VideoView view, int? page})> resolve(VideoLink link) async {
+    final generation = _requestGeneration;
+    _checkSession(generation);
     switch (link) {
       case BvidLink(:final id, :final page):
         return (view: await view(bvid: id), page: page);
@@ -158,6 +199,7 @@ final class BiliClient {
           HTTPRequest(url: secure, headers: {'User-Agent': userAgent}),
           'resolve short link',
         );
+        _checkSession(generation);
         _logger.info(LogCategory.api, 'resolve short link', {'host': secure.host, 'status': response.status});
         final next = LinkParser.parse(response.finalURL.toString());
         if (next == null || next.isShort) throw BiliError.invalidLink;
@@ -222,7 +264,9 @@ final class BiliClient {
     required bool signed,
     String host = api,
   }) async {
+    final generation = _requestGeneration;
     final sent = await _send(method: 'GET', path: path, query: query, signed: signed, host: host, accept: '*/*');
+    _checkSession(generation);
     _logger.info(LogCategory.api, path, {'status': sent.response.status, 'ms': sent.ms.round()});
     return sent.response.body;
   }
@@ -289,6 +333,7 @@ final class BiliClient {
     Map<String, String> extraHeaders = const {},
     required JsonDecode<T> decode,
   }) async {
+    final generation = _requestGeneration;
     final sent = await _send(
       method: 'GET',
       path: path,
@@ -300,6 +345,7 @@ final class BiliClient {
       sendCookies: sendCookies,
       extraHeaders: extraHeaders,
     );
+    _checkSession(generation);
     return _decodeEnvelope(sent, path, decode);
   }
 
@@ -312,6 +358,7 @@ final class BiliClient {
     Map<String, String> extraHeaders = const {},
     required JsonDecode<T> decode,
   }) async {
+    final generation = _requestGeneration;
     final sent = await _send(
       method: 'POST',
       path: path,
@@ -323,6 +370,7 @@ final class BiliClient {
       sendCookies: cookies,
       extraHeaders: extraHeaders,
     );
+    _checkSession(generation);
     return _decodeEnvelope(sent, path, decode);
   }
 
@@ -418,6 +466,12 @@ final class BiliClient {
     Duration? timeout,
     bool retried = false,
   }) async {
+    final generation = _requestGeneration;
+    _checkSession(generation);
+    // CSRF and Cookie must come from one snapshot, including while WBI loads.
+    final cookieSnapshot = CookieJar(cookies.all);
+    final rawCsrf = cookieSnapshot.value('bili_jct');
+    final csrfSnapshot = rawCsrf == null || rawCsrf.isEmpty ? null : rawCsrf;
     Uint8List? body;
     var sentQuery = query;
     final headers = {
@@ -428,7 +482,7 @@ final class BiliClient {
     };
     if (json != null) {
       if (sendCookies) {
-        final token = csrf;
+        final token = csrfSnapshot;
         if (token == null) throw const BiliError.api(code: -101, message: '账号未登录');
         sentQuery = {...query, 'csrf': token};
         headers['Origin'] = _origin;
@@ -439,7 +493,7 @@ final class BiliClient {
     if (form != null) {
       final fields = Map.of(form);
       if (sendCookies) {
-        final token = csrf;
+        final token = csrfSnapshot;
         if (token == null) throw const BiliError.api(code: -101, message: '账号未登录');
         fields['csrf'] = token;
         headers['Origin'] = _origin;
@@ -456,6 +510,7 @@ final class BiliClient {
     final String queryString;
     if (signed) {
       final key = await _mixinKey();
+      _checkSession(generation);
       queryString = WBI.signedQuery(sentQuery, mixinKey: key, wts: _unixSeconds);
     } else {
       queryString = WBI.encodeQuery(sentQuery);
@@ -468,16 +523,23 @@ final class BiliClient {
     }
     // The session cookies and the csrf token must never leave Bilibili's own hosts.
     if (BiliHosts.isBilibili(url.host)) {
-      final cookie = cookies.headerValue;
+      final cookie = cookieSnapshot.headerValue;
       if (sendCookies && cookie != null) headers['Cookie'] = cookie;
     } else if (form != null || json != null) {
       throw BiliError.invalidLink;
     }
     final watch = Stopwatch()..start();
-    final response = await _sendOver(
-      HTTPRequest(url: url, headers: headers, method: method, body: body, timeout: timeout),
-      path,
-    );
+    final HTTPResponse response;
+    try {
+      response = await _sendOver(
+        HTTPRequest(url: url, headers: headers, method: method, body: body, timeout: timeout),
+        path,
+      );
+    } catch (_) {
+      _checkSession(generation);
+      rethrow;
+    }
+    _checkSession(generation);
     final ms = watch.elapsedMicroseconds / 1000;
     if (response.status < 200 || response.status >= 300) {
       _logger.warn(LogCategory.api, path, {'status': response.status, 'ms': ms.round()});
@@ -486,6 +548,7 @@ final class BiliClient {
         cookies.remove('buvid3');
         cookies.remove('buvid4');
         await ensureRiskCookies();
+        _checkSession(generation);
         return _send(
           method: method,
           path: path,
