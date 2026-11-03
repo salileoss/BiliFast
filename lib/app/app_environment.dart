@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io' show Platform;
 
 import 'package:bili_core/api.dart';
@@ -7,6 +8,7 @@ import 'package:cupertino_http/cupertino_http.dart';
 import 'package:flutter/foundation.dart';
 
 import '../account/cookie_persistence.dart';
+import '../account/account_vault.dart';
 import '../account/keychain_store.dart';
 import '../account/web_cookies.dart';
 
@@ -54,6 +56,7 @@ class AppEnvironment extends ChangeNotifier {
   /// session on Bilibili's side first; [pcLogin] has the PC's 登录 page offer the QR login.
   static Future<AppEnvironment> load(
       {KeychainStore? keychain,
+      AccountVaultStore? accountStore,
       WebCookies? webCookies,
       HTTPTransport? http,
       HTTPTransport Function() httpFactory = platformHttpTransport,
@@ -132,6 +135,27 @@ class AppEnvironment extends ChangeNotifier {
   ValueListenable<int> get logins => _logins;
   final _logins = ValueNotifier<int>(0);
 
+  /// Identity boundaries, including reauthentication as the same account.
+  ValueListenable<int> get sessions => _sessions;
+  final _sessions = ValueNotifier<int>(0);
+  int get sessionGeneration => _epoch;
+  int? get activeAccountMid => _mid;
+  List<SavedAccount> get savedAccounts => const [];
+  bool get hasAccountVault => false;
+  bool get accountTransitioning => false;
+  bool get appAuthDeclined => false;
+
+  Future<void> switchAccount(int mid) async => throw const AccountSwitchFailure('账号不可用');
+  Future<void> removeAccount(int mid) async => throw const AccountSwitchFailure('账号不可用');
+  Future<String?> loadAppToken() => _keychain.loadAppToken();
+  Future<bool> saveAppToken(AppToken token, {required int generation}) => generation == _epoch
+      ? _keychain.saveAppToken(_encodeAppToken(token))
+      : Future.value(false);
+  Future<void> deleteAppToken({required int generation}) async {
+    if (generation == _epoch) await _keychain.deleteAppToken();
+  }
+  Future<void> setAppAuthDeclined(bool declined, {required int generation}) async {}
+
   String get accountLabel => switch (_account) {
         LoggedIn(:final name) => name.isEmpty ? '已登录' : name,
         LoggedOut() => '未登录',
@@ -173,7 +197,7 @@ class AppEnvironment extends ChangeNotifier {
 
   /// The login page's cookies once Bilibili set SESSDATA (BiliNative `AppEnvironment.didLogin`): they join the jar
   /// and the keychain, and the account is checked again, up to 3 times. Completes with whether it is now logged in.
-  Future<bool> didLogin(Map<String, String> cookies) async {
+  Future<bool> didLogin(Map<String, String> cookies, {int? expectedMid, bool Function()? isCurrent}) async {
     final epoch = ++_epoch;
     _checking = null;
     _fake = false;
@@ -340,8 +364,18 @@ class AppEnvironment extends ChangeNotifier {
   @override
   void dispose() {
     _logins.dispose();
+    _sessions.dispose();
     super.dispose();
   }
+}
+
+String _encodeAppToken(AppToken token) => jsonEncode(token.toJson());
+
+final class AccountSwitchFailure implements Exception {
+  const AccountSwitchFailure(this.message);
+  final String message;
+  @override
+  String toString() => 'AccountSwitchFailure';
 }
 
 /// [AppEnvironment.logout] couldn't empty the jar or delete the keychain's cookies.
