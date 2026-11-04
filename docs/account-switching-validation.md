@@ -34,7 +34,7 @@ from PATH. Test transports and media fixtures remain local.
 | Windows release build | Passed after the final implementation changes |
 | Windows native integration | Passed per file: appearance (1 test), player (11 tests) |
 | Whitespace checks | Passed |
-| Native iOS compile / real-device checks | Pending: this machine has no Swift compiler or iOS SDK |
+| Native iOS compile / real-device checks | Unsigned iOS release build 1.3.0 (8) passed on macOS; phone acceptance remains pending |
 
 `python scripts/gate.py` cannot start here because `fvm` is not on PATH; no release-gate stamp or TestFlight release
 was claimed. Available checks were run directly. The existing unrelated `.vscode/` and `LOCAL_SECURITY_REVIEW.md`
@@ -43,6 +43,16 @@ files were left untouched.
 The first combined Windows integration attempt and a concurrent player attempt could not attach to the debug
 process. The final player run, with other Flutter jobs finished, passed all 11 tests. The appearance check passed
 in the combined attempt. No native player implementation changes were made for this feature.
+
+## Local IPA
+
+The unsigned iPhone IPA is saved at `build/ipa/BiliFast-1.3.0-8-account-switching.ipa`, with its JSON manifest beside it.
+[The macOS build](https://github.com/salileoss/BiliFast/actions/runs/41758812862) succeeded using the existing
+fork-only workflow. Build commit `878cfa6ba4ad8a126d8deb8c523f3b085a28e3ee` has the same application source as
+`0b42246`; only the fork's unsigned build recipe differs. Local verification passed the source-commit check, checksum,
+ZIP integrity, bundle/version, ARM64 executable and absence of a provisioning profile.
+
+SHA-256: `b8a965c5e2cad9e6b9291d81f4d5ec84f4264900da6234846d7d2f886c0a6892`.
 
 ## Phone acceptance still required
 
