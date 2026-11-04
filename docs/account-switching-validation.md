@@ -32,13 +32,17 @@ from PATH. Test transports and media fixtures remain local.
 | Workflow checks | Passed: 36 tests |
 | PC tools checks | Passed: 86 tests |
 | Windows release build | Passed after the final implementation changes |
-| Windows native integration | Appearance test passed; player test could not start/attach to its debug process; final isolated check pending |
+| Windows native integration | Passed per file: appearance (1 test), player (11 tests) |
 | Whitespace checks | Passed |
 | Native iOS compile / real-device checks | Pending: this machine has no Swift compiler or iOS SDK |
 
 `python scripts/gate.py` cannot start here because `fvm` is not on PATH; no release-gate stamp or TestFlight release
 was claimed. Available checks were run directly. The existing unrelated `.vscode/` and `LOCAL_SECURITY_REVIEW.md`
 files were left untouched.
+
+The first combined Windows integration attempt and a concurrent player attempt could not attach to the debug
+process. The final player run, with other Flutter jobs finished, passed all 11 tests. The appearance check passed
+in the combined attempt. No native player implementation changes were made for this feature.
 
 ## Phone acceptance still required
 
