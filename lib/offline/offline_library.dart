@@ -62,6 +62,9 @@ abstract class OfflineLibrary extends ChangeNotifier {
   /// Quiesces account-owned work before the app publishes another login.
   Future<void> accountWillChange() async => pauseAll();
 
+  /// Releases the handoff guard after the selected credentials are published, or the change is aborted.
+  void accountChangeFinished() {}
+
   bool canResume(int cid) => true;
 
   /// Stops and removes the parts, files and all.
@@ -198,30 +201,32 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
   Future<void> accountWillChange() async {
     _accountChanging = true;
     _accountBoundary++;
-    try {
-      await _loading;
-      pauseAll();
-      var cancellationFailed = false;
-      await _queue(() async {
-        await _dropContinued();
-        await _endGrace();
-        List<BackgroundRangeResult> results;
-        try {
-          results = host.backgroundTransfers ? await host.takeBack() : const <BackgroundRangeResult>[];
-        } catch (_) {
-          cancellationFailed = true;
-          return;
-        }
-        _stampReturn();
-        _closeTrip(results, takeBackFailed: false);
-        _handedOff = false;
-      });
-      if (cancellationFailed) throw StateError('后台下载尚未停止，请重试');
-      await Future.wait([for (final part in _parts.values) part.stopping]);
-      await Future.wait([for (final part in _parts.values) part.writes]);
-    } finally {
-      _accountChanging = false;
-    }
+    await _loading;
+    pauseAll();
+    var cancellationFailed = false;
+    await _queue(() async {
+      await _dropContinued();
+      await _endGrace();
+      List<BackgroundRangeResult> results;
+      try {
+        results = host.backgroundTransfers ? await host.takeBack() : const <BackgroundRangeResult>[];
+      } catch (_) {
+        cancellationFailed = true;
+        return;
+      }
+      _stampReturn();
+      _closeTrip(results, takeBackFailed: false);
+      _handedOff = false;
+    });
+    if (cancellationFailed) throw StateError('后台下载尚未停止，请重试');
+    await Future.wait([for (final part in _parts.values) part.stopping]);
+    await Future.wait([for (final part in _parts.values) part.writes]);
+  }
+
+  @override
+  void accountChangeFinished() {
+    _accountChanging = false;
+    _notifyNow();
   }
 
   /// Parts being deleted, until their folders are gone; an enqueue of the same cid waits for it.

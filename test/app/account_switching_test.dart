@@ -23,12 +23,14 @@ class _Vault extends MemoryAccountVaultStore {
   _Vault([super.vault]);
   bool saveOk = true;
   bool unreadable = false;
+  Completer<void>? saving;
   int writes = 0;
   @override
   Future<AccountVaultLoad> load() async => unreadable ? const AccountVaultLoadFailed(-1) : super.load();
   @override
   Future<bool> save(AccountVault vault) async {
     writes++;
+    await saving?.future;
     return saveOk && await super.save(vault);
   }
 }
@@ -69,13 +71,13 @@ void main() {
   late AppEnvironment environment;
 
   Future<void> load({AccountVault? initial, bool absent = false, bool unreadable = false,
-      CookieLoad legacyCookies = const NoStoredCookies()}) async {
+      CookieLoad legacyCookies = const NoStoredCookies(), bool declined = false}) async {
     vault = _Vault(absent ? null : initial ?? AccountVault(activeMid: 1, accounts: {1: profile(1), 2: profile(2)}))
       ..unreadable = unreadable;
     http = _Http();
     legacy = _Legacy(legacyCookies);
     environment = await AppEnvironment.load(keychain: legacy, accountStore: vault, http: http,
-        webCookies: FakeWebCookies());
+        webCookies: FakeWebCookies(), legacyAuthDeclined: declined);
     addTearDown(environment.dispose);
   }
 
@@ -235,5 +237,73 @@ void main() {
     await expectLater(environment.didLogin(profile(2).cookies), throwsA(isA<AccountSwitchFailure>()));
     expect(vault.writes, 0);
     expect(legacy.deletes, 0);
+  });
+
+  test('a later successful vault read restores the selected account without another login', () async {
+    await load(unreadable: true, legacyCookies: StoredCookies(profile(2).cookies));
+    await environment.refreshAccount();
+    expect(environment.account, isA<AccountUnknown>());
+    vault.unreadable = false;
+    await environment.refreshAccount();
+    expect(environment.account, isA<LoggedIn>());
+    expect(environment.mid, 1);
+    expect(environment.client.appToken?.mid, 1);
+    expect(environment.cookies.value('SESSDATA'), 'session-1');
+    expect(legacy.deletes, 0);
+  });
+
+  test('migration preserves the existing declined authorization preference', () async {
+    await load(absent: true, legacyCookies: StoredCookies(profile(1).cookies), declined: true);
+    expect(environment.appAuthDeclined, isTrue);
+    await environment.refreshAccount();
+    expect(vault.vault?.accounts[1]?.authDeclined, isTrue);
+    expect(environment.appAuthDeclined, isTrue);
+    await environment.didLogin(profile(2).cookies);
+    expect(environment.appAuthDeclined, isFalse);
+  });
+
+  test('credential updates accepted before publication remain bound to the outgoing owner', () async {
+    await load();
+    await environment.refreshAccount();
+    await pumpEventQueue();
+    final generation = environment.sessionGeneration;
+    vault.saving = Completer<void>();
+    final switching = environment.switchAccount(2);
+    await pumpEventQueue();
+    final renewed = AppToken(accessToken: 'renewed-1', refreshToken: 'renewed-refresh-1', mid: 1,
+        expiresAt: DateTime.now().add(const Duration(days: 180)));
+    environment.client.appToken = renewed;
+    final saving = environment.saveAppToken(renewed, generation: generation);
+    environment.cookies.set('bili_ticket', 'rotated-1');
+    vault.saving!.complete();
+    await switching;
+    expect(await saving, isTrue);
+    await pumpEventQueue();
+    expect(vault.vault?.accounts[1]?.appToken?.accessToken, 'renewed-1');
+    expect(vault.vault?.accounts[1]?.cookies['bili_ticket'], 'rotated-1');
+    expect(environment.client.appToken?.mid, 2);
+    expect(environment.cookies.value('bili_ticket'), isNull);
+  });
+
+  test('an expired active session is marked for reauthentication in the account list', () async {
+    await load();
+    http.expired.add(1);
+    await environment.refreshAccount();
+    expect(environment.account, isA<LoginExpired>());
+    expect(environment.savedAccounts.first.expired, isTrue);
+    expect(environment.activeAccountMid, 1);
+  });
+
+  test('a saved identity whose cookies identify another uid cannot send authenticated web calls', () async {
+    await load(initial: AccountVault(activeMid: 1, accounts: {
+      1: SavedAccount(mid: 1, name: '账号1', cookies: profile(2).cookies),
+    }));
+    await environment.refreshAccount();
+    expect(environment.account, isA<LoginExpired>());
+    expect(environment.activeAccountMid, 1);
+    expect(environment.mid, isNull);
+    expect(environment.cookies.value('SESSDATA'), isNull);
+    expect(environment.client.appToken, isNull);
+    expect(environment.savedAccounts.first.expired, isTrue);
   });
 }

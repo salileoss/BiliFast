@@ -50,6 +50,15 @@ void main() {
     await store.deleteAppToken();
   });
 
+  test('an unreadable token differs from an absent token, so migration cannot delete an unknown credential', () async {
+    answer = (_) => {'code': -25308};
+    await expectLater(store.loadAppToken(), throwsA(isA<PlatformException>()
+        .having((error) => error.details, 'status', -25308)));
+    answer = (_) => <String, Object?>{};
+    expect(await store.loadAppToken(), isNull);
+    expect(memory.events, isEmpty);
+  });
+
   test(
     'a refused cookie write answers false and logs its status, no values',
     () async {

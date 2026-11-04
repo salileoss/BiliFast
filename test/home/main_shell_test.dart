@@ -39,7 +39,7 @@ void main() {
   });
 
   /// The shell at 440×956 over a 34 pt home indicator; [phone] makes it KaiC's iPhone at 3× under the system font.
-  Future<void> show(WidgetTester tester, {bool phone = false}) async {
+  Future<AppEnvironment> show(WidgetTester tester, {bool phone = false}) async {
     if (phone) {
       final saved = BiliFonts.family;
       addTearDown(() => BiliFonts.family = saved);
@@ -82,6 +82,7 @@ void main() {
         home: MainShell(developerPage: (context) => const Text('开发者页面')),
       ),
     );
+    return environment;
   }
 
   /// Lets requests answer and frames run without waiting on the loading cards' endless sweep.
@@ -105,6 +106,23 @@ void main() {
       .position;
 
   bool meActive(WidgetTester tester) => tester.widget<MePage>(find.byType(MePage, skipOffstage: false)).active;
+
+  testWidgets('switching between logged-in accounts resets root pages and selects 我的', (tester) async {
+    final environment = await show(tester);
+    await settle(tester);
+    final oldHome = tester.state(find.byType(HomePage, skipOffstage: false));
+    environment.useFakeAccount();
+    await environment.switchAccount(2);
+    await settle(tester);
+    expect(environment.activeAccountMid, 2);
+    expect(meActive(tester), isTrue);
+    expect(tester.state(find.byType(HomePage, skipOffstage: false)), isNot(same(oldHome)));
+    final services = AppScope.of(tester.element(find.byType(MainShell)));
+    await tester.pumpWidget(const SizedBox.shrink());
+    services.dispose();
+    environment.dispose();
+    await tester.pump();
+  });
 
   void expectSelected(WidgetTester tester, HomeTab selected) {
     for (final tab in HomeTab.values) {

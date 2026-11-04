@@ -33,7 +33,7 @@ abstract interface class KeychainStore {
   /// Throws when the keychain refused the delete; an item that wasn't there counts as deleted.
   Future<void> deleteCookies();
 
-  /// The official API's access token; null when absent or unreadable.
+  /// The official API's access token; null when absent. An unreadable item throws so migration retains it.
   Future<String?> loadAppToken();
   Future<bool> saveAppToken(String token);
   /// Throws as [deleteCookies].
@@ -86,6 +86,9 @@ class ChannelKeychainStore implements KeychainStore {
   @override
   Future<String?> loadAppToken() async {
     final reply = await _channel.invokeMapMethod<String, Object?>('loadAppToken');
+    if (reply?['code'] case final int status) {
+      throw PlatformException(code: 'keychain', message: 'app token read failed', details: status);
+    }
     final token = reply?['token'];
     return token is String && token.isNotEmpty ? token : null;
   }

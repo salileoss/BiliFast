@@ -98,8 +98,6 @@ Not built, by area. Most wait for a screenshot of the official app; KaiC decides
 - Folded over a 装扮 header, the status bar keeps the style measured for the open header; a 推荐 refresh whose page is
   short enough to show the divider shows its old top cards twice for 180 ms.
 - The normal page's 点我发弹幕 capsule border is 0.7 pt where the official one is a crisp 1/3.
-- `HistoryOutbox`: logging into another account straight after an expired one (no logout between) would send the
-  first account's waiting reports.
 - Apple deprecates `UIRequiresFullScreen` from iPadOS 26: a window narrower than 700 pt would draw the iPhone layouts.
 - Logging out and back in has never been tried on the phone (KaiC keeps his one login); Windows and widget tests cover
   the logged-out paths.
@@ -114,7 +112,8 @@ Not built, by area. Most wait for a screenshot of the official app; KaiC decides
     page-route observer (a page counts as covered only when a page route is pushed over it), Reduce Motion, and
     `phone_frame.dart` (Windows only: the window as KaiC's iPhone, or his iPad with `--pad`), and `form_factor.dart`
     (`FormFactor`: the iPhone or the iPad).
-  - `lib/account/`: keychain and cookie persistence, the login page and `LoginGate`, the web view's cookies.
+  - `lib/account/`: the encrypted saved-account vault and legacy login migration, account switcher, keychain and
+    cookie persistence, the login page and `LoginGate`, the web view's cookies.
   - `lib/home/`: `main_shell.dart` (the bottom bar's places), home, the feed, the bottom bar (`home_tab_bar.dart`,
     its glyphs in `tab_bar_icons.dart`), the avatar page (49), the shared shortcut glyphs and 最近打开.
   - `lib/me/`: 我的: `MeModel` over `MeApi` (`fake_me_api.dart` for tests and `--fake-account`), the page and header,
@@ -342,6 +341,9 @@ The `ios-testflight` skill is the playbook; load it before touching any workflow
   `BiliError.noAppToken` and its feature asks `AppAuth.request` instead. 推荐 is never fetched from the official feed
   without the token (that feed is generic). The token is confirmed only in the official app: Bilibili's confirm call
   answers the web login -101, and its page refuses any web view.
+- Saved accounts use one encrypted vault and one active uid. Switches replace the full cookie map and matching
+  optional app token together, without server logout. Old requests keep their initiating session; history reports
+  and unfinished downloads keep their owner. The legacy single login migrates one-way after verified storage.
 - UP主空间's calls are the official app's (`app.bilibili.com`), signed with `AppSigner.android` (a public pair, the
   same for everyone; KaiC allowed it in the repo) and sent with no cookies. An archive item's `uri` carries a signed
   play link: never keep, log or put it in a fixture. 关注 stays on the web card and `/x/relation/modify`.

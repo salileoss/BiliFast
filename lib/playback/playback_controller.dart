@@ -904,13 +904,13 @@ class PlaybackController extends ChangeNotifier {
     _fetchDetail(wanted.bvid, attempt: detailRetryGaps.length);
   }
 
-  Future<PlayURLInfo> _playUrl() async {
+  Future<PlayURLInfo> _playUrl() => _client.runInSession(_client.sessionGeneration, () async {
     final page = _page;
     final video = _video;
     if (page == null || video == null) throw BiliError.invalidLink;
     await _client.ensureRiskCookies();
     return _client.playURL(bvid: video.bvid, cid: page.cid, quality: _selectedQuality);
-  }
+  });
 
   Future<void> _startPlayback(double time, {required bool autoplay}) async {
     _resetStart(autoplay: autoplay);

@@ -141,8 +141,8 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
   /// The keychain threw on the read, so a token may well be stored: the launch doesn't ask for another.
   bool _storeUnreadable = false;
 
-  /// The confirm was turned down. Kept in the device file, so the app doesn't ask by itself again, at this launch or
-  /// the next, until a confirm goes through or the account logs out; what needs the token, and 开发者, still ask.
+  /// The confirm was turned down. Saved with its account (the device file for legacy stores), so an automatic
+  /// prompt stays declined across launches; what needs the token, and 开发者, can still ask.
   bool _declined = false;
   Future<bool>? _request;
 
@@ -203,6 +203,7 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
 
   @override
   Future<bool> reauthorize(BuildContext context) {
+    if (environment.accountTransitioning) return Future.value(false);
     if (_request case final running?) return running;
     if (authorized) unawaited(_drop('reauthorize'));
     return request(context);
@@ -212,7 +213,7 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
     final generation = environment.sessionGeneration;
     if (environment.account is! LoggedIn || environment.accountTransitioning) return false;
     final accepted = await confirm(context);
-    if (!_current(generation)) return false;
+    if (!_current(generation) || environment.accountTransitioning) return false;
     if (!accepted) {
       _logger.info(LogCategory.app, 'app auth declined');
       _setDeclined(true, generation: generation);
@@ -274,7 +275,7 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
   Future<void> _renew() async {
     final generation = environment.sessionGeneration;
     final original = _client.appToken;
-    if (original == null || !_current(generation)) return;
+    if (original == null || !_current(generation) || environment.accountTransitioning) return;
     try {
       final renewed = await _client.renewAppToken();
       if (!_current(generation) || _client.appToken != original) return;
@@ -322,7 +323,7 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
     if (!authorized) _askLater();
   }
 
-  bool _current(int generation) => !_disposed && generation == environment.sessionGeneration && !environment.accountTransitioning;
+  bool _current(int generation) => !_disposed && generation == environment.sessionGeneration;
 
   /// The environment has already restored the selected account's own token.
   void _sessionChanged() {
@@ -360,7 +361,7 @@ class TokenAppAuth extends ChangeNotifier implements AppAuth {
   void _askLater() {
     final generation = environment.sessionGeneration;
     Timer.run(() {
-      if (!_current(generation) || authorized || _declined || environment.account is! LoggedIn) return;
+      if (!_current(generation) || environment.accountTransitioning || authorized || _declined || environment.account is! LoggedIn) return;
       final context = navigator.currentContext;
       if (context == null) {
         _logger.warn(LogCategory.app, 'app auth not asked', {'reason': 'no navigator'});

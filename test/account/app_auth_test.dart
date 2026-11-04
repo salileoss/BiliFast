@@ -114,6 +114,37 @@ class Harness {
   BiliClient get client => environment.client;
 }
 
+/// A pending account choice has not invalidated the working login yet.
+class _PendingEnvironment extends ChangeNotifier implements AppEnvironment {
+  _PendingEnvironment(this.client, this.token);
+  @override
+  final BiliClient client;
+  String token;
+  @override
+  bool accountTransitioning = false;
+  @override
+  int sessionGeneration = 0;
+  @override
+  final ValueNotifier<int> sessions = ValueNotifier(0);
+  @override
+  final ValueNotifier<int> logins = ValueNotifier(0);
+  @override
+  Account get account => const LoggedIn(name: 'test', vip: false);
+  @override
+  int? get mid => 12345;
+  @override
+  bool get hasAccountVault => false;
+  @override
+  Future<String?> loadAppToken() async => token;
+  @override
+  Future<bool> saveAppToken(AppToken token, {required int generation}) async {
+    this.token = jsonEncode(token.toJson());
+    return true;
+  }
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 final prompt = find.byKey(const ValueKey('app-auth-prompt'));
 final authorize = find.byKey(const ValueKey('settings-confirm-授权'));
 final cancel = find.byKey(const ValueKey('settings-confirm-取消'));
@@ -193,6 +224,25 @@ void main() {
   }
 
   group('launch', () {
+    testWidgets('an in-flight renewal remains valid while a different account is only being checked', (tester) async {
+      final http = CannedHttp()..routes[renewPath] = (200, renewed);
+      final renewal = http.gates[renewPath] = Completer<void>();
+      final client = BiliClient(transport: http, cookies: CookieJar(Canned.cookies));
+      final environment = _PendingEnvironment(client, stored(days: 10));
+      final auth = TokenAppAuth(environment: environment, navigator: GlobalKey<NavigatorState>(), devicePath: () => null);
+      addTearDown(auth.dispose);
+      await auth.start();
+      await tester.pumpAndSettle();
+      expect(http.to(renewPath), hasLength(1));
+      environment.accountTransitioning = true;
+      renewal.complete();
+      await tester.pumpAndSettle();
+      expect(client.appToken?.accessToken, 'NEW-ACCESS');
+      expect(AppToken.fromJson(jsonDecode(environment.token)).accessToken, 'NEW-ACCESS');
+      environment.accountTransitioning = false;
+      expect(auth.authorized, isTrue, reason: 'the failed target check kept this session');
+    });
+
     testWidgets('a stored token not near its end is held, and nothing is sent or asked', (tester) async {
       final h = await mount(tester, token: stored(days: 100));
       await h.auth.start();
@@ -663,6 +713,7 @@ void main() {
       expect(await answer, isFalse);
       expect(h.client.appToken, isNull);
       expect(h.keychain.saves, isEmpty);
+      expect(find.text('授权账号与当前账号不一致'), findsOneWidget);
       await settle(tester);
     });
 

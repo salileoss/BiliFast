@@ -50,6 +50,8 @@ class FakeEnvironment extends ChangeNotifier implements AppEnvironment {
   @override
   bool get accountTransitioning => false;
   @override
+  bool get accountCommitting => false;
+  @override
   int? get activeAccountMid => null;
   @override
   Future<void> Function()? beforeAccountChange;
@@ -83,9 +85,6 @@ class FakeEnvironment extends ChangeNotifier implements AppEnvironment {
 
   @override
   bool loginSaved = true;
-
-  @override
-  bool get hasAccountVault => false;
 
   @override
   List<SavedAccount> get savedAccounts => const [];

@@ -118,7 +118,9 @@ enum KeychainChannel {
     guard status == errSecSuccess else {
       return status == errSecItemNotFound ? [:] : ["code": Int(status)]
     }
-    guard let data, let token = String(data: data, encoding: .utf8), !token.isEmpty else { return [:] }
+    guard let data, let token = String(data: data, encoding: .utf8), !token.isEmpty else {
+      return ["code": Int(errSecDecode)]
+    }
     return ["token": token]
   }
 

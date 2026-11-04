@@ -233,8 +233,7 @@ class AppServices {
     environment.logins.addListener(_loggedIn);
     environment.sessions.addListener(_sessionChanged);
     environment.beforeAccountChange = _prepareAccountChange;
-    environment.accountChangeAborted = playback.resumeAfterAccountChangeFailed;
-    _knownAccounts = environment.hasAccountVault ? environment.savedAccounts.map((account) => account.mid).toSet() : {};
+    environment.accountChangeAborted = _accountChangeAborted;
     _authorized = this.appAuth.authorized;
     this.appAuth.addListener(_authChanged);
     _historyFlusher = HistoryOutboxFlusher(outbox: this.historyOutbox, environment: environment, network: network);
@@ -252,24 +251,25 @@ class AppServices {
   }
 
   late Account _account;
-  late Set<int> _knownAccounts;
 
   Future<void> _prepareAccountChange() async {
     await playback.pauseForAccountChange();
     await offline.accountWillChange();
   }
 
+  void _accountChangeAborted() {
+    offline.accountChangeFinished();
+    playback.resumeAfterAccountChangeFailed();
+  }
+
   void _sessionChanged() {
     playback.closeAccountSession();
+    offline.accountChangeFinished();
     pipKeeper.release();
     follows.clear();
     _dynamicLikes?.clear();
     blockRules.resetAccount();
     if (meProfile.kept?.mid != environment.activeAccountMid) meProfile.delete();
-    // LoginPage closes itself in its completion callback; navigation waits until that callback has run.
-    Timer.run(() {
-      navigator.currentState?.popUntil((route) => route.isFirst);
-    });
   }
 
   /// Every login fetches the account's 屏蔽词 at once (Swift's didLogin); the launch's check is left to the first
@@ -283,13 +283,6 @@ class AppServices {
 
   /// A logout, or a login Bilibili no longer accepts, drops the old account's 屏蔽词.
   void _accountChanged() {
-    if (environment.hasAccountVault) {
-      final known = environment.savedAccounts.map((account) => account.mid).toSet();
-      for (final removed in _knownAccounts.difference(known)) {
-        historyOutbox.removeOwner(removed);
-      }
-      _knownAccounts = known;
-    }
     final now = environment.account;
     // didLogin passes through unknown on its way to logged in.
     if (now is AccountUnknown) return;

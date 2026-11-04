@@ -60,7 +60,7 @@ class BlockRuleStore extends ChangeNotifier {
     try {
       return await fetch;
     } finally {
-      _inflight = null;
+      if (identical(_inflight, fetch)) _inflight = null;
     }
   }
 
@@ -84,7 +84,7 @@ class BlockRuleStore extends ChangeNotifier {
       }
       return _failed('block rules failed', error, stack, syncFailed);
     } finally {
-      _setLoading(false);
+      if (started == _generation) _setLoading(false);
     }
   }
 

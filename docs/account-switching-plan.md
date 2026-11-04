@@ -1,6 +1,8 @@
 # Account switching: design and implementation plan
 
-Draft, 2026-11-03. Based on the code at `e7e97d8`. This is an investigation and proposed implementation; no runtime code has changed.
+Approved and implemented locally, 2026-11-03. The current-design investigation below describes the starting code at
+`e7e97d8`; the implementation sections record the agreed behavior. The user supplied the account-list reference and
+approved using the existing Settings style. Native iOS build and phone acceptance remain release checks.
 
 ## Current design
 
@@ -41,7 +43,8 @@ Assumption: account switching means several remembered Bilibili accounts on this
 6. 退出登录 removes the active saved credentials and enters guest mode; other saved accounts remain available. Removing an inactive account targets only that record. Preserve existing platform logout semantics, including Windows server confirmation before deleting that session. Switching itself performs neither removal nor revocation.
 7. A successful switch stops playback/PiP, closes old detail routes and rebuilds account-dependent root content. In-progress downloads pause; completed local downloads remain on the device. A failed switch keeps the previous identity and restores any temporarily paused UI work.
 
-Visual layout remains pending the official account-switching references. Reuse existing routes, theme tokens, loading states and confirmation components once measured against them.
+The UI follows the supplied account-switching reference and reuses the existing routes, theme tokens, loading
+states and confirmation components. Fixture renders cover light/dark phone and iPad layouts.
 
 ## Backend and state design
 
@@ -57,7 +60,7 @@ Add a small `AccountVaultStore` interface and versioned model, using a single ne
 - Use a DPAPI-protected vault for explicitly enabled Windows real-account runs, migrating its old cookie file. Windows continues to hold no app token. Normal/fake runs use empty/in-memory stores and never read the real vault.
 - Keep the official API device `buvid` device-wide. Move `authDeclined` to the account record; it currently lives beside the device id.
 
-This proposes one-way storage migration. Older builds would not understand the new saved accounts; confirm that tradeoff before implementation rather than maintaining two competing credential stores.
+Storage migration is one-way, as approved with the implementation go. Older builds do not understand the new saved accounts.
 
 ### 2. Serialize account transitions
 
@@ -98,7 +101,8 @@ Keep the shared client identity so existing API adapters do not all need rebindi
 
 ## Implementation order and ownership
 
-Use the repository's slice workflow when implementation is requested. The shared-contract step establishes interfaces, event ordering, theme tokens and test doubles before parallel work; no agents are started for this draft.
+Implementation used the repository's slice workflow: shared contracts first, then separate storage, session and UI
+worktrees, followed by data/lifecycle work and integration reviews. No live account calls were used.
 
 | Order / owner | Builds and owns | Verification |
 |---|---|---|
@@ -137,8 +141,8 @@ Only the phone can establish real WebKit cookie isolation, Keychain upgrade beha
 
 ## Decisions and reference inputs for implementation
 
-- **Product defaults proposed above:** save several accounts; validate online before switching; enter guest mode on logout; stop playback and pause downloads; share device preferences and completed local files. Confirm or adjust these with the implementation go.
-- **Storage compatibility:** recommend one-way migration now that Swift is retired. Existing documentation promises legacy-format compatibility; update that promise explicitly with the feature.
-- **UI references:** this checkout has no `local/official-app-reference/iphone/`. Need the official 设置 switching entry, account list with multiple/current/expired accounts, add-account state and removal confirmation before final layout implementation. This follows `.claude/skills/running-a-slice/SKILL.md`'s requirement to use official screenshots rather than invent missing layouts.
+- **Approved product defaults:** save several accounts; validate online before switching; enter guest mode on logout; stop playback and pause downloads; share device preferences and completed local files.
+- **Storage compatibility:** one-way migration replaces legacy-format downgrade compatibility. Legacy items are removed only after the new vault is saved and read back.
+- **UI reference:** the user supplied the dark account-switching screenshot during implementation and approved the existing Settings components for the other states. The list uses its avatar rows, current-account check, 管理 action and separate 添加账号 row; light/dark phone/iPad fixture renders were inspected without copying personal account details.
 - **Live checks:** selecting accounts and allowing new logins/official-app confirmations for phone testing is a separate implementation-time decision. Drafting this plan has used no live account calls.
 - **Release:** the last shipped build documented in `CLAUDE.md` is 1.3.0 (6); tentatively target the next build, 1.3.0 (7), after checking release state at implementation time.

@@ -29,6 +29,7 @@ void main() {
     await library.accountWillChange();
     active = 202;
     generation++;
+    library.accountChangeFinished();
     rig.client.invalidateSession();
     final started = rig.engine.downloadsStarted.length;
     expect(library.item(1)!.state, OfflineState.paused);
@@ -61,6 +62,22 @@ void main() {
     expect(reopened.item(1)!.state, OfflineState.paused);
     expect(reopened.canResume(1), isFalse);
     expect(rig.engine.downloadsStarted, hasLength(before));
+  });
+
+  test('handoff remains quiescent while the selected-account write is pending', () async {
+    final library = await rig.started();
+    await library.enqueue([offlineRequest(cid: 1)]);
+    await library.settled();
+    await library.accountWillChange();
+    final started = rig.engine.downloadsStarted.length;
+    library.resume(1);
+    await library.enqueue([offlineRequest(cid: 2)]);
+    await library.settled();
+    expect(rig.engine.downloadsStarted, hasLength(started));
+    expect(library.item(2), isNull);
+    expect(library.canResume(1), isFalse);
+    library.accountChangeFinished();
+    expect(library.canResume(1), isTrue);
   });
 
   test('a guest download is owned by guest mode and cannot resume as B', () async {

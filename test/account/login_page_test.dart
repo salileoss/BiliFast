@@ -17,9 +17,49 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../app/fake_keychain.dart';
 import '../playback/fakes.dart';
+import '../settings/settings_fakes.dart';
 import 'fake_web_cookies.dart';
 
+class _CommittingEnvironment extends FakeEnvironment {
+  _CommittingEnvironment() : super(const LoggedIn(name: '测试账号', vip: false));
+  bool committing = false;
+  @override
+  bool get accountCommitting => committing;
+  @override
+  bool get pcLogin => false;
+}
+
 void main() {
+  testWidgets('the login can close during validation but stays open during the durable commit', (tester) async {
+    final environment = _CommittingEnvironment();
+    final services = AppServices(environment: environment,
+        playback: AppPlayback(() => Completer<PlaybackController>().future),
+        recents: await RecentStore.load(null), pageApi: FakePageApi());
+    await tester.pumpWidget(MaterialApp(
+      navigatorKey: services.navigator,
+      builder: (context, child) => AppScope(services: services, child: child!),
+      home: const Scaffold(body: Text('root')),
+    ));
+    services.navigator.currentState!.push<void>(MaterialPageRoute(builder: (_) => const LoginPage()));
+    await tester.pumpAndSettle();
+    environment.committing = true;
+    environment.notifyListeners();
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('login-close')));
+    await tester.pumpAndSettle();
+    expect(find.byType(LoginPage), findsOneWidget);
+    environment.committing = false;
+    environment.notifyListeners();
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('login-close')));
+    await tester.pumpAndSettle();
+    expect(find.byType(LoginPage), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    services.dispose();
+    services.playback.dispose();
+    environment.dispose();
+  });
+
   testWidgets('on the PC the page shows the QR login under a 登录 bar with a close control', (tester) async {
     final environment = await AppEnvironment.load(
       keychain: FakeKeychain(const NoStoredCookies()),

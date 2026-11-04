@@ -26,44 +26,58 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  void _loggedIn() {
+    final navigator = Navigator.of(context, rootNavigator: true);
+    navigator.pop(true);
+    navigator.popUntil((route) => route.isFirst);
+  }
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: LoginTheme.colorsOf(context).page,
-    appBar: AppBar(
-      backgroundColor: LoginTheme.colorsOf(context).bar,
-      surfaceTintColor: LoginTheme.colorsOf(context).bar,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      leading: _CloseButton(onTap: () => Navigator.of(context).pop(false)),
-      title: Text('登录', style: LoginTheme.titleStyle.copyWith(color: LoginTheme.colorsOf(context).title)),
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: AppScope.of(context).environment,
+    builder: (context, _) => Scaffold(
+      backgroundColor: LoginTheme.colorsOf(context).page,
+      appBar: AppBar(
+        backgroundColor: LoginTheme.colorsOf(context).bar,
+        surfaceTintColor: LoginTheme.colorsOf(context).bar,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        leading: _CloseButton(onTap: AppScope.of(context).environment.accountCommitting ? null : () {
+          if (!AppScope.of(context).environment.accountCommitting) {
+            Navigator.of(context).pop(false);
+          }
+        }),
+        title: Text('登录', style: LoginTheme.titleStyle.copyWith(color: LoginTheme.colorsOf(context).title)),
+      ),
+      body: Platform.isIOS
+          ? _WebLogin(
+              environment: AppScope.of(context).environment,
+              expectedMid: widget.expectedMid,
+              onLoggedIn: _loggedIn,
+            )
+          : AppScope.of(context).environment.pcLogin
+          ? QrLogin(
+              environment: AppScope.of(context).environment,
+              expectedMid: widget.expectedMid,
+              onLoggedIn: _loggedIn,
+            )
+          : Center(
+              child: Text('请在手机上登录', key: const ValueKey('login-on-phone'),
+                  style: LoginTheme.messageStyle.copyWith(color: LoginTheme.colorsOf(context).message)),
+            ),
     ),
-    body: Platform.isIOS
-        ? _WebLogin(
-            environment: AppScope.of(context).environment,
-            expectedMid: widget.expectedMid,
-            onLoggedIn: () => Navigator.of(context).pop(true),
-          )
-        : AppScope.of(context).environment.pcLogin
-        ? QrLogin(
-            environment: AppScope.of(context).environment,
-            expectedMid: widget.expectedMid,
-            onLoggedIn: () => Navigator.of(context).pop(true),
-          )
-        : Center(
-            child: Text('请在手机上登录', key: const ValueKey('login-on-phone'),
-                style: LoginTheme.messageStyle.copyWith(color: LoginTheme.colorsOf(context).message)),
-          ),
   );
 }
 
 class _CloseButton extends StatelessWidget {
   const _CloseButton({required this.onTap});
 
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) => Semantics(
     button: true,
+    enabled: onTap != null,
     label: '关闭',
     onTap: onTap,
     excludeSemantics: true,
