@@ -202,6 +202,8 @@ final class Rig {
   Duration continuedStartWait = const Duration(seconds: 5);
   Duration continuedUpdateGap = const Duration(seconds: 2);
   Duration awayProgressGap = const Duration(seconds: 30);
+  int? Function()? accountMid;
+  int Function()? accountGeneration;
 
   /// The signed URLs are good for two more hours.
   DateTime now = DateTime.fromMillisecondsSinceEpoch((Canned.deadline - 7200) * 1000);
@@ -233,6 +235,8 @@ final class Rig {
       continuedStartWait: continuedStartWait,
       continuedUpdateGap: continuedUpdateGap,
       awayProgressGap: awayProgressGap,
+      accountMid: accountMid,
+      accountGeneration: accountGeneration,
     );
     libraries.add(library);
     return library;

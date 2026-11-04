@@ -235,13 +235,14 @@ Future<SkinLoadingCheck> checkSkinLoading(Uint8List bytes) async {
 /// worn deletes it, and logging out hides it (the next launch starts without it) but keeps the file for the next
 /// login, as the 装扮's packages are kept.
 class SkinLoadingKeeper {
-  SkinLoadingKeeper({required this._api, required this._root, required this._logger});
+  SkinLoadingKeeper({required this._api, required this._root, required this._logger, this.accountMid});
 
   final SkinApi _api;
 
   /// The 装扮 folder.
   final Future<String> Function() _root;
   final Logger _logger;
+  final int? Function()? accountMid;
 
   static const folderName = 'loading';
   static const _currentName = 'current.json';
@@ -268,14 +269,17 @@ class SkinLoadingKeeper {
   /// Hides what is shown and forgets it for the next launch; the file stays.
   void hide() {
     show(null);
-    unawaited(_exclusive(() => _writeCurrent(null)));
+    final owner = accountMid?.call();
+    unawaited(_exclusive(() => _writeCurrent(null, ownerMid: owner)));
   }
 
   /// The one worn at the last check, decoded from its file; null when none was or it can't be drawn.
   Future<SkinLoadingAnimation?> readCache() async {
+    final owner = accountMid?.call();
+    if (accountMid != null && owner == null) return null;
     try {
       final folder = await _folder();
-      final file = File('$folder/$_currentName');
+      final file = File('$folder/${_currentFile(owner)}');
       if (!await file.exists()) return null;
       final json = jsonDecode(await file.readAsString());
       if (json is! Map<String, Object?>) throw const FormatException('not an object');
@@ -304,6 +308,8 @@ class SkinLoadingKeeper {
   /// none. A download that fails keeps what is shown; a picture that can't be drawn shows the TV. [current] is false
   /// once the account changed, and nothing then shows.
   Future<void> wear(SkinWorn worn, bool Function() current) async {
+    final owner = accountMid?.call();
+    if (!current()) return;
     if (worn.loadingError case final reason?) {
       _logger.warn(LogCategory.ui, 'skin loading answer not understood, keeping what is shown', {'reason': reason});
       return;
@@ -313,7 +319,8 @@ class SkinLoadingKeeper {
       if (_shown.value != null) _logger.info(LogCategory.ui, 'skin loading stays stock', {'reason': 'none worn'});
       show(null);
       await _exclusive(() async {
-        await _writeCurrent(null);
+        if (!current()) return;
+        await _writeCurrent(null, ownerMid: owner);
         await _deleteFiles(keep: null);
       });
       return;
@@ -348,15 +355,18 @@ class SkinLoadingKeeper {
       _failed.add(key);
       show(null);
       await _exclusive(() async {
-        await _writeCurrent(null);
+        if (!current()) return;
+        await _writeCurrent(null, ownerMid: owner);
         await _deleteFiles(keep: null);
       });
       return;
     }
     show(animation);
     await _exclusive(() async {
+      if (!current()) return;
       if (from == 'download' && !await _writeFile(kept, animation.picture)) return;
-      await _writeCurrent(animation);
+      if (!current()) return;
+      await _writeCurrent(animation, ownerMid: owner);
       await _deleteFiles(keep: key);
     });
   }
@@ -413,15 +423,19 @@ class SkinLoadingKeeper {
   }
 
   /// Nothing to forget when nothing was ever kept, so a skin without a 加载动画 leaves no folder.
-  Future<void> _writeCurrent(SkinLoadingAnimation? animation) async {
+  String _currentFile(int? owner) => accountMid == null ? _currentName : 'current-$owner.json';
+
+  Future<void> _writeCurrent(SkinLoadingAnimation? animation, {int? ownerMid}) async {
+    if (accountMid != null && ownerMid == null) return;
+    final currentName = _currentFile(ownerMid);
     try {
       final folder = Directory(await _folder());
       if (animation == null && !await folder.exists()) return;
       await folder.create(recursive: true);
-      final temporary = File('${folder.path}/$_currentName.tmp');
+      final temporary = File('${folder.path}/$currentName.tmp');
       final worn = animation == null ? null : {'id': animation.id, 'ver': animation.ver, 'name': animation.name};
       await temporary.writeAsString(jsonEncode({'loading': worn}), flush: true);
-      await _retried(() => temporary.rename('${folder.path}/$_currentName'));
+      await _retried(() => temporary.rename('${folder.path}/$currentName'));
     } on FileSystemException catch (error) {
       _logger.warn(LogCategory.ui, 'skin loading choice not saved', {'error': _describe(error)});
     }
@@ -429,6 +443,7 @@ class SkinLoadingKeeper {
 
   /// Every picture but [keep]'s, and any write left half done.
   Future<void> _deleteFiles({required String? keep}) async {
+    if (accountMid != null) return;
     var failed = 0;
     try {
       final folder = Directory(await _folder());

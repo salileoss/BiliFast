@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app/app_scope.dart';
+import '../app/app_environment.dart';
 import '../dynamic/follow_tab/face_sheet.dart';
 import '../dynamic/follow_tab/follow_tab_page.dart';
 import '../me/me_page.dart';
@@ -35,9 +36,53 @@ class _MainShellState extends State<MainShell> {
   final _followReloads = _Reloads();
   final _faceSheet = FaceSheetController();
   HomeTab _tab = HomeTab.home;
+  AppEnvironment? _environment;
+  int _session = 0;
+  int _observedGeneration = 0;
+  int? _activeMid;
+  bool _initialLink = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final environment = AppScope.of(context).environment;
+    if (identical(_environment, environment)) return;
+    _environment?.sessions.removeListener(_sessionChanged);
+    _environment?.removeListener(_accountStateChanged);
+    _environment = environment;
+    _session = environment.sessionGeneration;
+    _observedGeneration = environment.sessionGeneration;
+    _activeMid = environment.activeAccountMid;
+    environment.sessions.addListener(_sessionChanged);
+    environment.addListener(_accountStateChanged);
+  }
+
+  void _accountStateChanged() {
+    if (_environment!.sessionGeneration == _observedGeneration) {
+      _activeMid = _environment!.activeAccountMid;
+    }
+  }
+
+  void _sessionChanged() {
+    if (!mounted) return;
+    _faceSheet.close();
+    final previous = _activeMid;
+    _activeMid = _environment!.activeAccountMid;
+    _observedGeneration = _environment!.sessionGeneration;
+    // Guest login/logout already refresh their mounted pages. A remembered-account replacement must rebuild
+    // them even though both sides read logged in; the switcher's destination is 我的.
+    if (!_environment!.hasAccountVault || previous == null || _activeMid == null) return;
+    setState(() {
+      _session = _environment!.sessionGeneration;
+      _tab = HomeTab.mine;
+      _initialLink = false;
+    });
+  }
 
   @override
   void dispose() {
+    _environment?.sessions.removeListener(_sessionChanged);
+    _environment?.removeListener(_accountStateChanged);
     _reloads.dispose();
     _followReloads.dispose();
     _faceSheet.dispose();
@@ -98,15 +143,17 @@ class _MainShellState extends State<MainShell> {
                 sizing: StackFit.expand,
                 children: [
                   _Place(
+                    key: ValueKey('home-$_session'),
                     shown: _tab == HomeTab.home,
                     child: HomePage(
                       developerPage: widget.developerPage,
-                      initialLink: widget.initialLink,
+                      initialLink: _initialLink ? widget.initialLink : null,
                       reloads: _reloads,
                       skin: skin,
                     ),
                   ),
                   _Place(
+                    key: ValueKey('follow-$_session'),
                     shown: follow,
                     child: FollowTabPage(active: follow, faceSheet: _faceSheet, reloads: _followReloads, skin: skin),
                   ),
@@ -142,7 +189,7 @@ class _MainShellState extends State<MainShell> {
 /// A place kept alive while hidden: still, and out of Hero flights, which an [IndexedStack] doesn't stop. Otherwise a
 /// hidden 推荐 cover flies over 我的 to or from a pushed page holding the same tag (a space row's `cover-<bvid>`).
 class _Place extends StatelessWidget {
-  const _Place({required this.shown, required this.child});
+  const _Place({super.key, required this.shown, required this.child});
 
   final bool shown;
   final Widget child;

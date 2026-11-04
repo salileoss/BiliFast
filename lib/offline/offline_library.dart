@@ -59,6 +59,14 @@ abstract class OfflineLibrary extends ChangeNotifier {
   void pauseAll();
   void startAll();
 
+  /// Quiesces account-owned work before the app publishes another login.
+  Future<void> accountWillChange() async => pauseAll();
+
+  /// Releases the handoff guard after the selected credentials are published, or the change is aborted.
+  void accountChangeFinished() {}
+
+  bool canResume(int cid) => true;
+
   /// Stops and removes the parts, files and all.
   Future<void> delete(Iterable<int> cids);
 
@@ -86,6 +94,8 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
     required this.engine,
     required this.host,
     this.codecMemory,
+    this.accountMid,
+    this.accountGeneration,
     BackgroundTrials? trials,
     Logger? logger,
     Future<Uint8List> Function(Uri url)? pictures,
@@ -173,6 +183,51 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
   static const _unavailableCodes = {-404, -403, 62002, 62004, 62012};
 
   final _parts = <int, _Part>{};
+  final int? Function()? accountMid;
+  final int Function()? accountGeneration;
+  int _accountBoundary = 0;
+  bool _accountChanging = false;
+
+  bool _owns(_Part part) => accountMid == null ||
+      (part.entry.ownerKnown && part.entry.ownerMid == accountMid!());
+
+  @override
+  bool canResume(int cid) {
+    final part = _parts[cid];
+    return !_accountChanging && part != null && (!part.entry.ownerKnown || _owns(part));
+  }
+
+  @override
+  Future<void> accountWillChange() async {
+    _accountChanging = true;
+    _accountBoundary++;
+    await _loading;
+    pauseAll();
+    var cancellationFailed = false;
+    await _queue(() async {
+      await _dropContinued();
+      await _endGrace();
+      List<BackgroundRangeResult> results;
+      try {
+        results = host.backgroundTransfers ? await host.takeBack() : const <BackgroundRangeResult>[];
+      } catch (_) {
+        cancellationFailed = true;
+        return;
+      }
+      _stampReturn();
+      _closeTrip(results, takeBackFailed: false);
+      _handedOff = false;
+    });
+    if (cancellationFailed) throw StateError('后台下载尚未停止，请重试');
+    await Future.wait([for (final part in _parts.values) part.stopping]);
+    await Future.wait([for (final part in _parts.values) part.writes]);
+  }
+
+  @override
+  void accountChangeFinished() {
+    _accountChanging = false;
+    _notifyNow();
+  }
 
   /// Parts being deleted, until their folders are gone; an enqueue of the same cid waits for it.
   final _deleting = <int, Future<void>>{};
@@ -258,7 +313,7 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
   @override
   bool get unseen => _unseen;
 
-  bool get _mayDownload => !_backgrounded || _graceRunning || _awayContinued;
+  bool get _mayDownload => !_accountChanging && (!_backgrounded || _graceRunning || _awayContinued);
 
   /// Something is left to download: a part downloading, or one waiting that nothing holds back.
   bool get _hasWork => _parts.values.any((part) {
@@ -448,6 +503,10 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
       }
       var item = entry.item;
       if (item.state == OfflineState.downloading) item = item.copyWith(state: OfflineState.waiting);
+      if (!item.isDone && accountMid != null &&
+          (!entry.ownerKnown || entry.ownerMid != accountMid!())) {
+        item = item.copyWith(state: OfflineState.paused, bps: 0);
+      }
       if (!item.isDone) {
         final video = await trackBytes(files.video(cid));
         final audio = await trackBytes(files.audio(cid));
@@ -479,6 +538,9 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
 
   @override
   Future<void> enqueue(List<OfflineRequest> parts, {int? quality}) async {
+    final boundary = _accountBoundary;
+    final owner = accountMid?.call();
+    final generation = accountGeneration?.call();
     await _loading;
     // A part being deleted lets go of its folder first, so the new one isn't removed with it.
     for (;;) {
@@ -488,7 +550,7 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
       if (deleting.isEmpty) break;
       await Future.wait(deleting);
     }
-    if (_disposed) return;
+    if (_disposed || _accountChanging || boundary != _accountBoundary || generation != accountGeneration?.call()) return;
     final added = <_Part>[];
     for (final request in parts) {
       if (_parts.containsKey(request.cid)) continue;
@@ -498,7 +560,7 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
       final addedAt = last != null && !now.isAfter(last) ? last.add(const Duration(milliseconds: 1)) : now;
       _lastAdded = addedAt;
       final item = OfflineItem(request: request, state: OfflineState.waiting, addedAt: addedAt);
-      final part = _Part(OfflineEntry(item: item, ceiling: quality));
+      final part = _Part(OfflineEntry(item: item, ceiling: quality, ownerMid: owner, ownerKnown: accountMid != null));
       _parts[request.cid] = part;
       added.add(part);
     }
@@ -541,11 +603,14 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
   @override
   void resume(int cid) {
     final part = _parts[cid];
-    if (part == null) return;
+    if (part == null || !canResume(cid)) return;
     final state = part.item.state;
     if (state != OfflineState.paused && state != OfflineState.failed) return;
     // 视频已失效 offers no retry; asking playurl again would only hear the same.
     if (part.item.failure == OfflineFailure.unavailable) return;
+    if (accountMid != null && !part.entry.ownerKnown) {
+      part.entry = part.entry.copyWith(ownerMid: accountMid!(), ownerKnown: true);
+    }
     _held = false;
     part.strikes = 0;
     _setItem(part, part.item.copyWith(state: OfflineState.waiting, bps: 0, clearFailure: true));
@@ -576,6 +641,10 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
     for (final part in _parts.values) {
       final state = part.item.state;
       if (state != OfflineState.paused && state != OfflineState.failed) continue;
+      if (!canResume(part.cid)) continue;
+      if (accountMid != null && !part.entry.ownerKnown) {
+        part.entry = part.entry.copyWith(ownerMid: accountMid!(), ownerKnown: true);
+      }
       part.strikes = 0;
       _setItem(part, part.item.copyWith(state: OfflineState.waiting, bps: 0, clearFailure: true), notify: false);
       started += 1;
@@ -747,6 +816,10 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
       ..sort((a, b) => a.item.addedAt.compareTo(b.item.addedAt));
     for (final part in waiting) {
       if (active >= _concurrency) break;
+      if (!_owns(part)) {
+        _setItem(part, part.item.copyWith(state: OfflineState.paused, bps: 0));
+        continue;
+      }
       active += 1;
       _setItem(part, part.item.copyWith(state: OfflineState.downloading, bps: 0, clearFailure: true));
       _launch(part);
@@ -754,6 +827,7 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
   }
 
   void _launch(_Part part) {
+    if (_accountChanging || !_owns(part)) return;
     if (part.preparing == part.epoch || part.running) return;
     final run = _run(part);
     part.run = run;
@@ -815,6 +889,8 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
 
   bool _isLive(_Part part, int epoch) =>
       !_disposed &&
+      !_accountChanging &&
+      _owns(part) &&
       identical(_parts[part.cid], part) &&
       part.epoch == epoch &&
       part.item.state == OfflineState.downloading;
@@ -929,11 +1005,24 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
 
   Future<PlayURLInfo> _playUrl(_Part part, int epoch) async {
     final request = part.item.request;
+    final boundary = _accountBoundary;
+    final generation = accountGeneration?.call();
+    final bili = client();
+    final clientGeneration = bili.sessionGeneration;
+    void check() {
+      if (_accountChanging || !_owns(part) || part.epoch != epoch || boundary != _accountBoundary ||
+          generation != accountGeneration?.call()) {
+        throw const BiliSessionChangedError();
+      }
+    }
     for (var attempt = 0; ; attempt++) {
       try {
-        final bili = client();
-        await bili.ensureRiskCookies();
-        return await bili.playURL(bvid: request.bvid, cid: request.cid, quality: part.entry.ceiling ?? askQuality);
+        check();
+        return await bili.runInSession(clientGeneration, () async {
+          await bili.ensureRiskCookies();
+          check();
+          return bili.playURL(bvid: request.bvid, cid: request.cid, quality: part.entry.ceiling ?? askQuality);
+        });
       } catch (error) {
         if (attempt >= retryGaps.length || !_retryable(error) || !identical(_parts[part.cid], part)) rethrow;
         logger.warn(LogCategory.app, 'offline playurl failed, retrying', {
@@ -1186,6 +1275,7 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
   /// downloads rather than before; one save per part at a time.
   void _saveDanmakuAlongside(_Part part) {
     if (part.entry.danmakuComplete) return;
+    final boundary = _accountBoundary;
     if (part.danmaku != null) {
       // The finish's one more go, for when the save under way stops short.
       part.danmakuOwed = true;
@@ -1194,6 +1284,9 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
     bool live() {
       final state = part.item.state;
       return !_disposed &&
+          !_accountChanging &&
+          _owns(part) &&
+          boundary == _accountBoundary &&
           !_held &&
           identical(_parts[part.cid], part) &&
           (state == OfflineState.downloading || state == OfflineState.done);
@@ -1522,6 +1615,8 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
 
   /// Stops the engine and hands what it still lacks to iOS's background session, with [arm]'s connections and pieces.
   Future<void> _handOff(List<_Part> active, BackgroundArm arm, {required bool fallback}) async {
+    if (_accountChanging) return;
+    final boundary = _accountBoundary;
     await _beginGrace();
     final leaving = Stopwatch()..start();
     // Parts not in the engine (the return's take-back was still waiting, or a run was still asking for its streams)
@@ -1582,6 +1677,7 @@ class DiskOfflineLibrary extends OfflineLibrary with WidgetsBindingObserver {
       handed.add(part);
     }
     final ranges = roundRobin(perPart);
+    if (_accountChanging || boundary != _accountBoundary) return;
     if (ranges.isNotEmpty) {
       try {
         await host.handOff(ranges, connections: arm.connections);

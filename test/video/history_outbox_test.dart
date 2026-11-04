@@ -409,19 +409,19 @@ void main() {
           },
         ]),
       );
-      final loaded = await HistoryOutbox.load(path, logger: logger, now: () => now);
+      final loaded = await HistoryOutbox.load(path, logger: logger, now: () => now, requireOwner: false);
       expect([for (final each in loaded.reports) (each.cid, each.played)], [(2, 5)]);
     });
 
     test('what waits is kept across launches, older than 30 days dropped at load', () async {
-      outbox = await HistoryOutbox.load(path, logger: logger, now: () => now);
+      outbox = await HistoryOutbox.load(path, logger: logger, now: () => now, requireOwner: false);
       offline();
       await report('BV1a', 1, 10);
       now = now.add(const Duration(days: 20));
       await report('BV1b', 2, -1);
       await outbox.settle();
 
-      final again = await HistoryOutbox.load(path, logger: logger, now: () => now);
+      final again = await HistoryOutbox.load(path, logger: logger, now: () => now, requireOwner: false);
       expect(
         [for (final each in again.reports) (each.bvid, each.cid, each.played)],
         [('BV1a', 1, 10), ('BV1b', 2, -1)],
@@ -429,7 +429,7 @@ void main() {
       expect(again.reports.first.at, DateTime(2026, 10, 30, 12));
 
       now = now.add(const Duration(days: 15));
-      final later = await HistoryOutbox.load(path, logger: logger, now: () => now);
+      final later = await HistoryOutbox.load(path, logger: logger, now: () => now, requireOwner: false);
       expect([for (final each in later.reports) each.bvid], ['BV1b']);
       expect(outboxLines().last, {'held': 1, 'dropped': 1});
       await later.settle();
@@ -438,7 +438,7 @@ void main() {
 
     test('an unreadable file starts empty, and entries that don\'t decode are skipped', () async {
       File(path).writeAsStringSync('{not json');
-      expect((await HistoryOutbox.load(path, logger: logger, now: () => now)).reports, isEmpty);
+      expect((await HistoryOutbox.load(path, logger: logger, now: () => now, requireOwner: false)).reports, isEmpty);
 
       File(path).writeAsStringSync(
         jsonEncode([
@@ -446,13 +446,13 @@ void main() {
           {'bvid': 'BV1b', 'cid': '2'},
         ]),
       );
-      final loaded = await HistoryOutbox.load(path, logger: logger, now: () => now);
+      final loaded = await HistoryOutbox.load(path, logger: logger, now: () => now, requireOwner: false);
       expect([for (final each in loaded.reports) each.bvid], ['BV1a']);
       expect(logs.events.map((event) => event.msg), contains('history outbox entries skipped'));
     });
 
     test('no file and nothing waiting: nothing is written or logged', () async {
-      final empty = await HistoryOutbox.load(path, logger: logger, now: () => now);
+      final empty = await HistoryOutbox.load(path, logger: logger, now: () => now, requireOwner: false);
       await empty.settle();
       expect(File(path).existsSync(), isFalse);
       expect(outboxLines(), isEmpty);

@@ -122,6 +122,11 @@ One Dart interface (`BiliPlayer`) with iOS and Windows implementations, over Pig
 - **Cookies:** the keychain generic password with service `com.kaichuan.bilinative.cookies`, account `bilibili`,
   accessibility `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, no access group; the value is a JSON object of
   cookie name → value. Writing the same format means going back to a Swift build keeps the login.
+- **Account switching (2026-11-03):** the versioned `com.kaichuan.bilifast.accounts` Keychain item supersedes these
+  legacy slots. It contains saved accounts and one active uid, with web cookies and the matching optional app token
+  together. Migration verifies the uid and reads the new vault back before deleting the legacy items. This is
+  one-way: an older Swift/Flutter build cannot read the new account collection. The original carry-over format above
+  remains the migration input, rather than an ongoing downgrade guarantee.
 - **TV token (不喜欢):** service `com.kaichuan.bilinative.apptoken`, account `bilibili`, raw UTF-8.
 - **Never log a cookie or token.** Every log line goes through `Redactor`.
 - **After a failed keychain read, block writes** until a read succeeds or the user logs in or out, so a transient

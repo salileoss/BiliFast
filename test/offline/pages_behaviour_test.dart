@@ -78,6 +78,12 @@ class _UnseenLibrary extends FakeOfflineLibrary {
 
 final _noSkin = ValueNotifier<Skin?>(null);
 
+class _OtherAccountLibrary extends FakeOfflineLibrary {
+  _OtherAccountLibrary({super.items});
+  @override
+  bool canResume(int cid) => false;
+}
+
 void main() {
   Future<AppServices> services(FakeOfflineLibrary offline, {bool loggedIn = true}) async {
     final logger = Logger(session: 'test');
@@ -306,6 +312,18 @@ void main() {
   });
 
   group('正在缓存', () {
+    testWidgets('a download belonging to another account explains how to resume', (tester) async {
+      final library = _OtherAccountLibrary(items: [_part(1, state: OfflineState.paused)]);
+      await show(tester, library, DownloadingPage(skin: _noSkin));
+      await tester.tap(key('offline-row-1'));
+      await tester.pump();
+      expect(find.text(DownloadingPage.otherAccount), findsOneWidget);
+      expect(library.item(1)!.state, OfflineState.paused);
+      await settle(tester);
+      await tester.pump(const Duration(seconds: 3));
+      await settle(tester);
+    });
+
     List<OfflineItem> queue() => [
       _part(1, state: OfflineState.downloading, minute: 1, bytes: 5 * _mb, total: 50 * _mb),
       _part(2, state: OfflineState.waiting, minute: 2, bytes: 0),

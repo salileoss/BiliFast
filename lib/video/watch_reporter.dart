@@ -22,9 +22,11 @@ class WatchReporter {
     required this._loggedIn,
     this.onProgress,
     this._outbox,
+    this.ownerMid,
     Logger? logger,
   }) : _controller = controller,
        _open = controller.opens,
+       _clientGeneration = _client.sessionGeneration,
        _logger = logger ?? Logger.shared {
     // After the controller's own subscription, so its phase already reflects each event.
     _events = controller.player.events.listen(_onEvent);
@@ -33,7 +35,7 @@ class WatchReporter {
   /// Logged in, or still unknown with a session in the jar: a launch account check that failed (no network) must not
   /// cost the whole session its history, and Bilibili ignores the heartbeats of a session that turns out dead. Never
   /// in a `--fake-account` run.
-  static bool canReport(AppEnvironment environment) => !environment.fake && switch (environment.account) {
+  static bool canReport(AppEnvironment environment) => !environment.fake && !environment.accountTransitioning && switch (environment.account) {
     LoggedIn() => true,
     AccountUnknown() => environment.cookies.all.containsKey('SESSDATA'),
     LoggedOut() || LoginExpired() => false,
@@ -43,6 +45,9 @@ class WatchReporter {
   final BiliClient _client;
   final bool Function() _loggedIn;
   final HistoryOutbox? _outbox;
+  final int? ownerMid;
+  final int _clientGeneration;
+  bool get _sameSession => _clientGeneration == _client.sessionGeneration;
 
   /// Every position reported, logged in or not, in seconds; a finished video reports its whole length.
   final void Function(String bvid, int cid, int seconds)? onProgress;
@@ -133,14 +138,20 @@ class WatchReporter {
 
   /// One after another, so a late answer never reorders the history Bilibili keeps.
   void _send(({String bvid, int cid}) item, int played) {
+    if (!_sameSession) return;
     final duration = _controller.page?.duration ?? 0;
     onProgress?.call(item.bvid, item.cid, played == HeartbeatSchedule.finished ? duration : played);
     if (!_loggedIn()) return;
-    Future<void> beat() => _client.heartbeat(bvid: item.bvid, cid: item.cid, playedTime: played);
+    bool current() => _sameSession && _loggedIn();
+    Future<void> beat() async {
+      if (!current()) return;
+      await _client.runInSession(_clientGeneration,
+          () => _client.heartbeat(bvid: item.bvid, cid: item.cid, playedTime: played));
+    }
     // Handed to the outbox at once, whose lane keeps the order: a page opening this part next must know a report of
     // it is on its way.
     final queued = _outbox
-        ?.send(item.bvid, item.cid, played, beat)
+        ?.send(item.bvid, item.cid, played, beat, ownerMid: ownerMid, isCurrent: current)
         .then<Object?>((_) => null, onError: (Object error) => error);
     _sending = _sending.then((_) async {
       Object? failure = await queued;
@@ -152,6 +163,7 @@ class WatchReporter {
         }
       }
       if (failure == null) return;
+      if (failure is BiliSessionChangedError) return;
       // The Windows guard refuses every beat and logs the first itself.
       if (failure is BiliAPIError && failure.code == GuardedTransport.readOnlyCode) return;
       _logger.warn(LogCategory.api, 'heartbeat failed', {'played': played, 'error': '$failure'});

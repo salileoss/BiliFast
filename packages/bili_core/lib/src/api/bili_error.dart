@@ -33,7 +33,16 @@ sealed class BiliError implements Exception {
     BiliInvalidLinkError() => '没有找到视频链接',
     BiliNoAppTokenError() => '需要先授权官方接口',
     BiliNetworkError() => '网络连接失败，请检查网络后重试',
+    BiliSessionChangedError() => '账号已切换，请重试',
   };
+}
+
+/// Work belonging to a previous login must not continue with the current credentials.
+final class BiliSessionChangedError extends BiliError {
+  const BiliSessionChangedError();
+
+  @override
+  String toString() => 'BiliSessionChangedError';
 }
 
 final class BiliHTTPError extends BiliError {

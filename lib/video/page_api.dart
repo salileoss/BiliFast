@@ -101,6 +101,11 @@ class ClientPageApi implements PageApi {
 
   final BiliClient _client;
 
+  int get sessionGeneration => _client.sessionGeneration;
+
+  /// Uploads and the comment they accompany belong to one initiating login.
+  Future<T> runInSession<T>(int generation, Future<T> Function() action) => _client.runInSession(generation, action);
+
   @override
   Future<VideoRelation> relation({required int aid, required String bvid}) => _client.relation(aid: aid, bvid: bvid);
 
@@ -136,7 +141,8 @@ class ClientPageApi implements PageApi {
   /// The official call while the app token is held, as PiliPlus does, else the web's. A token Bilibili turns down
   /// (the client's -101 and -2) has just been reported and is being dropped, and the call did nothing, so it goes out
   /// once on the web instead: the web login is a different one, and a -101 there still asks for it.
-  Future<void> _officialFirst(Future<void> Function() official, Future<void> Function() web) async {
+  Future<void> _officialFirst(Future<void> Function() official, Future<void> Function() web) =>
+      runInSession(sessionGeneration, () async {
     if (_client.appToken == null) return web();
     try {
       return await official();
@@ -144,7 +150,7 @@ class ClientPageApi implements PageApi {
       if (!_tokenRefused.contains(error.code)) rethrow;
       return web();
     }
-  }
+  });
 
   static const _tokenRefused = {-101, -2};
 

@@ -7,9 +7,11 @@ import 'package:bilifast/comments/comments_model.dart';
 import 'package:bilifast/comments/composer_model.dart';
 import 'package:bilifast/comments/emote_store.dart';
 import 'package:bilifast/video/fake_page_api.dart';
+import 'package:bilifast/video/page_api.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'comment_fixtures.dart';
+import '../playback/fakes.dart';
 
 Comment named(int rpid, String name, {int root = 0}) => Comment(
   rpid: rpid,
@@ -52,6 +54,34 @@ void main() {
   );
 
   group('posting', () {
+    test('switching accounts during picture upload cancels the following uploads and post', () async {
+      const uploadPath = '/x/dynamic/feed/draw/upload_bfs';
+      final http = CannedHttp()
+        ..routes[uploadPath] = (200, '{"code":0,"data":{"image_url":"https://i0.hdslb.com/test.png","image_width":10,"image_height":10}}');
+      final upload = http.gates[uploadPath] = Completer<void>();
+      final client = BiliClient(transport: http, cookies: CookieJar({'SESSDATA': 'session-a', 'bili_jct': 'csrf-a'}));
+      final drafts = CommentDrafts();
+      final comments = CommentsModel(aid: testAid, upMid: 1, api: ClientPageApi(client), drafts: drafts,
+          isLoggedIn: () => true, accountMid: () => 1, requestLogin: () {}, toast: (_) {});
+      final model = ComposerModel(comments: comments, target: const ReplyToVideo(), recent: recent, catalog: catalog);
+      addTearDown(model.dispose);
+      addTearDown(comments.dispose);
+      model.text = 'comment from A';
+      model.addPictures([picture('one.png'), picture('two.png')]);
+      final posted = model.post();
+      await pumpEventQueue();
+      expect(http.to(uploadPath), hasLength(1));
+      client.invalidateSession();
+      client.cookies.replaceAll({'SESSDATA': 'session-b', 'bili_jct': 'csrf-b'});
+      client.invalidateSession();
+      client.cookies.replaceAll({'SESSDATA': 'session-a', 'bili_jct': 'csrf-a'});
+      upload.complete();
+      expect(await posted, isFalse);
+      expect(http.requests, hasLength(1), reason: 'no second upload or comment under a later session');
+      expect(comments.comments, isEmpty);
+      expect(model.text, 'comment from A');
+    });
+
     test('a comment on the video sends no root or parent and goes to the top of the list', () async {
       final rig = CommentsRig();
       final model = composer(rig, const ReplyToVideo());

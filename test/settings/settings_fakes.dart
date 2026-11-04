@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bili_core/devlog.dart';
 import 'package:bilifast/account/login_gate.dart';
+import 'package:bilifast/account/account_vault.dart';
 import 'package:bilifast/app/app_environment.dart';
 import 'package:bilifast/app/app_scope.dart';
 import 'package:bilifast/devtools/log_files.dart';
@@ -39,6 +40,24 @@ class FakeEnvironment extends ChangeNotifier implements AppEnvironment {
   ValueListenable<int> get logins => _logins;
   final _logins = ValueNotifier<int>(0);
 
+  @override
+  ValueListenable<int> get sessions => _sessions;
+  final _sessions = ValueNotifier<int>(0);
+  @override
+  int get sessionGeneration => _sessions.value;
+  @override
+  bool get hasAccountVault => false;
+  @override
+  bool get accountTransitioning => false;
+  @override
+  bool get accountCommitting => false;
+  @override
+  int? get activeAccountMid => null;
+  @override
+  Future<void> Function()? beforeAccountChange;
+  @override
+  VoidCallback? accountChangeAborted;
+
   set account(Account value) {
     _account = value;
     notifyListeners();
@@ -66,6 +85,9 @@ class FakeEnvironment extends ChangeNotifier implements AppEnvironment {
 
   @override
   bool loginSaved = true;
+
+  @override
+  List<SavedAccount> get savedAccounts => const [];
 
   /// As the real one: every step runs and the account ends logged out, then a keychain that kept the login throws.
   @override

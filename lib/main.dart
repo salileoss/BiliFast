@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'dart:io' show Platform;
+import 'dart:convert';
+import 'dart:io' show Platform, File;
 
 import 'package:bili_core/devlog.dart';
 import 'package:flutter/material.dart';
@@ -87,7 +88,7 @@ Future<void> main(List<String> args) async {
     environment = await (Platform.isWindows
         ? loadWindowsEnvironment(
             realAccount: args.contains('--real-account') && !args.contains('--fake-account'))
-        : AppEnvironment.load());
+        : AppEnvironment.load(legacyAuthDeclined: await readLegacyAuthDeclined(appDevicePath())));
     recents = await RecentStore.load(supportFilePath('recents.json'));
     PlayerPrefs.shared = await PlayerPrefs.load(supportFilePath('player_prefs.json'));
     fonts = await FontStore.load(supportFilePath('font.json'));
@@ -145,6 +146,8 @@ Future<void> main(List<String> args) async {
           : DiskOfflineLibrary(
               folder: offlineFolder,
               client: () => environment.client,
+              accountMid: () => environment.activeAccountMid,
+              accountGeneration: () => environment.sessionGeneration,
               engine: engine.lease,
               host: Platform.isIOS ? IosOfflineHost() : const NoOfflineHost(),
               codecMemory: codecMemory,
@@ -194,6 +197,17 @@ Future<AppEnvironment> loadWindowsEnvironment({bool realAccount = false}) {
       guarded: true,
       serverLogout: true,
       pcLogin: loginFile != null);
+}
+
+/// Read before the first account check so migration cannot outrun the existing authorization preference.
+Future<bool> readLegacyAuthDeclined(String? path) async {
+  if (path == null) return false;
+  try {
+    final json = jsonDecode(await File(path).readAsString());
+    return json is Map<String, Object?> && json['authDeclined'] == true;
+  } catch (_) {
+    return false;
+  }
 }
 
 /// The launch's account check fails without a network; as Swift's RootView did on becoming active, coming back to

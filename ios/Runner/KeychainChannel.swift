@@ -2,12 +2,13 @@ import Flutter
 import Foundation
 import Security
 
-/// The Swift BiliFast's keychain items, read and written in exactly its format (BiliNative
-/// `Account/KeychainStore.swift`, `AppTokenStore.swift`), so the login carries over in both directions.
+/// The old Swift login items remain readable for migration. Saved accounts use a separate
+/// versioned vault item; Dart commits it before removing the legacy items.
 /// Values never cross into logs: errors report only the OSStatus.
 enum KeychainChannel {
   private static let cookieService = "com.kaichuan.bilinative.cookies"
   private static let tokenService = "com.kaichuan.bilinative.apptoken"
+  private static let vaultService = "com.kaichuan.bilifast.accounts"
   private static let account = "bilibili"
 
   static func register(with messenger: FlutterBinaryMessenger) {
@@ -36,6 +37,24 @@ enum KeychainChannel {
         result(saveAppToken(token))
       case "deleteAppToken":
         result(deleteError(delete(tokenService)))
+      case "loadAccountVault":
+        let (status, data) = load(vaultService)
+        if status == errSecItemNotFound {
+          result(["status": "notFound"])
+        } else if status != errSecSuccess {
+          result(["status": "failed", "code": Int(status)])
+        } else if let data, let vault = String(data: data, encoding: .utf8), !vault.isEmpty {
+          result(["status": "vault", "vault": vault])
+        } else {
+          result(["status": "failed", "code": Int(errSecDecode)])
+        }
+      case "saveAccountVault":
+        guard let vault = arguments?["vault"] as? String, !vault.isEmpty else {
+          result(["ok": false, "code": Int(errSecParam)])
+          return
+        }
+        // Even an empty account collection is a document: absence would revive a legacy login.
+        result(save(Data(vault.utf8), service: vaultService))
       default:
         result(FlutterMethodNotImplemented)
       }
@@ -99,7 +118,9 @@ enum KeychainChannel {
     guard status == errSecSuccess else {
       return status == errSecItemNotFound ? [:] : ["code": Int(status)]
     }
-    guard let data, let token = String(data: data, encoding: .utf8), !token.isEmpty else { return [:] }
+    guard let data, let token = String(data: data, encoding: .utf8), !token.isEmpty else {
+      return ["code": Int(errSecDecode)]
+    }
     return ["token": token]
   }
 

@@ -2,6 +2,7 @@ import 'package:bili_core/api.dart';
 import 'package:bili_core/devlog.dart';
 import 'package:flutter/foundation.dart';
 
+import '../video/page_api.dart';
 import 'comments_model.dart';
 import 'emote_store.dart';
 
@@ -166,24 +167,29 @@ class ComposerModel extends ChangeNotifier {
     final mentions = _mentionsIn(_trimmed);
     final syncToDynamic = _syncToDynamic;
     final drafts = comments.drafts;
+    final api = comments.api;
+    final generation = api is ClientPageApi ? api.sessionGeneration : null;
     _posting = true;
     drafts.setPosting(key, true);
     _notify();
     try {
-      final uploaded = <UploadedPicture>[];
-      for (final picture in sent.pictures) {
-        uploaded.add(await comments.api.uploadCommentPicture(bytes: picture.bytes, filename: picture.name));
+      Future<Comment> send() async {
+        final uploaded = <UploadedPicture>[];
+        for (final picture in sent.pictures) {
+          uploaded.add(await api.uploadCommentPicture(bytes: picture.bytes, filename: picture.name));
+        }
+        return api.postComment(
+          aid: comments.aid,
+          type: comments.type,
+          message: message,
+          root: root,
+          parent: parent,
+          syncToDynamic: syncToDynamic,
+          mentions: mentions,
+          pictures: uploaded,
+        );
       }
-      final posted = await comments.api.postComment(
-        aid: comments.aid,
-        type: comments.type,
-        message: message,
-        root: root,
-        parent: parent,
-        syncToDynamic: syncToDynamic,
-        mentions: mentions,
-        pictures: uploaded,
-      );
+      final posted = await (api is ClientPageApi ? api.runInSession(generation!, send) : send());
       comments.inserted(posted);
       // What was typed while it was out stays as the draft.
       if (_draft == sent) _load(CommentDraft.empty);

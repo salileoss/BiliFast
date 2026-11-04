@@ -18,6 +18,8 @@ final class OfflineEntry {
     this.audioTotal = 0,
     this.danmakuSegments = 0,
     this.danmakuSaved = 0,
+    this.ownerMid,
+    this.ownerKnown = false,
   });
 
   static const version = 1;
@@ -27,6 +29,9 @@ final class OfflineEntry {
 
   /// The 缓存 sheet's quality; null for the highest the account gets.
   final int? ceiling;
+  final int? ownerMid;
+  /// Also true for a guest download; false only for entries predating account ownership.
+  final bool ownerKnown;
   final DashStream? video;
   final DashStream? audio;
   final int videoTotal;
@@ -47,9 +52,13 @@ final class OfflineEntry {
     int? audioTotal,
     int? danmakuSegments,
     int? danmakuSaved,
+    int? ownerMid,
+    bool? ownerKnown,
   }) => OfflineEntry(
     item: item ?? this.item,
     ceiling: ceiling,
+    ownerMid: ownerMid ?? this.ownerMid,
+    ownerKnown: ownerKnown ?? this.ownerKnown,
     video: video ?? this.video,
     audio: audio ?? this.audio,
     videoTotal: videoTotal ?? this.videoTotal,
@@ -65,6 +74,8 @@ final class OfflineEntry {
     'failure': ?item.failure?.name,
     'addedAt': item.addedAt.millisecondsSinceEpoch,
     'ceiling': ?ceiling,
+    'ownerMid': ?ownerMid,
+    'ownerKnown': ownerKnown,
     'quality': item.quality,
     'qualityName': item.qualityName,
     'vipOnly': item.vipOnly,
@@ -105,6 +116,8 @@ final class OfflineEntry {
         faceFile: json['face'] is String ? files.face(cid) : null,
       ),
       ceiling: json['ceiling'] is int ? json['ceiling'] as int : null,
+      ownerMid: json['ownerMid'] is int && (json['ownerMid'] as int) > 0 ? json['ownerMid'] as int : null,
+      ownerKnown: json['ownerKnown'] == true,
       video: _stream(json['video']),
       audio: _stream(json['audio']),
       videoTotal: _int(json['videoTotal']),

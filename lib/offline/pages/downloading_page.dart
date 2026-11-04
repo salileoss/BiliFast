@@ -40,6 +40,7 @@ class DownloadingPage extends StatefulWidget {
 
   static const emptyMessage = '没有正在缓存的视频';
   static const vipOnly = '开通大会员后可使用';
+  static const otherAccount = '请切换到下载此视频的账号后继续缓存';
 
   @override
   State<DownloadingPage> createState() => _DownloadingPageState();
@@ -76,6 +77,10 @@ class _DownloadingPageState extends State<DownloadingPage> with OfflineEditing {
       case OfflineState.downloading || OfflineState.waiting:
         library.pause(item.cid);
       case OfflineState.paused || OfflineState.failed:
+        if (!library.canResume(item.cid)) {
+          showToast(context, DownloadingPage.otherAccount);
+          return;
+        }
         library.resume(item.cid);
       case OfflineState.done:
     }
@@ -85,6 +90,9 @@ class _DownloadingPageState extends State<DownloadingPage> with OfflineEditing {
     if (anyRunning(library)) {
       library.pauseAll();
     } else {
+      if (library.items.any((item) => !item.isDone && !library.canResume(item.cid))) {
+        showToast(context, DownloadingPage.otherAccount);
+      }
       library.startAll();
     }
   }
