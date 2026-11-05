@@ -93,3 +93,11 @@ resume/nested-scroll regression added after the full run began. The 34-test focu
 regression. Analysis with fatal infos, 36 workflow tests and whitespace checks passed. The fling test verifies zero
 new player allocations throughout ballistic motion, then exactly one start after idle. No physical-phone battery
 measurement was performed.
+
+Application source: `a36607c`. Build commit: `6760fcae42daad4770830307cb85de76c7b2a2fa`.
+The [macOS pipeline](https://github.com/salileoss/BiliFast/actions/runs/41971143699) passed.
+IPA 1.3.0 (11) is saved locally at `build/ipa/BiliFast-1.3.0-11-feed-idle.ipa` (19,070,144 bytes), with its manifest.
+Source commit, SHA-256, ZIP integrity, ARM64 binary, framework, bundle identity and version checks passed.
+The IPA is unsigned and requires sideload signing.
+
+SHA-256: `1eb9bc4b961f90c31db4fac233cb2f466f935cd91fa325cc4d2e83fab28986ba`.

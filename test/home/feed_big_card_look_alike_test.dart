@@ -14,6 +14,7 @@ import 'package:bilifast/home/main_shell.dart';
 import 'package:bilifast/home/recent_store.dart';
 import 'package:bilifast/playback/playback_controller.dart';
 import 'package:bilifast/player/bili_player.dart';
+import 'package:bilifast/player_ui/player_gestures.dart';
 import 'package:bilifast/search/fake_search_api.dart';
 import 'package:bilifast/settings/font_store.dart';
 import 'package:bilifast/shared/theme.dart';
@@ -128,6 +129,35 @@ void main() {
 
   Rect inCard(WidgetTester tester, String bvid, Key key) =>
       tester.getRect(find.descendant(of: find.byKey(ValueKey('feed-card-$bvid')), matching: find.byKey(key)));
+
+  for (final dark in [false, true]) {
+    testWidgets('focused tile gesture HUDs fit the ${dark ? 'dark' : 'light'} phone feed', (tester) async {
+      const bvid = 'BV1GJ411x7h7';
+      final player = await showPlaying(tester, bigCard(bvid, fullTitle: '视频播放手势'), dark: dark);
+      player.emit(const DurationChanged(600));
+      final video = inCard(tester, bvid, const ValueKey('big-card-open'));
+      var gesture = await tester.startGesture(video.center);
+      await gesture.moveBy(Offset(video.width / 4, 0));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      final seek = tester.getRect(find.byKey(const ValueKey('hud-seek')));
+      expect(video.contains(seek.center), isTrue);
+      final shots = Platform.environment['BILIFAST_SHOTS'];
+      if (shots != null) await saveShot(tester, find.byKey(_screen), '$shots/feed-seek-${dark ? 'dark' : 'light'}.png');
+      await gesture.cancel();
+      await tester.pump(const Duration(milliseconds: 500));
+      gesture = await tester.startGesture(video.center);
+      await tester.pump(PlayerGestureLayer.holdDelay + const Duration(milliseconds: 1));
+      await tester.pump(const Duration(milliseconds: 500));
+      final speed = tester.getRect(find.byKey(const ValueKey('hud-speed-pill')));
+      expect(video.contains(speed.topLeft), isTrue);
+      expect(video.contains(speed.bottomRight), isTrue);
+      if (shots != null) await saveShot(tester, find.byKey(_screen), '$shots/feed-speed-${dark ? 'dark' : 'light'}.png');
+      await gesture.up();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets("123's two-line title: the card 428 pt wide, the video 16:9, the band 59.67 pt, 👍 and ⋮ where 123 has "
       'them', (tester) async {

@@ -2,12 +2,16 @@ import 'dart:async';
 
 import 'package:bili_core/api.dart' show FeedCard, VideoDetail;
 import 'package:bili_core/devlog.dart';
+import 'package:bili_core/logic.dart' show GestureMath;
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../app/app_scope.dart';
 import '../player/bili_player.dart';
+import '../player_ui/chrome_state.dart';
 import '../player_ui/player_loading.dart';
+import '../player_ui/seek_bar.dart';
 import '../playback/playback_controller.dart';
 import '../shared/theme.dart';
 import '../video/page_playback.dart';
@@ -240,6 +244,86 @@ class FeedInlinePlayback extends ChangeNotifier {
   PlaybackController? get controller => _controller;
   PlayerSession? get session => _session;
 
+  final gestureChrome = ChromeState();
+  double? _seekStart;
+  double _seekWidth = 0;
+  double _seekTarget = 0;
+  double? _restAnchor;
+  Timer? _seekRest;
+  bool _holding = false;
+
+  bool get canGesture => _wanted && shown && !failed && (_session?.readout.wantsPlay ?? false);
+
+  void beginSeek(double width) {
+    final session = _session;
+    if (!canGesture || session == null || !(session.duration.value > 0)) return;
+    _seekStart = session.position;
+    _seekTarget = session.position;
+    _seekWidth = width;
+  }
+
+  void updateSeek(double dx) {
+    final start = _seekStart;
+    final session = _session;
+    if (start == null || session == null) return;
+    final duration = session.duration.value;
+    final target = _seekTarget = GestureMath.seekTarget(
+      start: start,
+      dx: dx,
+      width: _seekWidth,
+      duration: duration,
+    );
+    session.scrub(target);
+    gestureChrome.showHud(SeekHud(target: target, duration: duration));
+    final anchor = _restAnchor;
+    if (anchor != null && (dx - anchor).abs() <= SeekBar.restSlop) return;
+    _restAnchor = dx;
+    _seekRest?.cancel();
+    _seekRest = Timer(SeekBar.restDelay, () {
+      if (_seekStart != null) _session?.hint(_seekTarget);
+    });
+  }
+
+  void endSeek() {
+    if (_seekStart == null) return;
+    _seekStart = null;
+    _clearSeekRest();
+    gestureChrome.showHud(null);
+    if (_session case final session?) unawaited(session.commitSeek(_seekTarget));
+  }
+
+  void beginHold() {
+    if (!canGesture || _holding) return;
+    _holding = true;
+    _session!.speedUp(true);
+    gestureChrome.showHud(const SpeedUpHud());
+    unawaited(HapticFeedback.mediumImpact());
+  }
+
+  void endHold() {
+    if (!_holding) return;
+    _holding = false;
+    _session?.speedUp(false);
+    gestureChrome.showHud(null);
+  }
+
+  /// A lost focus, cancelled touch, or page handoff must leave no seek hint or temporary speed behind.
+  void cancelGesture() {
+    if (_seekStart != null) {
+      _seekStart = null;
+      _session?.cancelScrub();
+      gestureChrome.showHud(null);
+    }
+    _clearSeekRest();
+    endHold();
+  }
+
+  void _clearSeekRest() {
+    _seekRest?.cancel();
+    _seekRest = null;
+    _restAnchor = null;
+  }
+
   /// The video has played since its player came, so it shows over the cover.
   bool get shown => _shown && _controller != null;
 
@@ -282,6 +366,7 @@ class FeedInlinePlayback extends ChangeNotifier {
   void pause() {
     if (!_wanted || _disposed) return;
     _wanted = false;
+    cancelGesture();
     if (_controller case final controller?) {
       controller.holdAutoplay(true);
       _quietly(controller.player.pause, 'pause');
@@ -343,7 +428,9 @@ class FeedInlinePlayback extends ChangeNotifier {
   }
 
   void _changed() {
-    if (!_disposed) notifyListeners();
+    if (_disposed) return;
+    if (!canGesture) cancelGesture();
+    notifyListeners();
   }
 
   /// Played to its end: from the start again, the counts gone and the buttons dimmed from the second time on (125).
@@ -397,6 +484,7 @@ class FeedInlinePlayback extends ChangeNotifier {
   }
 
   void _forget() {
+    cancelGesture();
     _release?.cancel();
     _release = null;
     _playback?.removeListener(_playbackChanged);
@@ -421,6 +509,7 @@ class FeedInlinePlayback extends ChangeNotifier {
     FeedInlineChoices.sound.removeListener(_applySound);
     _services.danmakuSettings.removeListener(_applyFilter);
     _services.blockRules.removeListener(_applyFilter);
+    gestureChrome.dispose();
     super.dispose();
   }
 

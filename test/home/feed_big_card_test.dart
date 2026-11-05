@@ -9,6 +9,7 @@ import 'package:bilifast/app/app_environment.dart';
 import 'package:bilifast/app/app_scope.dart';
 import 'package:bilifast/danmaku/danmaku_layer.dart';
 import 'package:bilifast/home/feed_big_card.dart';
+import 'package:bilifast/home/feed_inline_gestures.dart';
 import 'package:bilifast/home/feed_inline_player.dart';
 import 'package:bilifast/home/feed_model.dart';
 import 'package:bilifast/home/home_page.dart';
@@ -17,7 +18,10 @@ import 'package:bilifast/home/main_shell.dart';
 import 'package:bilifast/home/recent_store.dart';
 import 'package:bilifast/playback/playback_controller.dart';
 import 'package:bilifast/player/bili_player.dart';
+import 'package:bilifast/player_ui/chrome_state.dart';
+import 'package:bilifast/player_ui/player_gestures.dart';
 import 'package:bilifast/player_ui/player_loading.dart';
+import 'package:bilifast/player_ui/seek_bar.dart';
 import 'package:bilifast/shared/theme.dart';
 import 'package:bilifast/video/fake_page_api.dart';
 import 'package:bilifast/video/video_page.dart';
@@ -42,6 +46,7 @@ void main() {
   late FakeLoginGate gate;
   late List<FakePlayer> players;
   late List<PlaybackController> controllers;
+  late List<FakeEngine> engines;
   late Map<int, List<FeedCard>> pages;
 
   /// While set, a player asked for comes only once it completes; [createError] fails it instead.
@@ -54,6 +59,7 @@ void main() {
     gate = FakeLoginGate();
     players = [];
     controllers = [];
+    engines = [];
     pages = {
       1: [bigCard(_bv), ...smalls('a', 12)],
     };
@@ -86,9 +92,11 @@ void main() {
       if (createError case final error?) throw error;
       final player = FakePlayer();
       players.add(player);
+      final engine = FakeEngine();
+      engines.add(engine);
       final controller = PlaybackController(
         client: environment.client,
-        engine: FakeEngine(),
+        engine: engine,
         player: player,
         clock: ManualClock(10000).clock,
         now: () => now,
@@ -130,6 +138,7 @@ void main() {
     await frames(tester, 20);
     expect(players, isNotEmpty, reason: 'the big card asked for a player');
     if (playing) {
+      players.last.emit(const DurationChanged(600));
       players.last.emit(const StatusChanged(PlayerStatus.playing));
       await frames(tester, 2);
     }
@@ -143,6 +152,242 @@ void main() {
     if (since.isEmpty) return player.loaded?.autoplay ?? false;
     return since.last == 'play';
   }
+
+  FeedInlinePlayback inline(WidgetTester tester) =>
+      tester.widget<FeedInlineGestures>(find.byType(FeedInlineGestures).first).playback;
+
+  group('focused tile gestures', () {
+    for (final direction in [1.0, -1.0]) {
+      testWidgets('a ${direction > 0 ? 'right' : 'left'} swipe previews and commits one seek', (tester) async {
+        await show(tester);
+        await started(tester);
+        player().emit(const PositionChanged(seconds: 0, hostMs: 10000, rate: 1));
+        player().emit(const PositionChanged(seconds: 60, hostMs: 10000, rate: 1));
+        await tester.pump();
+        final playback = inline(tester);
+        final video = tester.getRect(inCard(_bv, const ValueKey('big-card-open')));
+        final scroll = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+        final before = scroll.pixels;
+        final gesture = await tester.startGesture(video.center);
+        await gesture.moveBy(Offset(video.width / 4 * direction, 0));
+        await tester.pump();
+        final target = 60 + 22.5 * direction;
+        expect(playback.session!.scrubbing.value, closeTo(target, 0.001));
+        expect(playback.gestureChrome.hud.value, isA<SeekHud>());
+        expect(player().calls.where((call) => call.startsWith('seek ')), isEmpty);
+        await tester.pump(SeekBar.restDelay);
+        expect(engines.first.hints.last.seconds, closeTo(target, 0.001));
+        await gesture.up();
+        await frames(tester, 8);
+        expect(player().calls.where((call) => call.startsWith('seek ')), ['seek $target']);
+        expect(playback.gestureChrome.hud.value, isNull);
+        expect(scroll.pixels, before);
+        expect(find.byType(VideoPage), findsNothing);
+        expect(playingNow(player()), isTrue);
+      });
+    }
+
+    testWidgets('a drag can reverse direction and clamps at both video boundaries', (tester) async {
+      await show(tester);
+      await started(tester);
+      final playback = inline(tester);
+      final video = tester.getRect(inCard(_bv, const ValueKey('big-card-open')));
+      final duration = playback.session!.duration.value;
+      player().emit(const PositionChanged(seconds: 0, hostMs: 10000, rate: 1));
+      player().emit(PositionChanged(seconds: duration - 2, hostMs: 10000, rate: 1));
+      await tester.pump();
+      final gesture = await tester.startGesture(video.center);
+      await gesture.moveBy(Offset(video.width, 0));
+      await tester.pump();
+      expect(playback.session!.scrubbing.value, duration);
+      await gesture.moveBy(Offset(-video.width * 20, 0));
+      await tester.pump();
+      expect(playback.session!.scrubbing.value, 0);
+      await gesture.up();
+      await frames(tester, 8);
+      expect(player().calls, contains('seek 0.0'));
+      expect(find.byType(VideoPage), findsNothing);
+    });
+
+    testWidgets('cancelling a held seek clears preloading without seeking', (tester) async {
+      await show(tester);
+      await started(tester);
+      final playback = inline(tester);
+      final gesture = await tester.startGesture(tester.getCenter(inCard(_bv, const ValueKey('big-card-open'))));
+      await gesture.moveBy(const Offset(80, 0));
+      await tester.pump(SeekBar.restDelay);
+      expect(engines.first.hints.last.seconds, isNotNull);
+      await gesture.cancel();
+      await frames(tester, 8);
+      expect(playback.session!.scrubbing.value, isNull);
+      expect(playback.gestureChrome.hud.value, isNull);
+      expect(engines.first.hints.last.seconds, isNull);
+      expect(player().calls.where((call) => call.startsWith('seek ')), isEmpty);
+      expect(find.byType(VideoPage), findsNothing);
+    });
+
+    for (final cancel in [false, true]) {
+      testWidgets('holding uses 2x and restores the chosen rate on ${cancel ? 'cancel' : 'release'}', (tester) async {
+        await show(tester);
+        await started(tester);
+        final playback = inline(tester);
+        await playback.session!.setRate(1.5);
+        final gesture = await tester.startGesture(tester.getCenter(inCard(_bv, const ValueKey('big-card-open'))));
+        await tester.pump(PlayerGestureLayer.holdDelay + const Duration(milliseconds: 1));
+        expect(player().calls.last, 'rate 2.0');
+        expect(playback.session!.speedingUp, isTrue);
+        expect(playback.gestureChrome.hud.value, isA<SpeedUpHud>());
+        if (cancel) {
+          await gesture.cancel();
+        } else {
+          await gesture.up();
+        }
+        await frames(tester, 8);
+        expect(player().calls.last, 'rate 1.5');
+        expect(playback.session!.speedingUp, isFalse);
+        expect(playback.gestureChrome.hud.value, isNull);
+        expect(find.byType(VideoPage), findsNothing);
+      });
+    }
+
+    for (final holding in [false, true]) {
+      testWidgets('losing focus cancels ${holding ? 'speed-up' : 'scrubbing'} before the finger lifts', (tester) async {
+        await show(tester);
+        await started(tester);
+        final playback = inline(tester);
+        final session = playback.session!;
+        final gesture = await tester.startGesture(tester.getCenter(inCard(_bv, const ValueKey('big-card-open'))));
+        if (holding) {
+          await tester.pump(PlayerGestureLayer.holdDelay + const Duration(milliseconds: 1));
+        } else {
+          await gesture.moveBy(const Offset(80, 0));
+          await tester.pump(SeekBar.restDelay);
+          expect(session.scrubbing.value, isNotNull);
+        }
+        await tester.tap(find.byKey(ValueKey('home-tab-${HomeTab.mine.name}')));
+        await frames(tester, 8);
+        expect(session.speedingUp, isFalse);
+        expect(session.scrubbing.value, isNull);
+        expect(playback.gestureChrome.hud.value, isNull);
+        expect(playingNow(player()), isFalse);
+        await gesture.up();
+        await frames(tester, 8);
+        expect(player().calls.where((call) => call.startsWith('seek ')), isEmpty);
+        expect(find.byType(VideoPage), findsNothing);
+      });
+    }
+
+    testWidgets('vertical swiping on the playing video scrolls the feed without seeking or opening', (tester) async {
+      await show(tester);
+      await started(tester);
+      final scroll = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+      final before = scroll.pixels;
+      final gesture = await tester.startGesture(tester.getCenter(inCard(_bv, const ValueKey('big-card-open'))));
+      await gesture.moveBy(const Offset(0, -30));
+      await gesture.moveBy(const Offset(0, -180));
+      await frames(tester, 4);
+      expect(scroll.pixels, greaterThan(before));
+      await gesture.up();
+      await frames(tester, 8);
+      expect(player().calls.where((call) => call.startsWith('seek ')), isEmpty);
+      expect(player().calls, isNot(contains('rate 2.0')));
+      expect(find.byType(VideoPage), findsNothing);
+    });
+
+    testWidgets('an unfocused tile has no playback gestures', (tester) async {
+      await show(tester);
+      await started(tester);
+      final next = inCard('BV1a0', const ValueKey('big-card-open'));
+      expect(find.descendant(of: next, matching: find.byType(FeedInlineGestures)), findsNothing);
+      final calls = List.of(player().calls);
+      final gesture = await tester.startGesture(tester.getCenter(next));
+      await gesture.moveBy(const Offset(80, 0));
+      await tester.pump(PlayerGestureLayer.holdDelay);
+      await gesture.up();
+      await frames(tester, 8);
+      expect(player().calls, calls);
+      expect(find.byType(VideoPage), findsNothing);
+    });
+
+    testWidgets('paused playback rejects seeks and holds; an unknown duration rejects seeking', (tester) async {
+      await show(tester);
+      await started(tester);
+      final playback = inline(tester);
+      final center = tester.getCenter(inCard(_bv, const ValueKey('big-card-open')));
+      controllers.first.duration.value = 0;
+      var gesture = await tester.startGesture(center);
+      await gesture.moveBy(const Offset(80, 0));
+      await gesture.up();
+      await frames(tester, 8);
+      expect(player().calls.where((call) => call.startsWith('seek ')), isEmpty);
+      controllers.first.duration.value = 600;
+      player().emit(const StatusChanged(PlayerStatus.paused));
+      gesture = await tester.startGesture(center);
+      await tester.pump(PlayerGestureLayer.holdDelay + const Duration(milliseconds: 1));
+      expect(playback.session!.speedingUp, isFalse);
+      await gesture.up();
+      gesture = await tester.startGesture(center);
+      await gesture.moveBy(const Offset(80, 0));
+      await gesture.up();
+      await frames(tester, 8);
+      expect(player().calls.where((call) => call.startsWith('seek ')), isEmpty);
+      expect(player().calls, isNot(contains('rate 2.0')));
+    });
+
+    testWidgets('backgrounding cancels a pending seek preload and restores a held speed', (tester) async {
+      await show(tester);
+      await started(tester);
+      final playback = inline(tester);
+      final center = tester.getCenter(inCard(_bv, const ValueKey('big-card-open')));
+      var gesture = await tester.startGesture(center);
+      await gesture.moveBy(const Offset(80, 0));
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      await frames(tester, 8);
+      expect(playback.session!.scrubbing.value, isNull);
+      expect(engines.first.hints, isEmpty, reason: 'the 150 ms preload timer was cancelled');
+      await gesture.up();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await frames(tester, 8);
+      gesture = await tester.startGesture(center);
+      await tester.pump(PlayerGestureLayer.holdDelay + const Duration(milliseconds: 1));
+      expect(playback.session!.speedingUp, isTrue);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      await frames(tester, 8);
+      expect(playback.session!.speedingUp, isFalse);
+      await gesture.up();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await frames(tester, 8);
+    });
+
+    testWidgets('a native pause during a hold restores normal speed immediately', (tester) async {
+      await show(tester);
+      await started(tester);
+      final playback = inline(tester);
+      final gesture = await tester.startGesture(tester.getCenter(inCard(_bv, const ValueKey('big-card-open'))));
+      await tester.pump(PlayerGestureLayer.holdDelay + const Duration(milliseconds: 1));
+      expect(playback.session!.speedingUp, isTrue);
+      player().emit(const StatusChanged(PlayerStatus.paused));
+      expect(playback.session!.speedingUp, isFalse);
+      await gesture.up();
+      await frames(tester, 8);
+    });
+
+    testWidgets('page handoff clears a held gesture before transferring the player', (tester) async {
+      await show(tester);
+      await started(tester);
+      final playback = inline(tester);
+      final session = playback.session!;
+      final gesture = await tester.startGesture(tester.getCenter(inCard(_bv, const ValueKey('big-card-open'))));
+      await tester.pump(PlayerGestureLayer.holdDelay + const Duration(milliseconds: 1));
+      await tester.tap(inCard(_bv, const ValueKey('big-card-open-title')));
+      await frames(tester, 20);
+      expect(session.speedingUp, isFalse);
+      expect(find.byType(VideoPage), findsOneWidget);
+      expect(players, hasLength(1));
+      await gesture.up();
+      await frames(tester, 8);
+    });
+  });
 
   testWidgets('an ordinary card autoplays and hands playback to its page', (tester) async {
     pages = {1: [smallCard(_bv), ...smalls('next', 5)]};

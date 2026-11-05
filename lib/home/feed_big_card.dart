@@ -25,6 +25,7 @@ import '../video/page_playback.dart';
 import '../video/video_route.dart';
 import 'feed_card.dart' show FeedCardView;
 import 'feed_dislike.dart';
+import 'feed_inline_gestures.dart';
 import 'feed_inline_player.dart';
 import 'feed_model.dart' show CardDislike, feedLogFields;
 import 'feed_more_sheet.dart';
@@ -347,7 +348,9 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
                     _opens(
                       label: '视频画面',
                       key: const ValueKey('big-card-open'),
-                      child: _video(context, inline, playing),
+                      child: playing
+                          ? FeedInlineGestures(playback: inline, child: _video(context, inline, playing))
+                          : _video(context, inline, playing),
                     ),
                     // The controls' own elements over the excluded one: touches pass through to the detectors under.
                     if (playing) ...[
