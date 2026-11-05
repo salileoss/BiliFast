@@ -69,3 +69,11 @@ release, and lazy-list disposal/recreation without refreshing the feed.
 Validation after this correction: all 4,520 Flutter tests passed, including 30 focused inline playback tests;
 fatal-info analysis and whitespace checks passed. Regression tests verify the one-third boundary in both vertical
 directions, horizontal clipping, pausing before gesture release, deterministic focus, and resuming from 37 seconds.
+
+Updated application source: `92409b1`. Build commit: `312f50ed145bba31771c9a5b0703a667cceedbef`.
+The [updated macOS pipeline](https://github.com/salileoss/BiliFast/actions/runs/41968056207) passed.
+IPA version 1.3.0 (10) is saved at `build/ipa/BiliFast-1.3.0-10-feed-focus.ipa`, with its JSON manifest beside it.
+Local manifest source, SHA-256, ZIP integrity, ARM64 binary, app framework, bundle identity and version checks passed.
+It remains unsigned and requires signing for sideloading. The 36 workflow tests also passed.
+
+SHA-256: `9da62589f5bec4d5715fd508c03bbd8dba7e90667339fb295fa7e335a74b42b8`.
