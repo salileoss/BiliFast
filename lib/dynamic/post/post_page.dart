@@ -513,7 +513,7 @@ class _DynamicPostPageState extends State<DynamicPostPage> {
     );
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification.depth == 0 && notification is ScrollEndNotification) _inline?.settleSoon();
+        _inline?.onScroll(notification);
         return false;
       },
       child: KeyedSubtree(key: _area, child: _paging?.listen(scrollView) ?? scrollView),
