@@ -5769,6 +5769,9 @@ abstract final class FeedBigCardTheme {
   /// The focused video pauses when two thirds or more of its box is off screen.
   static const visibleToKeepPlaying = 1 / 3;
 
+  /// Skip passing tiles and short pauses between swipes before starting another player.
+  static const autoplayAfterScroll = Duration(milliseconds: 300);
+
   /// Paused this long off screen (or under another page), its player is let go; the card starts again where it was.
   static const releaseAfter = Duration(seconds: 30);
 }

@@ -760,8 +760,7 @@ class _FeedGridState extends State<_FeedGrid> with SingleTickerProviderStateMixi
             : metrics.pixels;
       }
       _loadMoreNearEnd(notification.metrics);
-      // Check after layout on every scroll frame, including while the finger is still down.
-      _inline.settleSoon();
+      _inline.onScroll(notification);
     }
     return false;
   }

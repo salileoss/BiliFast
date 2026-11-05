@@ -400,11 +400,8 @@ class _FaceSheetLayerState extends State<FaceSheetLayer> with SingleTickerProvid
     }
     return _paging.listen(
       _scroll,
-      NotificationListener<ScrollEndNotification>(
-        onNotification: (notification) {
-          if (notification.depth == 0) inline.settleSoon();
-          return false;
-        },
+      NotificationListener<ScrollNotification>(
+        onNotification: inline.onScroll,
         child: CustomScrollView(
           key: const ValueKey('face-sheet-list'),
           controller: _scroll,

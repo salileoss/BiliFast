@@ -303,11 +303,8 @@ class _FollowTabPageState extends State<FollowTabPage> with SkinRefreshRoom {
     final room = refreshRoom;
     return _paging.listen(
       _scroll,
-      NotificationListener<ScrollEndNotification>(
-        onNotification: (notification) {
-          if (notification.depth == 0) inline.settleSoon();
-          return false;
-        },
+      NotificationListener<ScrollNotification>(
+        onNotification: inline.onScroll,
         child: CustomScrollView(
           key: const ValueKey('follow-list'),
           controller: _scroll,

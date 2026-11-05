@@ -320,6 +320,8 @@ void main() {
     await gesture.moveBy(Offset(0, -(video.height * 0.7 + 60)));
     await frames(tester, 6);
     expect(playingNow(player()), isFalse, reason: 'mostly off screen, even with the finger held down');
+    await frames(tester, 20);
+    expect(players, hasLength(1), reason: 'passing tiles do not allocate players while the finger is down');
     await gesture.up();
     await frames(tester, 30);
     expect(playingNow(player()), isFalse);
@@ -332,6 +334,27 @@ void main() {
     expect(players, hasLength(2), reason: 'the next tile autoplayed; the first resumes its player');
     expect(player().calls.skip(paused).where((call) => call.startsWith('load')), isEmpty);
     expect(controllers.first.currentSeconds, 37);
+  });
+
+  testWidgets('a fling starts no passing players and waits briefly after ballistic scrolling ends', (tester) async {
+    pages = {1: [bigCard(_bv), ...smalls('a', 50)]};
+    await show(tester);
+    await started(tester);
+    final position = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    await tester.fling(find.byKey(const ValueKey('feed')), const Offset(0, -700), 3000);
+    expect(position.isScrollingNotifier.value, isTrue);
+    var framesLeft = 600;
+    while (position.isScrollingNotifier.value && framesLeft-- > 0) {
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(players, hasLength(1), reason: 'no video loads while coasting, even after 300 ms');
+    }
+    expect(framesLeft, greaterThan(0));
+    expect(playingNow(player()), isFalse);
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(players, hasLength(1), reason: 'a short pause does not start playback');
+    await frames(tester, 20);
+    expect(players, hasLength(2), reason: 'only the final focused tile starts');
+    expect(playingNow(players.last), isTrue);
   });
 
   testWidgets('a focused video pauses at one third visible and resumes when half visible again', (tester) async {

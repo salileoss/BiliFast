@@ -59,7 +59,8 @@ abstract interface class FeedInlineCard {
 
 /// Plays the most visible video while the feed is shown and the app is in front, one at a time.
 /// A new focus needs [FeedBigCardTheme.visibleToPlay] of its video on screen; the current focus can continue until
-/// only [FeedBigCardTheme.visibleToKeepPlaying] remains. Visibility is checked during scrolling too.
+/// only [FeedBigCardTheme.visibleToKeepPlaying] remains. During scrolling only the existing player may continue;
+/// new playback waits until the list has rested for [FeedBigCardTheme.autoplayAfterScroll].
 class FeedInlineHost with WidgetsBindingObserver {
   FeedInlineHost({required this.viewport, required this._pip}) {
     _pip.addListener(settleSoon);
@@ -86,6 +87,8 @@ class FeedInlineHost with WidgetsBindingObserver {
   bool _foreground = true;
   bool _queued = false;
   bool _disposed = false;
+  bool _scrolling = false;
+  Timer? _autoplayWait;
 
   @visibleForTesting
   FeedInlineCard? get playing => _playing;
@@ -110,6 +113,28 @@ class FeedInlineHost with WidgetsBindingObserver {
     }
   }
 
+  /// Listen to the outer list, including ballistic scrolling. A fresh gesture cancels the idle wait.
+  bool onScroll(ScrollNotification notification) {
+    if (notification.depth != 0 || _disposed) return false;
+    if (notification is ScrollStartNotification ||
+        notification is ScrollUpdateNotification ||
+        notification is OverscrollNotification) {
+      _scrolling = true;
+      _autoplayWait?.cancel();
+      _autoplayWait = null;
+      settleSoon();
+    } else if (notification is ScrollEndNotification) {
+      _scrolling = false;
+      _autoplayWait?.cancel();
+      _autoplayWait = Timer(FeedBigCardTheme.autoplayAfterScroll, () {
+        _autoplayWait = null;
+        settleSoon();
+      });
+      settleSoon();
+    }
+    return false;
+  }
+
   /// After the frame being built, once everything has its place.
   void settleSoon() {
     if (_queued || _disposed) return;
@@ -129,6 +154,7 @@ class FeedInlineHost with WidgetsBindingObserver {
     var bestTop = double.infinity;
     if (area != null) {
       for (final card in _cards) {
+        if ((_scrolling || _autoplayWait != null) && !identical(card, _playing)) continue;
         final box = card.videoRect();
         if (box == null || box.isEmpty || !box.overlaps(area)) continue;
         final seen = box.intersect(area);
@@ -164,6 +190,7 @@ class FeedInlineHost with WidgetsBindingObserver {
 
   void dispose() {
     _disposed = true;
+    _autoplayWait?.cancel();
     _pip.removeListener(settleSoon);
     WidgetsBinding.instance.removeObserver(this);
   }
