@@ -21,6 +21,8 @@ handoff restore the speed and cancel a pending scrub before the session is trans
 - Six phone render tests passed, including new light/dark seek and speed HUD renders; rendered PNGs inspected locally.
 - Analysis with fatal infos passed.
 - All 36 workflow checks passed.
+- The full Flutter suite passed: 4,541 tests.
+- Windows release build passed; all 11 native Windows playback integration tests passed.
 
 ## Phone checks
 
