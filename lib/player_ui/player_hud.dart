@@ -15,6 +15,17 @@ class PlayerHud extends StatelessWidget {
 
   final PlayerUi ui;
 
+  @override
+  Widget build(BuildContext context) => PlayerGestureHud(chrome: ui.chrome, presentation: ui.presentation);
+}
+
+/// The shared gesture feedback for a page player or a focused feed tile.
+class PlayerGestureHud extends StatelessWidget {
+  const PlayerGestureHud({super.key, required this.chrome, this.presentation = Presentation.inline});
+
+  final ChromeState chrome;
+  final Presentation presentation;
+
   static const _appear = Duration(milliseconds: 260);
   static const _vanish = Duration(milliseconds: 160);
   static const _speedKey = ValueKey('hud-speed');
@@ -22,7 +33,7 @@ class PlayerHud extends StatelessWidget {
 
   /// Full screen's pill as it is; the small player's sized to its box (no screenshot of an inline level).
   double _levelScale(double height) {
-    if (ui.presentation != Presentation.inline || !height.isFinite) return 1;
+    if (presentation != Presentation.inline || !height.isFinite) return 1;
     return (height / BiliMetrics.hudInlineLevelFullHeight).clamp(0.0, 1.0);
   }
 
@@ -30,7 +41,7 @@ class PlayerHud extends StatelessWidget {
   Widget build(BuildContext context) {
     return IgnorePointer(
       child: ValueListenableBuilder<Hud?>(
-        valueListenable: ui.chrome.hud,
+        valueListenable: chrome.hud,
         builder: (context, hud, _) => AnimatedSwitcher(
           duration: _appear,
           reverseDuration: _vanish,
