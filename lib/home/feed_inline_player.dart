@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:bili_core/api.dart' show FeedCard, VideoDetail;
 import 'package:bili_core/devlog.dart';
@@ -58,9 +57,9 @@ abstract interface class FeedInlineCard {
   void inlinePause();
 }
 
-/// Which of 推荐's big cards plays: the one with the most of its video box on screen, at least
-/// [FeedBigCardTheme.visibleToPlay] of it, looked at once a scroll has come to rest (KaiC: a card dragged half off keeps
-/// playing until the finger lets go), while 首页 shows with nothing over it and the app is in front. One at a time.
+/// Plays the most visible video while the feed is shown and the app is in front, one at a time.
+/// A new focus needs [FeedBigCardTheme.visibleToPlay] of its video on screen; the current focus can continue until
+/// only [FeedBigCardTheme.visibleToKeepPlaying] remains. Visibility is checked during scrolling too.
 class FeedInlineHost with WidgetsBindingObserver {
   FeedInlineHost({required this.viewport, required this._pip}) {
     _pip.addListener(settleSoon);
@@ -87,9 +86,6 @@ class FeedInlineHost with WidgetsBindingObserver {
   bool _foreground = true;
   bool _queued = false;
   bool _disposed = false;
-
-  /// Registration during a drag must not change focus before scrolling settles.
-  bool scrolling = false;
 
   @visibleForTesting
   FeedInlineCard? get playing => _playing;
@@ -128,18 +124,22 @@ class FeedInlineHost with WidgetsBindingObserver {
 
   void settle() {
     final area = _shown && _foreground && !_pip.showing ? viewport() : null;
-    if (area != null && scrolling) return;
     FeedInlineCard? best;
     var bestShare = 0.0;
+    var bestTop = double.infinity;
     if (area != null) {
       for (final card in _cards) {
         final box = card.videoRect();
-        if (box == null || box.height <= 0) continue;
-        final seen = math.min(box.bottom, area.bottom) - math.max(box.top, area.top);
-        final share = (seen / box.height).clamp(0.0, 1.0);
-        if (share >= FeedBigCardTheme.visibleToPlay && share > bestShare) {
+        if (box == null || box.isEmpty || !box.overlaps(area)) continue;
+        final seen = box.intersect(area);
+        final share = (seen.width * seen.height) / (box.width * box.height);
+        final eligible = identical(card, _playing)
+            ? share > FeedBigCardTheme.visibleToKeepPlaying
+            : share >= FeedBigCardTheme.visibleToPlay;
+        if (eligible && (share > bestShare || (share == bestShare && box.top < bestTop))) {
           best = card;
           bestShare = share;
+          bestTop = box.top;
         }
       }
     }

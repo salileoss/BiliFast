@@ -638,7 +638,7 @@ class _FeedGridState extends State<_FeedGrid> with SingleTickerProviderStateMixi
 
   double get _rowGap => _pad ? PadHomeTheme.rowGap : FeedBigCardTheme.topGap;
 
-  /// The cards' area on screen, above a dressed bar's row, for the big cards' half-visible rule.
+  /// The cards' visible area on screen, above a dressed bar's row.
   Rect? _feedArea() {
     final box = mounted ? context.findRenderObject() : null;
     if (box is! RenderBox || !box.hasSize || !box.attached) return null;
@@ -760,12 +760,8 @@ class _FeedGridState extends State<_FeedGrid> with SingleTickerProviderStateMixi
             : metrics.pixels;
       }
       _loadMoreNearEnd(notification.metrics);
-      // Only once the scroll has come to rest: a big card dragged half off plays on until the finger lets go.
-      if (notification is ScrollStartNotification) _inline.scrolling = true;
-      if (notification is ScrollEndNotification) {
-        _inline.scrolling = false;
-        _inline.settleSoon();
-      }
+      // Check after layout on every scroll frame, including while the finger is still down.
+      _inline.settleSoon();
     }
     return false;
   }
