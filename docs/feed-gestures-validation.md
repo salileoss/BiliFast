@@ -24,6 +24,19 @@ handoff restore the speed and cancel a pending scrub before the session is trans
 - The full Flutter suite passed: 4,541 tests.
 - Windows release build passed; all 11 native Windows playback integration tests passed.
 
+## Local IPA
+
+Application source: `b435cf585d255eb5f02851362347e0c2e8d08743`.
+Build commit: `850caf44f8fa485b69cad8f60256954b12b796e8` on the fork's build-only branch `build/ipa-feed-tiles`.
+The [macOS pipeline](https://github.com/salileoss/BiliFast/actions/runs/42087741900) passed.
+
+IPA 1.3.0 (12) is saved at `build/ipa/BiliFast-1.3.0-12-feed-gestures.ipa` (19,074,440 bytes), with its JSON manifest.
+Local checks passed for the source commit, SHA-256, ZIP integrity, ARM64 executable, app framework, bundle identity,
+version and absence of a provisioning profile. The application files in the build commit match the tested source.
+The IPA is unsigned and requires signing for sideloading; minimum iOS is 26.0.
+
+SHA-256: `5a3cfe161b5f52cf31c38bc0070837efe8103068f791a54c33d36698221475f1`.
+
 ## Phone checks
 
 1. Let the focused home-feed tile play. Swipe right, hold at the target, reverse left, then release. Check the HUD,
