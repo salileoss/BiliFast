@@ -5763,8 +5763,11 @@ abstract final class FeedBigCardTheme {
   static const progress = 2.0;
   static const progressInk = BiliColors.pink;
 
-  /// The card's video plays only while at least this much of its box is on screen once a scroll comes to rest (KaiC).
+  /// A video needs at least this much of its box visible to gain focus.
   static const visibleToPlay = 0.5;
+
+  /// The focused video pauses when two thirds or more of its box is off screen.
+  static const visibleToKeepPlaying = 1 / 3;
 
   /// Paused this long off screen (or under another page), its player is let go; the card starts again where it was.
   static const releaseAfter = Duration(seconds: 30);

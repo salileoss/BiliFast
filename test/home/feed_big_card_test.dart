@@ -307,20 +307,22 @@ void main() {
     expect(player().muted, isTrue);
   });
 
-  testWidgets('dragged half off it plays on until the finger lets go, then pauses; back and settled it plays on', (
+  testWidgets('dragging a video mostly off screen pauses before release; scrolling back resumes its progress', (
     tester,
   ) async {
     await show(tester);
     await started(tester);
+    player().emit(const PositionChanged(seconds: 0, hostMs: 10000, rate: 1));
+    player().emit(const PositionChanged(seconds: 37, hostMs: 10000, rate: 1));
     final video = tester.getRect(inCard(_bv, const ValueKey('big-card-open')));
     final gesture = await tester.startGesture(const Offset(220, 700));
     await gesture.moveBy(const Offset(0, -20));
     await gesture.moveBy(Offset(0, -(video.height * 0.7 + 60)));
     await frames(tester, 6);
-    expect(playingNow(player()), isTrue, reason: 'held: still playing');
+    expect(playingNow(player()), isFalse, reason: 'mostly off screen, even with the finger held down');
     await gesture.up();
     await frames(tester, 30);
-    expect(playingNow(player()), isFalse, reason: 'let go with less than half on screen');
+    expect(playingNow(player()), isFalse);
     expect(inCard(_bv, const ValueKey('big-card-play')), findsOneWidget);
     final paused = player().calls.length;
 
@@ -329,9 +331,10 @@ void main() {
     expect(playingNow(player()), isTrue);
     expect(players, hasLength(2), reason: 'the next tile autoplayed; the first resumes its player');
     expect(player().calls.skip(paused).where((call) => call.startsWith('load')), isEmpty);
+    expect(controllers.first.currentSeconds, 37);
   });
 
-  testWidgets('a scroll that settles with half its video on screen plays it, with less pauses it', (tester) async {
+  testWidgets('a focused video pauses at one third visible and resumes when half visible again', (tester) async {
     await show(tester);
     await started(tester);
     final video = tester.getRect(inCard(_bv, const ValueKey('big-card-open')));
@@ -344,7 +347,13 @@ void main() {
     expect(playingNow(player()), isTrue);
     position.jumpTo(half + 1);
     await frames(tester, 10);
+    expect(playingNow(player()), isTrue, reason: 'the focused video can remain below half visible');
+    position.jumpTo(FeedBigCardTheme.topGap + video.height * 2 / 3 + 1);
+    await frames(tester, 10);
     expect(playingNow(player()), isFalse);
+    position.jumpTo(half + 1);
+    await frames(tester, 10);
+    expect(playingNow(player()), isFalse, reason: 'a paused video needs half visible to regain focus');
     position.jumpTo(half - 0.5);
     await frames(tester, 10);
     expect(playingNow(player()), isTrue);
@@ -411,6 +420,8 @@ void main() {
   testWidgets('paused off screen a while, its player is let go; back, it starts again where it stood', (tester) async {
     await show(tester);
     await started(tester);
+    player().emit(const PositionChanged(seconds: 0, hostMs: 10000, rate: 1));
+    player().emit(const PositionChanged(seconds: 37, hostMs: 10000, rate: 1));
     await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, -500));
     await frames(tester, 30);
     expect(services.playback.live, 2);
@@ -421,6 +432,30 @@ void main() {
     await frames(tester, 30);
     expect(services.playback.live, 2);
     expect(players, hasLength(3));
+    expect(player(2).loaded?.startSeconds, 37, reason: 'release preserves progress until the feed is refreshed');
+  });
+
+  testWidgets('scrolling far enough to dispose a tile preserves its progress when rebuilt', (tester) async {
+    await show(tester);
+    await started(tester);
+    final view = tester.widget<FeedBigCardView>(find.descendant(of: card(_bv), matching: find.byType(FeedBigCardView)));
+    final host = view.host!;
+    player().emit(const PositionChanged(seconds: 0, hostMs: 10000, rate: 1));
+    player().emit(const PositionChanged(seconds: 37, hostMs: 10000, rate: 1));
+    expect(controllers.first.currentSeconds, 37);
+    final position = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    position.jumpTo(2000);
+    await frames(tester, 30);
+    expect(card(_bv), findsNothing);
+    expect(player().disposed, isTrue);
+    expect(host.positions[_bv], 37);
+    position.jumpTo(0);
+    await frames(tester, 30);
+    expect(card(_bv), findsOneWidget);
+    final resumed = players.last;
+    expect(resumed.disposed, isFalse);
+    expect(resumed.loaded?.startSeconds, 37);
+    expect(playingNow(resumed), isTrue);
   });
 
   testWidgets('played to its end it starts over, the counts gone and the buttons dimmed', (tester) async {
