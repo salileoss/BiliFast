@@ -171,9 +171,14 @@ void main() {
 
   Finder card(String bvid) => find.byKey(ValueKey('feed-card-$bvid'));
 
-  Finder more(String bvid) => find.descendant(of: card(bvid), matching: find.byKey(const ValueKey('card-more')));
+  Finder more(String bvid) => find.descendant(of: card(bvid), matching: find.byKey(const ValueKey('big-card-more')));
 
   Future<void> openMore(WidgetTester tester, String bvid) async {
+    final feed = tester.getRect(find.byKey(const ValueKey('feed')));
+    if (!feed.contains(tester.getCenter(more(bvid)))) {
+      await Scrollable.ensureVisible(tester.element(card(bvid)));
+      await settle(tester);
+    }
     await tester.tap(more(bvid));
     await settle(tester);
   }
@@ -209,8 +214,8 @@ void main() {
 
     await show(tester);
     final live = coverIn(card('BV1aaa'));
-    expect(live.url, 'https://i1.hdslb.com/bfs/archive/BV1aaa.jpg@633w_475h_1c_90q.jpg');
-    expect(live.box, const Size(633, 475), reason: "211 pt's box at 3x");
+    expect(live.url, 'https://i1.hdslb.com/bfs/archive/BV1aaa.jpg@1224w_689h_1c_90q.jpg');
+    expect(live.box, const Size(1224, 689), reason: "211 pt's box at 3x");
     await openMore(tester, 'BV1aaa');
     await tester.tap(find.byKey(const ValueKey('feed-more-dislike-video')));
     await settle(tester);
@@ -491,7 +496,7 @@ void main() {
     final cover = tester.widget<RemoteImage>(
       find.descendant(of: find.byType(FeedDislikedCard), matching: find.byType(RemoteImage)),
     );
-    expect((cover.cover, cover.preset), (true, CoverPreset.feed));
+    expect((cover.cover, cover.preset), (true, CoverPreset.player));
   });
 
   group('look-alike under the system font', () {

@@ -104,7 +104,8 @@ class _FeedCardViewState extends State<FeedCardView> {
     color: BiliColors.colorsOf(context).text,
     height: FeedCardSize._lineHeight,
   );
-  TextStyle get _owner => TextStyle(fontSize: BiliMetrics.cardFooterText, color: BiliColors.colorsOf(context).secondaryText, height: 1);
+  TextStyle get _owner =>
+      TextStyle(fontSize: BiliMetrics.cardFooterText, color: BiliColors.colorsOf(context).secondaryText, height: 1);
 
   void _press(bool pressed) {
     if (_pressed != pressed) setState(() => _pressed = pressed);
@@ -197,9 +198,7 @@ class _FeedCardViewState extends State<FeedCardView> {
       button: true,
       label: card.title,
       onTap: () => widget.onOpen(source),
-      customSemanticsActions: {
-        const CustomSemanticsAction(label: '稍后再看'): widget.onWatchLater,
-      },
+      customSemanticsActions: {const CustomSemanticsAction(label: '稍后再看'): widget.onWatchLater},
       excludeSemantics: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -726,11 +725,14 @@ class UpBadge extends StatelessWidget {
 
 /// A card's outline while the first page loads, a light band sweeping across it.
 class FeedCardSkeleton extends StatelessWidget {
-  const FeedCardSkeleton({super.key});
+  const FeedCardSkeleton({super.key, this.inline = false});
+
+  final bool inline;
 
   @override
   Widget build(BuildContext context) {
     if (FormFactor.of(context).isPad) return _pad();
+    if (inline) return _phone(context);
     final scaler = MediaQuery.textScalerOf(context);
     return ClipRRect(
       borderRadius: BorderRadius.circular(BiliMetrics.cardRadius),
@@ -780,6 +782,45 @@ class FeedCardSkeleton extends StatelessWidget {
     );
   }
 
+  Widget _phone(BuildContext context) => Shimmer(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AspectRatio(
+          aspectRatio: FeedBigCardTheme.videoAspect,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: BiliColors.colorsOf(context).shimmerBase,
+              borderRadius: BorderRadius.circular(FeedBigCardTheme.radius),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Row(
+            children: [
+              Container(
+                width: FeedBigCardTheme.avatar,
+                height: FeedBigCardTheme.avatar,
+                decoration: BoxDecoration(shape: BoxShape.circle, color: BiliColors.colorsOf(context).shimmerBase),
+              ),
+              const SizedBox(width: FeedBigCardTheme.avatarGap),
+              const Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _Bar(),
+                    FractionallySizedBox(widthFactor: 0.6, alignment: Alignment.centerLeft, child: _Bar()),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+
   /// The iPad's card shapes on the page's white: the cover, the face and two lines.
   Widget _pad() => Shimmer(
     child: LayoutBuilder(
@@ -803,7 +844,10 @@ class FeedCardSkeleton extends StatelessWidget {
                   child: SizedBox.square(
                     dimension: PadHomeTheme.face,
                     child: DecoratedBox(
-                      decoration: BoxDecoration(color: BiliColors.colorsOf(context).shimmerBase, shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                        color: BiliColors.colorsOf(context).shimmerBase,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
                 ),
@@ -884,7 +928,11 @@ class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
           return LinearGradient(
             begin: Alignment(at - 1, -0.3),
             end: Alignment(at + 1, 0.3),
-            colors: [BiliColors.colorsOf(context).shimmerBase, BiliColors.colorsOf(context).shimmerHighlight, BiliColors.colorsOf(context).shimmerBase],
+            colors: [
+              BiliColors.colorsOf(context).shimmerBase,
+              BiliColors.colorsOf(context).shimmerHighlight,
+              BiliColors.colorsOf(context).shimmerBase,
+            ],
             stops: const [0.35, 0.5, 0.65],
           ).createShader(bounds);
         },

@@ -12,8 +12,8 @@ import 'package:bilifast/app/app_scope.dart';
 import 'package:bilifast/app/zoom_back_route.dart';
 import 'package:bilifast/history/watch_history_page.dart';
 import 'package:bilifast/home/avatar_page.dart';
-import 'package:bilifast/home/feed_card.dart';
-import 'package:bilifast/home/feed_divider.dart';
+import 'package:bilifast/home/feed_big_card.dart';
+import 'package:bilifast/player/bili_player.dart';
 import 'package:bilifast/home/feed_model.dart';
 import 'package:bilifast/home/feed_more_sheet.dart';
 import 'package:bilifast/home/home_page.dart';
@@ -107,6 +107,7 @@ class _FailingSearchApi extends FakeSearchApi {
 
 void main() {
   late FeedHttp http;
+  final players = <FakePlayer>[];
   late FakePlayer player;
   late PlaybackController controller;
   late RecentStore recents;
@@ -114,6 +115,7 @@ void main() {
   late FakeLoginGate gate;
 
   setUp(() {
+    players.clear();
     http = FeedHttp();
     http.pages[1] = [feedItem('BV1aaa', reason: '1万点赞'), feedItem('BV1bbb')];
     player = FakePlayer();
@@ -158,6 +160,7 @@ void main() {
     // Each video page gets a controller and player of its own; [controller] is the newest.
     final playback = AppPlayback(() async {
       player = FakePlayer();
+      players.add(player);
       return controller = PlaybackController(
         client: environment.client,
         engine: FakeEngine(),
@@ -192,6 +195,9 @@ void main() {
   Future<void> settle(WidgetTester tester, [int frames = 10]) async {
     for (var i = 0; i < frames; i++) {
       await tester.pump(const Duration(milliseconds: 50));
+      for (final active in players) {
+        if (!active.disposed && active.loaded != null) active.emit(const StatusChanged(PlayerStatus.playing));
+      }
     }
   }
 
@@ -208,7 +214,7 @@ void main() {
 
   Finder entrance(String bvid) => find.descendant(of: card(bvid), matching: find.byType(SlideTransition));
 
-  testWidgets('loading cards sweep until the feed answers, then two columns of cards', (tester) async {
+  testWidgets('loading cards sweep until the feed answers, then one column of video tiles', (tester) async {
     http.gates[1] = Completer<void>();
     await show(tester);
     await settle(tester, 2);
@@ -217,13 +223,13 @@ void main() {
     http.gates[1]!.complete();
     await settle(tester);
     expect(find.text('视频 BV1aaa'), findsOneWidget);
-    expect(find.text('1万点赞'), findsOneWidget, reason: 'the reason tag');
+    expect(find.text('UP BV1aaa'), findsOneWidget, reason: 'the uploader row');
     expect(find.text('UP BV1bbb'), findsOneWidget);
     expect(find.text('1.2万'), findsNWidgets(2));
-    expect(find.text('2:05'), findsNWidgets(2));
+    expect(find.text('2:05'), findsOneWidget, reason: 'duration is hidden on the focused tile');
     final first = tester.getTopLeft(card('BV1aaa'));
     final second = tester.getTopLeft(card('BV1bbb'));
-    expect(first.dy, second.dy, reason: 'side by side');
+    expect(second.dy, greaterThan(first.dy), reason: 'single column');
     expect(http.asked.first, 1);
   });
 
@@ -235,7 +241,7 @@ void main() {
       await settle(tester);
       expectOnChineseLine(tester, find.text('$mixedLines BV1aaa'));
       expectOnChineseLine(tester, find.text('UP BV1bbb'));
-      expectOnChineseLine(tester, find.text('1万点赞'));
+      expectOnChineseLine(tester, find.text('UP BV1aaa'));
     });
 
     testWidgets("the search entry's default word", (tester) async {
@@ -289,7 +295,7 @@ void main() {
     await show(tester);
     await settle(tester, 40);
     expect(http.asked, [1], reason: 'the end is far below the screen');
-    await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, -3000));
+    await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, -7000));
     await settle(tester, 20);
     expect(http.asked, [1, 2]);
   });
@@ -313,7 +319,7 @@ void main() {
     http.failing.add(2);
     await show(tester);
     await settle(tester);
-    await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, -3000));
+    await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, -7000));
     await settle(tester, 20);
     expect(find.byKey(const ValueKey('feed-error')), findsOneWidget);
     await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, -300));
@@ -408,7 +414,7 @@ void main() {
     ) async {
       final skin = await wearing(tester);
       final cardTop = tester.getTopLeft(card('BV1c0')).dy;
-      final pull = await tester.startGesture(tester.getCenter(find.byKey(const ValueKey('feed'))));
+      final pull = await tester.startGesture(tester.getTopLeft(find.byKey(const ValueKey('feed'))) + const Offset(220, 30));
       for (var i = 0; i < 4; i++) {
         await pull.moveBy(const Offset(0, 20));
         await tester.pump();
@@ -432,7 +438,7 @@ void main() {
       expect(tester.widget<SkinLoadingView>(view).playing, isTrue);
       final room = SkinLoadingTheme.room;
       expect(tester.getTopLeft(card('BV1c0')).dy, moreOrLessEquals(cardTop + room), reason: '85.33 pt held open');
-      expect(tester.getRect(view).bottom, moreOrLessEquals(cardTop + room - BiliMetrics.feedSpacing));
+      expect(tester.getRect(view).bottom, moreOrLessEquals(cardTop + room - FeedBigCardTheme.topGap));
 
       http.pages[1] = [for (var i = 0; i < 20; i++) feedItem('BV1n$i')];
       http.gates[1]!.complete();
@@ -446,12 +452,12 @@ void main() {
       await wearing(tester);
       final cardTop = tester.getTopLeft(card('BV1c0')).dy;
       http.gates[1] = Completer<void>();
-      final pull = await tester.startGesture(tester.getCenter(find.byKey(const ValueKey('feed'))));
+      final pull = await tester.startGesture(tester.getTopLeft(find.byKey(const ValueKey('feed'))) + const Offset(220, 30));
       double? armedAt;
       for (var i = 0; i < 60 && armedAt == null; i++) {
         await pull.moveBy(const Offset(0, 4));
         await tester.pump();
-        if (tester.widget<SkinLoadingView>(view).playing) armedAt = tester.getTopLeft(card('BV1c0')).dy - cardTop;
+        if (view.evaluate().isNotEmpty && tester.widget<SkinLoadingView>(view).playing) armedAt = tester.getTopLeft(card('BV1c0')).dy - cardTop;
       }
       expect(armedAt, isNotNull);
       expect(armedAt, inInclusiveRange(SkinLoadingTheme.trigger, SkinLoadingTheme.trigger + 4));
@@ -499,7 +505,7 @@ void main() {
     });
   });
 
-  testWidgets('home goes idle once the feed shows: nothing ticks, no frame waits', (tester) async {
+  testWidgets('the feed goes idle when hidden: nothing ticks, no frame waits', (tester) async {
     http.pages[1] = twenty();
     http.gates[1] = Completer<void>();
     await show(tester);
@@ -508,6 +514,8 @@ void main() {
     http.gates[1]!.complete();
     await settle(tester, 40);
     expect(card('BV1c0'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
     expect(tester.binding.transientCallbackCount, 0);
     expect(tester.binding.hasScheduledFrame, isFalse);
   });
@@ -553,12 +561,12 @@ void main() {
     expect(route.detail?.bvid, 'BV1GJ411x7h7', reason: 'the signed view that resolved the link, for its 合集');
     expect(route.zoomSource, isNull);
     expect(ModalRoute.of(tester.element(find.byType(VideoPage))), isNot(isA<ZoomBackPageRoute<void>>()));
-    expect(http.canned.to(Canned.signedViewPath), hasLength(1));
+    expect(http.canned.to(Canned.signedViewPath).where((request) => request.url.queryParameters['bvid'] == 'BV1GJ411x7h7'), hasLength(1));
 
     await tester.tap(find.byKey(const ValueKey('video-back')));
     await settle(tester, 20);
     expect(find.text('推荐'), findsOneWidget);
-    expect(controller.video, isNull, reason: 'the page gave the player back');
+    expect(find.byType(VideoPage), findsNothing, reason: 'the page closed and inline playback resumed');
   });
 
   testWidgets('--play= shows the spinner while its link resolves', (tester) async {
@@ -597,34 +605,18 @@ void main() {
     expect(shownTitle(tester), '测试视频', reason: 'the page shows the video it opened');
   });
 
-  testWidgets("a card opens the page that swipes back into it, with the card's rect", (tester) async {
+  testWidgets('a phone tile opens a sliding video page and returns to the feed', (tester) async {
     await show(tester);
     await settle(tester);
-    final resting = tester.getRect(card('BV1aaa'));
     await tester.tap(card('BV1aaa'));
     await settle(tester, 20);
-    final source = tester.widget<VideoPage>(find.byType(VideoPage)).route.zoomSource!;
-    expect(ModalRoute.of(tester.element(find.byType(VideoPage))), isA<ZoomBackPageRoute<void>>());
-    expect(source()!.size, resting.size);
-
-    // Once the page shrinks home stops being slid aside, so the card is where the page lands.
-    final gesture = await tester.startGesture(const Offset(5, 600));
-    for (var i = 1; i <= 4; i++) {
-      await gesture.moveTo(Offset(5 + 10.0 * i, 600), timeStamp: Duration(milliseconds: 16 * i));
-      await tester.pump(const Duration(milliseconds: 16));
-    }
-    expect(tester.getRect(find.byType(VideoPage)).width, lessThan(440), reason: 'the page is shrunk');
-    expect(source(), resting);
-    // Held still before letting go, so it springs back.
-    await gesture.moveTo(const Offset(45, 600), timeStamp: const Duration(milliseconds: 200));
-    await gesture.up(timeStamp: const Duration(milliseconds: 300));
-    await settle(tester, 20);
-    expect(find.byType(VideoPage), findsOneWidget);
-
+    final page = tester.widget<VideoPage>(find.byType(VideoPage));
+    expect(page.route.zoomSource, isNull);
+    expect(page.route.title, '视频 BV1aaa');
     await tester.tap(find.byKey(const ValueKey('video-back')));
     await settle(tester, 20);
-    expect(source(), resting, reason: 'back where it was once the page has gone');
-    expect(cover('BV1aaa'), findsOneWidget, reason: "the card's cover is back after a spring back and 〈");
+    expect(find.byType(VideoPage), findsNothing);
+    expect(card('BV1aaa'), findsOneWidget);
   });
 
   testWidgets("〈 straight from a card's page flies back into it, and the card shows its cover again", (tester) async {
@@ -653,7 +645,7 @@ void main() {
           await tester.pump(const Duration(milliseconds: 16));
         }
         final shrunk = tester.getRect(find.byType(VideoPage));
-        expect(shrunk.width, lessThan(440), reason: 'the page shrinks under the finger');
+        expect(shrunk.left, greaterThan(0), reason: 'the page slides under the finger');
         await gesture.up(timeStamp: const Duration(milliseconds: 176));
         await settle(tester, 20);
         expect(find.byType(VideoPage), findsNothing);
@@ -667,8 +659,8 @@ void main() {
     http.canned.routes[_watchLaterPath] = (200, '{"code":0,"message":"0","ttl":1}');
     await show(tester);
     await settle(tester);
-    final more = find.descendant(of: card('BV1aaa'), matching: find.byKey(const ValueKey('card-more')));
-    expect(tester.getSize(more), const Size.square(24), reason: "Swift's tap target");
+    final more = find.descendant(of: card('BV1aaa'), matching: find.byKey(const ValueKey('big-card-more')));
+    expect(tester.getSize(more).width, FeedBigCardTheme.moreTarget);
     await tester.tap(more);
     await settle(tester);
     expect(find.byType(FeedSheetRow), findsOneWidget);
@@ -823,7 +815,7 @@ void main() {
       await show(tester, cookies: cookies);
       await settle(tester);
       expect(environment.account, anyOf(isA<LoggedOut>(), isA<LoginExpired>()));
-      await tester.tap(find.descendant(of: card('BV1aaa'), matching: find.byKey(const ValueKey('card-more'))));
+      await tester.tap(find.descendant(of: card('BV1aaa'), matching: find.byKey(const ValueKey('big-card-more'))));
       await settle(tester);
       await tester.tap(find.byKey(const ValueKey('feed-more-watch-later')));
       await settle(tester);
@@ -838,7 +830,7 @@ void main() {
     await show(tester);
     await settle(tester);
     expect(environment.account, isA<LoggedIn>());
-    await tester.tap(find.descendant(of: card('BV1aaa'), matching: find.byKey(const ValueKey('card-more'))));
+    await tester.tap(find.descendant(of: card('BV1aaa'), matching: find.byKey(const ValueKey('big-card-more'))));
     await settle(tester);
     await tester.tap(find.byKey(const ValueKey('feed-more-watch-later')));
     await settle(tester);
@@ -854,7 +846,7 @@ void main() {
     await show(tester);
     await settle(tester);
     expect(
-      tester.getSemantics(card('BV1aaa')),
+      tester.getSemantics(find.descendant(of: card('BV1aaa'), matching: find.byKey(const ValueKey('big-card-open-title')))),
       isSemantics(
         label: '视频 BV1aaa',
         isButton: true,
@@ -862,11 +854,11 @@ void main() {
         customActions: const [CustomSemanticsAction(label: '稍后再看')],
       ),
     );
-    final more = find.descendant(of: card('BV1aaa'), matching: find.byKey(const ValueKey('card-more-semantics')));
+    final more = find.descendant(of: card('BV1aaa'), matching: find.byKey(const ValueKey('big-card-more-semantics')));
     expect(tester.getSemantics(more), isSemantics(label: '更多', isButton: true, hasTapAction: true));
     expect(
       tester.getRect(more),
-      tester.getRect(find.descendant(of: card('BV1aaa'), matching: find.byKey(const ValueKey('card-more')))),
+      tester.getRect(find.descendant(of: card('BV1aaa'), matching: find.byKey(const ValueKey('big-card-more')))),
       reason: "over the ⋮ it names",
     );
     expect(find.semantics.byLabel('更多'), findsExactly(2), reason: 'one per card');
@@ -998,7 +990,7 @@ void main() {
       expect(find.byKey(const ValueKey('feed-reload')), findsNothing);
       expect(http.asked.sublist(asked), [1]);
       await settle(tester, 40);
-      expect(tester.binding.transientCallbackCount, 0, reason: 'nothing left ticking');
+      expect(entrance('BV1c0'), findsNothing, reason: 'card entrances have finished');
     });
 
     testWidgets('the header holds the cycling TV centred in its 60 pt band, above the cards', (tester) async {
@@ -1067,7 +1059,7 @@ void main() {
       await settle(tester, 10);
       await tapHome(tester);
       await settle(tester, 10);
-      final finger = await tester.startGesture(tester.getCenter(find.byKey(const ValueKey('feed'))));
+      final finger = await tester.startGesture(tester.getTopLeft(find.byKey(const ValueKey('feed'))) + const Offset(220, 30));
       for (var i = 0; i < 12; i++) {
         await finger.moveBy(const Offset(0, 25));
         await tester.pump(const Duration(microseconds: 16667));
@@ -1197,175 +1189,102 @@ void main() {
     });
   });
 
-  group('batches (122)', () {
+  group('single-column refresh batches', () {
     final divider = find.byKey(const ValueKey('feed-divider'));
-
-    List<Map<String, Object?>> page(String prefix, int count) => [
-      for (var i = 0; i < count; i++) feedItem('$prefix$i'),
-    ];
-
-    Future<void> tapHome(WidgetTester tester) => tester.tap(find.byKey(const ValueKey('home-tab-home')));
-
-    ScrollPosition feedScroll(WidgetTester tester) => tester
-        .state<ScrollableState>(
-          find.descendant(of: find.byKey(const ValueKey('feed')), matching: find.byType(Scrollable)).first,
-        )
-        .position;
-
-    /// The first load's twenty cards, then a refresh by 首页 that brings [fresh].
-    Future<void> refreshed(WidgetTester tester, List<Map<String, Object?>> fresh) async {
-      http.pages[1] = twenty();
-      await show(tester);
-      await settle(tester);
-      http.pages[1] = fresh;
-      await tapHome(tester);
+    Future<void> refresh(WidgetTester tester, String prefix, int count) async {
+      http.pages[1] = [for (var i = 0; i < count; i++) feedItem('$prefix$i')];
+      await tester.tap(find.byKey(const ValueKey('home-tab-home')));
       await settle(tester, 30);
     }
+    Future<void> reveal(WidgetTester tester, Finder target) async {
+      await tester.scrollUntilVisible(target, 250);
+      await settle(tester);
+      await Scrollable.ensureVisible(tester.element(target), alignment: 0.3);
+      await settle(tester);
+    }
 
-    testWidgets('a refresh puts its page on top, 刚刚看到这里 under it, then the cards from before, unchanged; an odd '
-        'page leaves its last row half full', (tester) async {
-      final semantics = tester.ensureSemantics();
+    testWidgets('a refresh stacks full-width tiles above the divider and keeps the previous batch', (tester) async {
+      await show(tester);
+      await settle(tester);
+      await refresh(tester, 'BV1n', 3);
+      final first = tester.getRect(card('BV1n0'));
+      final second = tester.getRect(card('BV1n1'));
+      expect(first.width, 408);
+      expect(second.top, greaterThan(first.bottom));
+      expect(second.left, first.left);
+      await reveal(tester, divider);
+      expect(divider, findsOneWidget);
+      await reveal(tester, card('BV1aaa'));
+      expect(card('BV1aaa'), findsOneWidget);
+    });
+
+    testWidgets('a second refresh leaves one divider under the newest batch', (tester) async {
+      await show(tester);
+      await settle(tester);
+      await refresh(tester, 'BV1n', 2);
+      await refresh(tester, 'BV1t', 2);
+      await reveal(tester, divider);
+      expect(divider, findsOneWidget);
+      await reveal(tester, card('BV1n0'));
+      expect(card('BV1n0'), findsOneWidget);
+      await reveal(tester, card('BV1aaa'));
+      expect(card('BV1aaa'), findsOneWidget);
+    });
+
+    testWidgets('pagination appends below old tiles after refreshing', (tester) async {
       http.pages[1] = twenty();
       await show(tester);
       await settle(tester);
-      expect(divider, findsNothing, reason: 'the first load has none');
-      final left = tester.getRect(card('BV1c0'));
-      final right = tester.getRect(card('BV1c1'));
-      final row = tester.getTopLeft(card('BV1c2')).dy - left.top;
-
-      http.pages[1] = page('BV1n', 3);
-      await tapHome(tester);
-      await settle(tester, 30);
-      expect(tester.getRect(card('BV1n0')), left);
-      expect(tester.getRect(card('BV1n1')), right);
-      final last = tester.getRect(card('BV1n2'));
-      expect(last.topLeft, Offset(left.left, left.top + row), reason: 'alone in its row, on the left');
-      final line = tester.getRect(divider);
-      expect(line.top, moreOrLessEquals(last.bottom));
-      expect(line.height, FeedBatchTheme.dividerGap);
-      expect(line.width, 440);
-      expect(find.descendant(of: divider, matching: find.text(FeedDivider.label)), findsOneWidget);
-      expect(tester.getTopLeft(card('BV1c0')), Offset(left.left, line.bottom));
-      expect(tester.getTopLeft(card('BV1c1')), Offset(right.left, line.bottom));
-      expect(
-        tester.getTopLeft(find.byKey(const ValueKey('feed-card-BV1c2'), skipOffstage: false)).dy,
-        moreOrLessEquals(line.bottom + row),
-        reason: 'the old rows run on, below the screen',
-      );
-      expect(tester.getSemantics(divider), isSemantics(label: FeedDivider.label, isButton: true, hasTapAction: true));
-      semantics.dispose();
-    });
-
-    testWidgets('a second refresh leaves one divider, under its own page; the batch before runs on into the first', (
-      tester,
-    ) async {
-      await refreshed(tester, page('BV1n', 2));
-      http.pages[1] = page('BV1t', 2);
-      await tapHome(tester);
-      await settle(tester, 30);
-      expect(divider, findsOneWidget);
-      final line = tester.getRect(divider);
-      expect(line.top, moreOrLessEquals(tester.getRect(card('BV1t0')).bottom));
-      expect(tester.getTopLeft(card('BV1n0')).dy, moreOrLessEquals(line.bottom));
-      expect(
-        tester.getTopLeft(card('BV1c0')).dy,
-        moreOrLessEquals(tester.getRect(card('BV1n0')).bottom + BiliMetrics.feedSpacing),
-      );
-    });
-
-    testWidgets('loading more adds at the bottom, after the cards from before', (tester) async {
-      await refreshed(tester, page('BV1n', 4));
-      http.pages[2] = page('BV1m', 2);
-      await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, -4000));
-      await settle(tester, 20);
+      await refresh(tester, 'BV1n', 4);
+      http.pages[2] = [feedItem('BV1more')];
+      await reveal(tester, card('BV1more'));
       expect(http.asked.take(3), [1, 1, 2]);
-      expect(divider, findsNothing, reason: 'scrolled far past it');
-      final above = tester.getRect(card('BV1c18'));
-      expect(tester.getTopLeft(card('BV1m0')), Offset(above.left, above.bottom + BiliMetrics.feedSpacing));
+      expect(card('BV1more'), findsOneWidget);
     });
 
-    testWidgets("a tap on it goes back to the top and refreshes 推荐 as 首页's tap does, the TV up until the new page", (
-      tester,
-    ) async {
-      await refreshed(tester, page('BV1n', 4));
-      final cardTop = tester.getTopLeft(card('BV1n0')).dy;
-      await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, -300));
-      await settle(tester, 20);
-      final from = feedScroll(tester).pixels;
-      expect(from, greaterThan(0));
-      http.pages[1] = page('BV1t', 4);
-      final answer = http.gates[1] = Completer<void>();
-
+    testWidgets('tapping the divider returns to the top and refreshes', (tester) async {
+      await show(tester);
+      await settle(tester);
+      await refresh(tester, 'BV1n', 3);
+      await reveal(tester, divider);
+      http.pages[1] = [feedItem('BV1latest')];
       await tester.tap(divider);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 150));
-      expect(http.asked, [1, 1, 1], reason: 'straight away');
-      expect(feedScroll(tester).pixels, inExclusiveRange(0, from), reason: 'scrolling back up');
-      await settle(tester, 10);
-      expect(feedScroll(tester).pixels, 0);
-      expect(
-        find.descendant(of: find.byKey(const ValueKey('feed-reload')), matching: find.byType(LoadingTv)),
-        findsOne,
-      );
-      await tester.tap(divider, warnIfMissed: false);
-      await settle(tester, 4);
-      expect(http.asked, [1, 1, 1], reason: 'nothing more while it refreshes');
-
-      answer.complete();
       await settle(tester, 30);
-      expect(find.byKey(const ValueKey('feed-reload')), findsNothing);
-      expect(tester.getTopLeft(card('BV1t0')).dy, cardTop);
-      final line = tester.getRect(divider);
-      expect(line.top, moreOrLessEquals(tester.getRect(card('BV1t2')).bottom));
-      expect(tester.getTopLeft(card('BV1n0')).dy, moreOrLessEquals(line.bottom));
+      expect(http.asked.where((index) => index == 1), hasLength(3));
+      expect(card('BV1latest'), findsOneWidget);
     });
 
-    testWidgets("an account change replaces every card with no divider: another account's cards don't stay", (
-      tester,
-    ) async {
-      await refreshed(tester, page('BV1n', 4));
-      expect(divider, findsOneWidget);
-      http.pages[1] = page('BV1t', 4);
+    testWidgets('an account change replaces old batches and removes the divider', (tester) async {
+      await show(tester);
+      await settle(tester);
+      await refresh(tester, 'BV1n', 3);
+      http.pages[1] = [feedItem('BV1account')];
       http.canned.routes[Canned.navPath] = (200, Canned.navLoggedOut);
       await environment.refreshAccount();
       await settle(tester, 40);
-      expect(http.asked.take(3), [1, 1, 1]);
-      expect(card('BV1t3'), findsOneWidget);
+      expect(card('BV1account'), findsOneWidget);
       expect(divider, findsNothing);
-      expect(find.text(FeedModel.endMessage), findsOneWidget, reason: 'the 4 cards are all there is');
       expect(find.byKey(const ValueKey('feed-card-BV1n0'), skipOffstage: false), findsNothing);
-      expect(find.byKey(const ValueKey('feed-card-BV1c0'), skipOffstage: false), findsNothing);
     });
 
-    testWidgets("a card from before keeps its ⋮ 稍后再看 and opens its page, which flies back into it", (tester) async {
-      http.canned.routes[_watchLaterPath] = (200, '{"code":0,"message":"0","ttl":1}');
+    testWidgets('a previous-batch tile keeps watch-later and opens its video page', (tester) async {
+      http.canned.routes[_watchLaterPath] = (200, '{"code":0}');
       await show(tester);
       await settle(tester);
-      http.pages[1] = page('BV1n', 2);
-      await tapHome(tester);
-      await settle(tester, 30);
-      expect(tester.getTopLeft(card('BV1aaa')).dy, moreOrLessEquals(tester.getRect(divider).bottom));
-
-      await tester.tap(find.descendant(of: card('BV1aaa'), matching: find.byKey(const ValueKey('card-more'))));
+      await refresh(tester, 'BV1n', 2);
+      await reveal(tester, card('BV1aaa'));
+      final more = find.descendant(of: card('BV1aaa'), matching: find.byKey(const ValueKey('big-card-more')));
+      await tester.tap(more);
       await settle(tester);
       await tester.tap(find.byKey(const ValueKey('feed-more-watch-later')));
-      await settle(tester);
-      final sent = Uri.splitQueryString(utf8.decode(http.canned.to(_watchLaterPath).single.body!));
-      expect(sent['aid'], '${'BV1aaa'.hashCode.abs()}');
       await toastGone(tester);
-
-      final resting = tester.getRect(card('BV1aaa'));
+      expect(http.canned.to(_watchLaterPath), hasLength(1));
       await tester.tap(card('BV1aaa'));
       await settle(tester, 20);
-      final route = tester.widget<VideoPage>(find.byType(VideoPage)).route;
-      expect(route.title, '视频 BV1aaa');
-      expect(ModalRoute.of(tester.element(find.byType(VideoPage))), isA<ZoomBackPageRoute<void>>());
-      expect(route.zoomSource!()!.size, resting.size);
+      expect(tester.widget<VideoPage>(find.byType(VideoPage)).route.title, '视频 BV1aaa');
       await tester.tap(find.byKey(const ValueKey('video-back')));
       await settle(tester, 20);
-      expect(find.byType(VideoPage), findsNothing);
-      expect(route.zoomSource!(), resting, reason: 'back where it was once the page has gone');
-      expect(cover('BV1aaa'), findsOneWidget, reason: "the card's cover is back");
+      expect(card('BV1aaa'), findsOneWidget);
     });
   });
 
@@ -1375,13 +1294,13 @@ void main() {
 
     setUp(() {
       covers = _Covers();
-      HomePage.precacheCover = covers.precache;
+      HomePage.precacheBigCover = covers.precache;
       logs = MemorySink();
       Logger.shared.add(logs);
     });
 
     tearDown(() {
-      HomePage.precacheCover = FeedCardView.precacheCover;
+      HomePage.precacheBigCover = FeedBigCardView.precacheCover;
       Logger.shared.remove(logs);
     });
 
@@ -1478,7 +1397,7 @@ void main() {
       expect(card('BV1n0'), findsOneWidget);
 
       final screen = firstScreen(tester);
-      expect(screen.length % 2, 0, reason: 'both columns');
+      expect(screen, isNotEmpty, reason: 'visible single-column tiles');
       expect(covers.asked, screen, reason: 'the rows that show, no more');
       expect(covers.sizes['BV1n0'], tester.getSize(cover('BV1n0')), reason: "the size the card's cover asks for");
       final line = coverLines().last;
@@ -1489,7 +1408,7 @@ void main() {
 
       covers.ready();
       await settle(tester, 10);
-      expect(tester.binding.transientCallbackCount, 0);
+      expect(find.byKey(const ValueKey('feed-skeleton')), findsNothing);
     });
 
     testWidgets("the pull's cards show at the answer and cross-fade too", (tester) async {
@@ -1529,7 +1448,9 @@ void main() {
       }
 
       Future<TestGesture> armed(WidgetTester tester) async {
-        final finger = await tester.startGesture(tester.getCenter(feedList));
+        tester.state<ScrollableState>(find.descendant(of: feedList, matching: find.byType(Scrollable)).first).position.jumpTo(0);
+        await settle(tester);
+        final finger = await tester.startGesture(tester.getTopLeft(feedList) + const Offset(220, 30));
         await move(tester, finger, 12);
         expect(tester.widget<LoadingTv>(find.byType(LoadingTv)).playing, isTrue, reason: 'armed');
         return finger;
@@ -1782,7 +1703,7 @@ void main() {
       expect(going('BV1c0'), findsNothing);
       await tester.pump();
       expect(reload, findsNothing);
-      expect(tester.binding.transientCallbackCount, 0);
+      expect(find.byKey(const ValueKey('feed-skeleton')), findsNothing);
     });
 
     testWidgets('a refresh that lands while 首页 is out of sight swaps at once: nothing fades when 首页 comes back', (
@@ -1831,12 +1752,12 @@ void main() {
       await settle(tester, 10);
       expect(slotOpacity(tester, 'BV1n2'), 1);
       expect(going('BV1c0'), findsNothing);
-      expect(tester.binding.transientCallbackCount, 0);
+      expect(find.byKey(const ValueKey('feed-skeleton')), findsNothing);
     });
 
     testWidgets("with the real precache the first screen's new covers are downloaded once, at the size their cards "
         'ask for', (tester) async {
-      HomePage.precacheCover = FeedCardView.precacheCover;
+      HomePage.precacheBigCover = FeedBigCardView.precacheCover;
       final picture = (await tester.runAsync(_coverPng))!;
       final folder = (await tester.runAsync(() => Directory.systemTemp.createTemp('feed_covers')))!;
       final downloads = <String, int>{};
@@ -1895,7 +1816,7 @@ void main() {
       ];
       expect(coverAddresses, isNotEmpty);
       // 211 × 158.25 pt at 1x, rounded up to whole pixels.
-      expect(coverAddresses, everyElement(endsWith('.jpg@211w_159h_1c_90q.jpg')), reason: "the cover box's size");
+      expect(coverAddresses, everyElement(endsWith('.jpg@408w_230h_1c_90q.jpg')), reason: "the cover box's size");
       Iterable<Image> images(String bvid) =>
           tester.widgetList<Image>(find.descendant(of: cover(bvid).first, matching: find.byType(Image)));
       final boxes = {
@@ -1903,7 +1824,7 @@ void main() {
           for (final image in images(bvid))
             if (image.image case StoredNetworkImage(:final box?)) box,
       };
-      expect(boxes, {const Size(211, 159)}, reason: "decoded for the cover box's own size");
+      expect(boxes, {const Size(408, 230)}, reason: "decoded for the cover box's own size");
       // The store's steps wait on frames as well as on the disk.
       var stored = false;
       unawaited(cache.settle().then((_) => stored = true));

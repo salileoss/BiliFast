@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:bili_core/api.dart' show FeedCard;
+import 'package:bili_core/api.dart' show FeedCard, VideoDetail;
 import 'package:bili_core/devlog.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
@@ -32,11 +32,13 @@ abstract final class FeedInlineChoices {
 /// What an inline player plays: a 推荐 big card's video, or a 动态 card's.
 @immutable
 final class InlineVideo {
-  const InlineVideo({required this.bvid, this.cid = 0, this.title = '', this.duration = 0});
+  const InlineVideo({required this.bvid, this.cid = 0, this.title = '', this.duration = 0, this.detail});
 
-  InlineVideo.of(FeedCard card) : this(bvid: card.bvid, cid: card.cid, title: card.title, duration: card.duration);
+  InlineVideo.of(FeedCard card, {VideoDetail? detail})
+    : this(bvid: card.bvid, cid: card.cid, title: card.title, duration: card.duration, detail: detail);
 
   final String bvid;
+  final VideoDetail? detail;
 
   /// 0 when unknown: the player asks for the first part's.
   final int cid;
@@ -76,12 +78,18 @@ class FeedInlineHost with WidgetsBindingObserver {
   /// Where each video stood when its player was let go or its page closed, so the card starts again there.
   final positions = <String, double>{};
 
+  /// Upload dates and avatars missing from feed cards, fetched near the viewport.
+  final metadata = <String, Future<VideoDetail>>{};
+
   final _cards = <FeedInlineCard>{};
   FeedInlineCard? _playing;
   bool _shown = false;
   bool _foreground = true;
   bool _queued = false;
   bool _disposed = false;
+
+  /// Registration during a drag must not change focus before scrolling settles.
+  bool scrolling = false;
 
   @visibleForTesting
   FeedInlineCard? get playing => _playing;
@@ -120,6 +128,7 @@ class FeedInlineHost with WidgetsBindingObserver {
 
   void settle() {
     final area = _shown && _foreground && !_pip.showing ? viewport() : null;
+    if (area != null && scrolling) return;
     FeedInlineCard? best;
     var bestShare = 0.0;
     if (area != null) {
@@ -260,7 +269,13 @@ class FeedInlinePlayback extends ChangeNotifier {
     final start = video.duration > 0 && at > video.duration - 3 ? 0.0 : at;
     final playback = _playback = PagePlayback(
       services: _services,
-      route: VideoRoute(bvid: video.bvid, cid: video.cid > 0 ? video.cid : null, start: start, title: video.title),
+      route: VideoRoute(
+        bvid: video.bvid,
+        cid: video.cid > 0 ? video.cid : null,
+        start: start,
+        title: video.title,
+        detail: video.detail,
+      ),
       createSession: pageSession,
       restorePage: (route) => VideoPage(route: route),
       inline: true,

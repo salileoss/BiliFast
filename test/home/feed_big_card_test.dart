@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:bili_core/api.dart' hide VideoPage;
 import 'package:bili_core/devlog.dart';
@@ -143,7 +144,49 @@ void main() {
     return since.last == 'play';
   }
 
-  testWidgets('a big card spans both columns at the top of its batch, the small cards in two columns under it', (
+  testWidgets('an ordinary card autoplays and hands playback to its page', (tester) async {
+    pages = {1: [smallCard(_bv), ...smalls('next', 5)]};
+    await show(tester);
+    await started(tester);
+    expect(playingNow(player()), isTrue);
+    expect(player().muted, isTrue);
+    expect(inCard(_bv, const ValueKey('big-card-video')), findsOneWidget);
+    final original = player();
+    await tester.tap(inCard(_bv, const ValueKey('big-card-open')));
+    await frames(tester, 20);
+    expect(find.byType(VideoPage), findsOneWidget);
+    expect(players, hasLength(1), reason: 'detail page takes over the inline player');
+    expect(original.muted, isFalse);
+  });
+
+  testWidgets('a feed upload date appears beside the uploader without a metadata request', (tester) async {
+    final published = DateTime.now().subtract(const Duration(hours: 10)).millisecondsSinceEpoch ~/ 1000;
+    pages = {1: [FeedCard.fromJson({
+      ...feedItem(_bv),
+      'pubdate': published,
+      'owner': {'name': '上传者', 'mid': 7, 'face': 'https://i0.hdslb.com/face.jpg'},
+    })]};
+    await show(tester);
+    await frames(tester, 15);
+    expect(find.text('上传者 · 10小时前'), findsOneWidget);
+    final byline = tester.getRect(inCard(_bv, const ValueKey('feed-uploader-byline')));
+    final avatar = tester.getRect(inCard(_bv, const ValueKey('feed-uploader-avatar')));
+    expect(byline.left, avatar.right + FeedBigCardTheme.avatarGap);
+    expect(avatar.width, FeedBigCardTheme.avatar);
+  });
+
+  testWidgets('official cards missing an upload date resolve it from video details', (tester) async {
+    final body = jsonDecode(Canned.view) as Map<String, dynamic>;
+    body['data']['pubdate'] = DateTime.now().subtract(const Duration(hours: 16)).millisecondsSinceEpoch ~/ 1000;
+    body['data']['owner']['face'] = 'https://i0.hdslb.com/uploader.jpg';
+    http.canned.routes[Canned.signedViewPath] = (200, jsonEncode(body));
+    pages = {1: [bigCard(_bv)]};
+    await show(tester);
+    await frames(tester, 20);
+    expect(find.text('UP $_bv · 16小时前'), findsOneWidget);
+  });
+
+  testWidgets('every phone tile spans the feed width with an uploader row', (
     tester,
   ) async {
     await show(tester);
@@ -155,12 +198,13 @@ void main() {
     expect(video.height, closeTo(video.width * 9 / 16, 0.01));
     final first = tester.getRect(card('BV1a0'));
     final second = tester.getRect(card('BV1a1'));
-    expect(first.top, closeTo(big.bottom + FeedBigCardTheme.spacing, 0.01));
-    expect(second.top, first.top, reason: 'side by side');
+    expect(first.top, closeTo(big.bottom + FeedBigCardTheme.topGap * 2 + 0.5, 0.01));
+    expect(second.top, greaterThan(first.bottom), reason: 'single column');
+    expect(second.width, first.width);
     expect(first.left, FeedBigCardTheme.spacing);
     expect(find.text('大卡片 $_bv'), findsOneWidget);
     expect(find.text('2.7万'), findsOneWidget, reason: "👍's count");
-    expect(find.text('UP $_bv'), findsNothing, reason: 'no uploader line');
+    expect(find.text('UP $_bv'), findsOneWidget, reason: 'uploader below the title');
     await frames(tester, 20);
   });
 
@@ -184,13 +228,13 @@ void main() {
     expect(faded, isTrue, reason: "the hand-off draws the old big card in the new one's slot");
     expect(
       bigCovers['https://i0.hdslb.com/bfs/archive/BV1new.jpg'],
-      const Size(428, 428 * 9 / 16),
+      const Size(408, 408 * 9 / 16),
       reason: "the new big card's cover asked for at its video's size",
     );
     final fresh = tester.getRect(card('BV1new'));
     expect(fresh.left, FeedBigCardTheme.spacing);
     expect(fresh.width, 440 - FeedBigCardTheme.spacing * 2);
-    expect(tester.getRect(card('BV1n0')).top, closeTo(fresh.bottom + FeedBigCardTheme.spacing, 0.01));
+    expect(tester.getRect(card('BV1n0')).top, closeTo(fresh.bottom + FeedBigCardTheme.topGap * 2 + 0.5, 0.01));
     final position = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
     await tester.scrollUntilVisible(find.byKey(const ValueKey('feed-divider')), 200);
     await frames(tester, 10);
@@ -221,7 +265,7 @@ void main() {
     expect(inCard(_bv, const ValueKey('big-card-video')), findsOneWidget);
     expect(inCard(_bv, const ValueKey('big-card-danmaku-toggle')), findsOneWidget);
     expect(inCard(_bv, const ValueKey('big-card-sound')), findsOneWidget);
-    expect(find.byKey(const ValueKey('big-card-duration')), findsNothing, reason: 'no duration while it plays');
+    expect(inCard(_bv, const ValueKey('big-card-duration')), findsNothing, reason: 'no duration while it plays');
     expect(tester.widget<DanmakuLayer>(find.byType(DanmakuLayer)).enabled, isTrue);
 
     player().emit(const StatusChanged(PlayerStatus.buffering));
@@ -283,7 +327,7 @@ void main() {
     await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, 600));
     await frames(tester, 30);
     expect(playingNow(player()), isTrue);
-    expect(players, hasLength(1), reason: 'the same player, from where it was');
+    expect(players, hasLength(2), reason: 'the next tile autoplayed; the first resumes its player');
     expect(player().calls.skip(paused).where((call) => call.startsWith('load')), isEmpty);
   });
 
@@ -292,7 +336,9 @@ void main() {
     await started(tester);
     final video = tester.getRect(inCard(_bv, const ValueKey('big-card-open')));
     final position = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
-    final half = FeedBigCardTheme.spacing + video.height / 2;
+    final half = FeedBigCardTheme.topGap + video.height / 2;
+    tester.view.physicalSize = Size(440, video.height + 142);
+    await frames(tester, 2);
     position.jumpTo(half - 0.5);
     await frames(tester, 10);
     expect(playingNow(player()), isTrue);
@@ -367,14 +413,14 @@ void main() {
     await started(tester);
     await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, -500));
     await frames(tester, 30);
-    expect(services.playback.live, 1);
+    expect(services.playback.live, 2);
     await tester.pump(FeedBigCardTheme.releaseAfter);
     await frames(tester, 2);
-    expect(services.playback.live, 0, reason: 'released');
+    expect(services.playback.live, 1, reason: 'offscreen player released, focused tile still playing');
     await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, 600));
     await frames(tester, 30);
-    expect(services.playback.live, 1);
-    expect(players, hasLength(2));
+    expect(services.playback.live, 2);
+    expect(players, hasLength(3));
   });
 
   testWidgets('played to its end it starts over, the counts gone and the buttons dimmed', (tester) async {
@@ -382,13 +428,13 @@ void main() {
     await started(tester);
     double opacity(Finder of) =>
         tester.widget<AnimatedOpacity>(find.descendant(of: of, matching: find.byType(AnimatedOpacity))).opacity;
-    expect(opacity(find.byKey(const ValueKey('big-card-stats'))), 1);
+    expect(opacity(inCard(_bv, const ValueKey('big-card-stats'))), 1);
     expect(opacity(inCard(_bv, const ValueKey('big-card-sound'))), 1);
     player().emit(const StatusChanged(PlayerStatus.ended));
     await frames(tester, 2);
     expect(player().calls, contains('seek 0.0 precise'));
     expect(player().calls.last, 'play');
-    expect(opacity(find.byKey(const ValueKey('big-card-stats'))), 0);
+    expect(opacity(inCard(_bv, const ValueKey('big-card-stats'))), 0);
     expect(opacity(inCard(_bv, const ValueKey('big-card-sound'))), FeedBigCardTheme.dimmed);
     expect(opacity(inCard(_bv, const ValueKey('big-card-danmaku-toggle'))), FeedBigCardTheme.dimmed);
   });

@@ -36,7 +36,11 @@ abstract final class FeedBigCardSize {
 
   /// The whole card with a title of [lines] lines.
   static double height(double width, {int lines = 2}) =>
-      video(width).height + FeedBigCardTheme.titlePad * 2 + FeedBigCardTheme.titleLine * lines;
+      video(width).height +
+      FeedBigCardTheme.titlePad * 2 +
+      FeedBigCardTheme.titleLine * lines +
+      FeedBigCardTheme.bylineGap +
+      FeedBigCardTheme.bylineLine;
 }
 
 /// 推荐's big card (`large_cover_v9`, 122-126): full width, its video playing inline and muted while
@@ -95,6 +99,7 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
   bool _liked = false;
   int _likes = 0;
   bool _liking = false;
+  VideoDetail? _detail;
 
   bool get _live => widget.host != null && widget.dislike == null;
 
@@ -112,7 +117,31 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
     super.didChangeDependencies();
     if (_services != null) return;
     _services = AppScope.of(context);
-    if (_live) widget.host!.register(this);
+    if (_live) {
+      widget.host!.register(this);
+      unawaited(_loadMetadata());
+    }
+  }
+
+  /// Official two-column cards often omit the face and upload date. Resolve only
+  /// cards built near the viewport; the host reuses the answer when scrolling back.
+  Future<void> _loadMetadata() async {
+    final card = widget.card;
+    if (card.published > 0 && card.ownerFace.isNotEmpty) return;
+    try {
+      final detail = await widget.host!.metadata.putIfAbsent(
+        card.bvid,
+        () => _services!.environment.client.videoDetail(bvid: card.bvid),
+      );
+      if (!mounted || widget.card.bvid != card.bvid || detail.bvid != card.bvid) return;
+      setState(() {
+        _detail = detail;
+        if (card.big == null && !_liking && !_liked) _likes = detail.stat.like;
+      });
+    } catch (error) {
+      widget.host?.metadata.remove(card.bvid);
+      Logger.shared.warn(LogCategory.ui, 'feed metadata failed', feedLogFields(error));
+    }
   }
 
   @override
@@ -177,7 +206,7 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
     final bvid = widget.card.bvid;
     return FeedInlinePlayback(
       services: _services!,
-      video: InlineVideo.of(widget.card),
+      video: InlineVideo.of(widget.card, detail: _detail),
       startAt: () => host.positions[bvid] ?? 0,
       released: (seconds) => host.positions[bvid] = seconds,
     )..addListener(_inlineChanged);
@@ -285,6 +314,7 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
               builder: (context, constraints) => SizedBox(
                 height: _height ?? FeedBigCardSize.height(constraints.maxWidth),
                 child: FeedDislikedCard(
+                  inline: true,
                   card: widget.card,
                   onUndo: () => widget.onUndo?.call(),
                   onReasons: offersReasons ? () => unawaited(_reasons()) : null,
@@ -300,15 +330,15 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
     final playing = inline != null && inline.wanted && inline.shown;
     return _Measured(
       onHeight: (height) => _height = height,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(FeedBigCardTheme.radius),
-        child: ColoredBox(
-          color: BiliColors.colorsOf(context).card,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AspectRatio(
+      child: ColoredBox(
+        color: BiliColors.colorsOf(context).card,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(FeedBigCardTheme.radius),
+              child: AspectRatio(
                 key: _videoKey,
                 aspectRatio: FeedBigCardTheme.videoAspect,
                 child: Stack(
@@ -337,51 +367,52 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
                   ],
                 ),
               ),
-              Stack(
-                children: [
-                  _opens(
-                    label: card.title,
-                    key: const ValueKey('big-card-open-title'),
-                    actions: {const CustomSemanticsAction(label: '稍后再看'): widget.onWatchLater},
-                    child: _TitleBand(
-                      card: card,
-                      liked: _liked,
-                      likes: _likes,
-                      likeMotion: _likeMotion,
-                      onLike: () => unawaited(_like()),
-                      onMore: () => unawaited(_more()),
-                    ),
+            ),
+            Stack(
+              children: [
+                _opens(
+                  label: card.title,
+                  key: const ValueKey('big-card-open-title'),
+                  actions: {const CustomSemanticsAction(label: '稍后再看'): widget.onWatchLater},
+                  child: _TitleBand(
+                    card: card,
+                    detail: _detail,
+                    liked: _liked,
+                    likes: _likes,
+                    likeMotion: _likeMotion,
+                    onLike: () => unawaited(_like()),
+                    onMore: () => unawaited(_more()),
                   ),
-                  Positioned(
-                    right: FeedBigCardTheme.likeRight - FeedBigCardTheme.likeTarget / 2,
-                    top: 0,
-                    bottom: 0,
-                    width: FeedBigCardTheme.likeTarget,
-                    child: Semantics(
-                      key: const ValueKey('big-card-like-semantics'),
-                      container: true,
-                      button: true,
-                      label: _liked ? '取消点赞' : '点赞',
-                      onTap: () => unawaited(_like()),
-                    ),
+                ),
+                Positioned(
+                  right: FeedBigCardTheme.likeRight - FeedBigCardTheme.likeTarget / 2,
+                  top: 0,
+                  bottom: 0,
+                  width: FeedBigCardTheme.likeTarget,
+                  child: Semantics(
+                    key: const ValueKey('big-card-like-semantics'),
+                    container: true,
+                    button: true,
+                    label: _liked ? '取消点赞' : '点赞',
+                    onTap: () => unawaited(_like()),
                   ),
-                  Positioned(
-                    right: FeedBigCardTheme.moreRight - FeedBigCardTheme.moreTarget / 2,
-                    top: 0,
-                    bottom: 0,
-                    width: FeedBigCardTheme.moreTarget,
-                    child: Semantics(
-                      key: const ValueKey('big-card-more-semantics'),
-                      container: true,
-                      button: true,
-                      label: '更多',
-                      onTap: () => unawaited(_more()),
-                    ),
+                ),
+                Positioned(
+                  right: FeedBigCardTheme.moreRight - FeedBigCardTheme.moreTarget / 2,
+                  top: FeedBigCardTheme.moreDrop * 2,
+                  bottom: 0,
+                  width: FeedBigCardTheme.moreTarget,
+                  child: Semantics(
+                    key: const ValueKey('big-card-more-semantics'),
+                    container: true,
+                    button: true,
+                    label: '更多',
+                    onTap: () => unawaited(_more()),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -552,27 +583,6 @@ class _RenderMeasured extends RenderProxyBox {
   }
 }
 
-/// The title band at the official height for its lines: Flutter draws each line a whole point tall (19 for 19.33), so
-/// a two-line band would come out 0.67 pt short of 123's.
-class _LineBand extends SingleChildRenderObjectWidget {
-  const _LineBand({super.key, required super.child});
-
-  @override
-  RenderObject createRenderObject(BuildContext context) => _RenderLineBand();
-}
-
-class _RenderLineBand extends RenderProxyBox {
-  @override
-  void performLayout() {
-    // The band takes the card's width whatever the title's, so 👍 and ⋮ keep to the card's right.
-    final width = constraints.maxWidth;
-    final child = this.child!..layout(BoxConstraints.tightFor(width: width), parentUsesSize: true);
-    const pad = FeedBigCardTheme.titlePad * 2;
-    final lines = ((child.size.height - pad) / FeedBigCardTheme.titleLine).round().clamp(1, 2);
-    size = constraints.constrain(Size(width, pad + lines * FeedBigCardTheme.titleLine));
-  }
-}
-
 /// The counts on the video's bottom left, and on the cover the duration on its right (122). Playing they sit a little
 /// lower without the duration (123), and from the second time round they are gone (126).
 class _Stats extends StatelessWidget {
@@ -710,6 +720,7 @@ class _Progress extends StatelessWidget {
 class _TitleBand extends StatelessWidget {
   const _TitleBand({
     required this.card,
+    required this.detail,
     required this.liked,
     required this.likes,
     required this.likeMotion,
@@ -718,11 +729,20 @@ class _TitleBand extends StatelessWidget {
   });
 
   final FeedCard card;
+  final VideoDetail? detail;
   final bool liked;
   final int likes;
   final AnimationController likeMotion;
   final VoidCallback onLike;
   final VoidCallback onMore;
+
+  String _byline() {
+    final name = card.ownerName.isNotEmpty ? card.ownerName : detail?.owner.name ?? '';
+    final published = card.published > 0 ? card.published : detail?.pubdate ?? 0;
+    if (published <= 0) return name;
+    final date = FeedCardView.padDate(published, now: DateTime.now());
+    return name.isEmpty ? date : '$name · $date';
+  }
 
   TextStyle _title(BuildContext context) => TextStyle(
     fontSize: FeedBigCardTheme.titleText,
@@ -733,7 +753,7 @@ class _TitleBand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final big = card.big;
-    final showCount = big != null && big.showLikes && likes > 0;
+    final showCount = (big?.showLikes ?? true) && likes > 0;
     final count = TextStyle(
       fontFamily: BiliFonts.family,
       fontFamilyFallback: BiliFonts.fallback,
@@ -745,24 +765,63 @@ class _TitleBand extends StatelessWidget {
     const target = FeedBigCardTheme.likeTarget;
     return Stack(
       children: [
-        _LineBand(
+        Padding(
           key: const ValueKey('big-card-title'),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              FeedBigCardTheme.titleInset,
-              FeedBigCardTheme.titlePad + FeedBigCardTheme.titleDrop,
-              FeedBigCardTheme.titleTrailing,
-              FeedBigCardTheme.titlePad - FeedBigCardTheme.titleDrop,
-            ),
-            child: MediaQuery.withClampedTextScaling(
-              maxScaleFactor: 1,
-              child: Text(
-                card.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: _title(context),
-                strutStyle: BiliFonts.strutOf(context, _title(context)),
-              ),
+          padding: const EdgeInsets.fromLTRB(
+            0,
+            FeedBigCardTheme.titlePad,
+            FeedBigCardTheme.titleTrailing,
+            FeedBigCardTheme.titlePad,
+          ),
+          child: MediaQuery.withClampedTextScaling(
+            maxScaleFactor: 1,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipOval(
+                  child: SizedBox.square(
+                    dimension: FeedBigCardTheme.avatar,
+                    child: RemoteImage.avatar(
+                      card.ownerFace.isNotEmpty ? card.ownerFace : detail?.owner.face ?? '',
+                      key: const ValueKey('feed-uploader-avatar'),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: FeedBigCardTheme.avatarGap),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        card.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: _title(context),
+                        strutStyle: BiliFonts.strutOf(context, _title(context)),
+                      ),
+                      const SizedBox(height: FeedBigCardTheme.bylineGap),
+                      Text(
+                        _byline(),
+                        key: const ValueKey('feed-uploader-byline'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: FeedBigCardTheme.bylineText,
+                          height: FeedBigCardTheme.bylineLine / FeedBigCardTheme.bylineText,
+                          color: BiliColors.colorsOf(context).secondaryText,
+                        ),
+                        strutStyle: BiliFonts.strutOf(
+                          context,
+                          const TextStyle(
+                            fontSize: FeedBigCardTheme.bylineText,
+                            height: FeedBigCardTheme.bylineLine / FeedBigCardTheme.bylineText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -819,7 +878,11 @@ class _TitleBand extends StatelessWidget {
                             key: const ValueKey('big-card-likes'),
                             maxLines: 1,
                             softWrap: false,
-                            style: count.copyWith(color: liked ? FeedBigCardTheme.colorsOf(context).liked : FeedBigCardTheme.colorsOf(context).count),
+                            style: count.copyWith(
+                              color: liked
+                                  ? FeedBigCardTheme.colorsOf(context).liked
+                                  : FeedBigCardTheme.colorsOf(context).count,
+                            ),
                           ),
                         ),
                       ),
@@ -839,7 +902,11 @@ class _TitleBand extends StatelessWidget {
             behavior: HitTestBehavior.opaque,
             onTap: onMore,
             child: Center(
-              child: Icon(Icons.more_vert, size: BiliMetrics.cardFooterText + 4, color: BiliColors.colorsOf(context).secondaryText),
+              child: Icon(
+                Icons.more_vert,
+                size: BiliMetrics.cardFooterText + 4,
+                color: BiliColors.colorsOf(context).secondaryText,
+              ),
             ),
           ),
         ),

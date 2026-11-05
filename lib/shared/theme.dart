@@ -5677,9 +5677,15 @@ abstract final class FeedBatchTheme {
 abstract final class FeedBigCardTheme {
   static FeedBigCardThemeColors colorsOf(BuildContext context) => FeedBigCardThemeColors(BiliPalette.of(context));
 
-  /// The card spans both columns, inside the feed's side spacing.
-  static const spacing = BiliMetrics.feedSpacing;
-  static const radius = BiliMetrics.cardRadius;
+  /// The phone's single-column feed, inset 16 pt with 12 pt above each video.
+  static const spacing = 16.0;
+  static const topGap = 12.0;
+  static const radius = 4.0;
+  static const avatar = 36.0;
+  static const avatarGap = 8.0;
+  static const bylineText = 12.0;
+  static const bylineLine = 18.0;
+  static const bylineGap = 2.0;
 
   /// 6 to 434 pt wide, the video 240.75 pt tall (123, 126).
   static const videoAspect = 16 / 9;
@@ -5690,9 +5696,9 @@ abstract final class FeedBigCardTheme {
   /// the card's right.
   static const titleText = BiliMetrics.cardTitleText;
   static const titleLine = 58 / 3;
-  static const titlePad = 10.5;
+  static const titlePad = 8.0;
   static const titleDrop = 1.0;
-  static const titleInset = BiliMetrics.cardInset;
+  static const titleInset = 0.0;
   static const titleTrailing = 83.0;
   static const title = BiliColors.text;
 

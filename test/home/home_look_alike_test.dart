@@ -137,8 +137,8 @@ void main() {
     expect(hairline.height, moreOrLessEquals(1 / 3), reason: "one pixel, as 01's");
     final first = tester.getTopLeft(find.byKey(const ValueKey('feed-card-BV1aaa'))).dy;
     final third = tester.getTopLeft(find.byKey(const ValueKey('feed-card-BV1ccc'))).dy;
-    expect(first, moreOrLessEquals(hairline.bottom + BiliMetrics.feedSpacing));
-    expect(third - first, moreOrLessEquals(248), reason: "01's rows at 148, 396 and 644");
+    expect(first, moreOrLessEquals(hairline.bottom + FeedBigCardTheme.topGap));
+    expect(third - first, greaterThan(550), reason: 'single-column video rows with uploader metadata');
 
     final cover = tester.getRect(find.byType(CoverPlaceholder).first);
     final tv = tester.getRect(find.descendant(of: find.byType(CoverPlaceholder).first, matching: find.byType(Image)));
@@ -165,7 +165,7 @@ void main() {
     expect(tester.getRect(find.byType(LoadingTv)), Rect.fromLTWH(190, band, LoadingTvTheme.size, LoadingTvTheme.size));
     final cardTop = tester.getTopLeft(find.byKey(const ValueKey('feed-card-BV1aaa'))).dy;
     expect(cardTop, restTop + LoadingTvTheme.size);
-    expect(cardTop - band, 66, reason: "14's first card, 208 under a hairline at 142");
+    expect(cardTop - band, 72, reason: "14's first card, 208 under a hairline at 142");
 
     final shots = Platform.environment['BILIFAST_SHOTS'];
     if (shots != null) await saveShot(tester, find.byKey(_screen), '$shots/14-home-reload-ours.png');

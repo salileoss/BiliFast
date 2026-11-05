@@ -154,6 +154,7 @@ FeedCard bigCard(
   bool liked = false,
   String title = '大卡片',
   String? fullTitle,
+  int published = 0,
 }) =>
     FeedCard(
   aid: 80433022,
@@ -171,6 +172,7 @@ FeedCard bigCard(
   viewsText: '54.9万',
   danmakuText: '255',
   big: FeedBig(likes: likes, showLikes: showLikes, liked: liked),
+  published: published,
 );
 
 /// A small card, as the web feed's.

@@ -145,11 +145,18 @@ class _ReasonTile extends StatelessWidget {
 /// 选择不感兴趣原因 › where the card offers reasons ([onReasons] null leaves it out). It keeps the card's size and
 /// only its top corners.
 class FeedDislikedCard extends StatelessWidget {
-  const FeedDislikedCard({super.key, required this.card, required this.onUndo, required this.onReasons});
+  const FeedDislikedCard({
+    super.key,
+    required this.card,
+    required this.onUndo,
+    required this.onReasons,
+    this.inline = false,
+  });
 
   final FeedCard card;
   final VoidCallback onUndo;
   final VoidCallback? onReasons;
+  final bool inline;
 
   @override
   Widget build(BuildContext context) {
@@ -165,7 +172,7 @@ class FeedDislikedCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AspectRatio(
-              aspectRatio: BiliMetrics.coverAspect,
+              aspectRatio: inline ? FeedBigCardTheme.videoAspect : BiliMetrics.coverAspect,
               child: LayoutBuilder(
                 builder: (context, box) {
                   final middle = box.maxHeight / 2;
@@ -181,7 +188,11 @@ class FeedDislikedCard extends StatelessWidget {
                             sigmaY: FeedDislikeTheme.coverBlur,
                             tileMode: TileMode.clamp,
                           ),
-                          child: RemoteImage(card.cover, cover: true, preset: CoverPreset.feed),
+                          child: RemoteImage(
+                            card.cover,
+                            cover: true,
+                            preset: inline ? CoverPreset.player : CoverPreset.feed,
+                          ),
                         ),
                       ),
                       const ColoredBox(color: FeedDislikeTheme.coverShade),

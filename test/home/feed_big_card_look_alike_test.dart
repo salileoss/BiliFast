@@ -17,6 +17,7 @@ import 'package:bilifast/player/bili_player.dart';
 import 'package:bilifast/search/fake_search_api.dart';
 import 'package:bilifast/settings/font_store.dart';
 import 'package:bilifast/shared/theme.dart';
+import 'package:bilifast/shared/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -44,7 +45,7 @@ void main() {
     });
   });
 
-  Future<FakePlayer> showPlaying(WidgetTester tester, FeedCard big, {bool playing = true}) async {
+  Future<FakePlayer> showPlaying(WidgetTester tester, FeedCard big, {bool playing = true, bool dark = false}) async {
     HomePage.feedPages = (index) async => index == 1 ? [big, ...smalls('a', 6)] : const [];
     final saved = BiliFonts.family;
     addTearDown(() => BiliFonts.family = saved);
@@ -83,7 +84,7 @@ void main() {
     BiliFonts.family = BiliFonts.system;
     await tester.pumpWidget(
       MaterialApp(
-        theme: appTheme(),
+        theme: dark ? biliTheme(Brightness.dark) : appTheme(),
         builder: (context, child) => RepaintBoundary(
           key: _screen,
           child: AppScope(services: services, child: child!),
@@ -92,6 +93,7 @@ void main() {
       ),
     );
     await tester.runAsync(() async {
+      await loadIconFonts();
       final context = tester.element(find.byType(MainShell));
       for (final asset in [
         'assets/images/card/stat_play.png',
@@ -133,10 +135,10 @@ void main() {
     await showPlaying(tester, bigCard(bvid, fullTitle: '在夜晚东京街头唱了《真夜中のドア～stay with me》会穿越回泡沫经济时代吗?', likes: 28000));
     final card = tester.getRect(find.byKey(const ValueKey('feed-card-$bvid')));
     final video = inCard(tester, bvid, const ValueKey('big-card-open'));
-    expect(card.left, 6);
-    expect(card.width, 428);
-    expect(video.height, moreOrLessEquals(240.75));
-    expect(card.bottom - video.bottom, moreOrLessEquals(59.67, epsilon: 0.34), reason: "123's band, 456.33 to 516");
+    expect(card.left, 16);
+    expect(card.width, 408);
+    expect(video.height, moreOrLessEquals(229.5));
+    expect(card.bottom - video.bottom, moreOrLessEquals(74, epsilon: 0.5), reason: "123's band, 456.33 to 516");
     final like = inCard(tester, bvid, const ValueKey('big-card-like'));
     expect(like.center.dx, moreOrLessEquals(card.right - FeedBigCardTheme.likeRight));
     final more = inCard(tester, bvid, const ValueKey('big-card-more'));
@@ -154,10 +156,24 @@ void main() {
     await showPlaying(tester, bigCard(bvid, fullTitle: '科学家们用物理智斗爱因斯坦?', likes: 429000));
     final card = tester.getRect(find.byKey(const ValueKey('feed-card-$bvid')));
     final video = inCard(tester, bvid, const ValueKey('big-card-open'));
-    expect(card.bottom - video.bottom, moreOrLessEquals(40.33, epsilon: 0.34), reason: "126's band, 388.67 to 429");
+    expect(card.bottom - video.bottom, moreOrLessEquals(55, epsilon: 0.5), reason: "126's band, 388.67 to 429");
 
     final shots = Platform.environment['BILIFAST_SHOTS'];
     if (shots != null) await saveShot(tester, find.byKey(_screen), '$shots/126-big-card-ours.png');
+  });
+
+  testWidgets('the dark phone feed shows uploader and upload time under the video', (tester) async {
+    const bvid = 'BV1GJ411x7h7';
+    final published = DateTime.now().subtract(const Duration(hours: 10)).millisecondsSinceEpoch ~/ 1000;
+    await showPlaying(tester, bigCard(bvid, fullTitle: '2万多能买满改咬地鲨？', likes: 465, published: published), dark: true);
+    expect(find.text('UP $bvid · 10小时前'), findsOneWidget);
+    final video = inCard(tester, bvid, const ValueKey('big-card-open'));
+    final avatar = inCard(tester, bvid, const ValueKey('feed-uploader-avatar'));
+    final byline = inCard(tester, bvid, const ValueKey('feed-uploader-byline'));
+    expect(avatar.top, video.bottom + FeedBigCardTheme.titlePad);
+    expect(byline.left, avatar.right + FeedBigCardTheme.avatarGap);
+    final shots = Platform.environment['BILIFAST_SHOTS'];
+    if (shots != null) await saveShot(tester, find.byKey(_screen), '$shots/feed-dark-with-date.png');
   });
 
   testWidgets("122's cover: the ▶'s body 46.67 pt wide on the video's middle, the counts and the duration", (

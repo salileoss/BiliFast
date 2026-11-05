@@ -158,7 +158,7 @@ void main() {
     final open = header(tester);
     final top = cardTop(tester);
     expectRect(open, const Rect.fromLTRB(0, 0, 440, 142));
-    expect(top, open.bottom + BiliMetrics.feedSpacing);
+    expect(top, open.bottom + FeedBigCardTheme.topGap);
 
     feedScroll(tester).jumpTo(HomeHeaderTheme.trigger - 1);
     await settle(tester);
@@ -315,6 +315,7 @@ void main() {
     await tester.pump();
     expect(header(tester), open);
     expect(magnifier(), findsNothing);
+    await settle(tester);
     expect(tester.binding.transientCallbackCount, 0);
   });
 
@@ -373,7 +374,7 @@ void main() {
   testWidgets('a list too short to scroll folds nothing when dragged up past the trigger, held or let go', (
     tester,
   ) async {
-    http.pages[1] = [feedItem('BV1h0'), feedItem('BV1h1')];
+    http.pages[1] = [feedItem('BV1h0')];
     await show(tester);
     final open = header(tester);
     final drag = await tester.startGesture(tester.getCenter(find.byKey(const ValueKey('feed'))));

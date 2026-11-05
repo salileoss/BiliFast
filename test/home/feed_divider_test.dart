@@ -101,7 +101,9 @@ void main() {
   Finder turnedOver(String bvid) => find.descendant(of: card(bvid), matching: find.byType(FeedDislikedCard));
 
   Future<void> dislike(WidgetTester tester, String bvid) async {
-    await tester.tap(find.descendant(of: card(bvid), matching: find.byKey(const ValueKey('card-more'))));
+    await Scrollable.ensureVisible(tester.element(card(bvid)));
+    await settle(tester);
+    await tester.tap(find.descendant(of: card(bvid), matching: find.byKey(const ValueKey('big-card-more'))));
     await settle(tester);
     await tester.tap(find.byKey(const ValueKey('feed-more-dislike-video')));
     await settle(tester);
@@ -116,7 +118,11 @@ void main() {
     await dislike(tester, 'BV1aaa');
     expect(turnedOver('BV1aaa'), findsOneWidget);
     expect(http.dislikes.single['id'], '${'BV1aaa'.hashCode.abs()}');
-    expect(tester.getTopLeft(card('BV1aaa')).dy, moreOrLessEquals(below), reason: 'in its place');
+    expect(
+      tester.getTopLeft(card('BV1aaa')).dy,
+      moreOrLessEquals(tester.getRect(find.byKey(const ValueKey('feed'))).top),
+      reason: 'in its scrolled place',
+    );
     expect(turnedOver('BV1new0'), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('feed-disliked-undo')));
@@ -132,10 +138,12 @@ void main() {
     await refresh(tester, [officialItem('BV1top0'), officialItem('BV1top1')]);
     expect(find.byKey(const ValueKey('feed-card-BV1aaa'), skipOffstage: false), findsNothing);
     expect(find.byType(FeedDislikedCard), findsNothing);
+    await tester.scrollUntilVisible(_divider, 200);
+    await settle(tester);
     expect(tester.getTopLeft(card('BV1new0')).dy, moreOrLessEquals(tester.getRect(_divider).bottom));
     expect(
       tester.getTopLeft(card('BV1bbb')).dy,
-      moreOrLessEquals(tester.getRect(card('BV1new0')).bottom + BiliMetrics.feedSpacing),
+      moreOrLessEquals(tester.getRect(card('BV1new1')).bottom + FeedBigCardTheme.topGap * 2 + 0.5),
       reason: 'the cards before run on without it',
     );
   });
