@@ -25,6 +25,7 @@ import '../video/page_playback.dart';
 import '../video/video_route.dart';
 import 'feed_card.dart' show FeedCardView;
 import 'feed_dislike.dart';
+import 'feed_exposure.dart';
 import 'feed_inline_gestures.dart';
 import 'feed_inline_player.dart';
 import 'feed_model.dart' show CardDislike, feedLogFields;
@@ -92,6 +93,8 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
   final _videoKey = GlobalKey();
   late final _likeMotion = AnimationController(vsync: this, duration: FeedBigCardTheme.likeMotion, value: 1);
   AppServices? _services;
+  int? _exposureAccount;
+  int? _exposureSession;
   FeedInlinePlayback? _inline;
   Widget? _view;
   Object? _viewOf;
@@ -118,6 +121,8 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
     super.didChangeDependencies();
     if (_services != null) return;
     _services = AppScope.of(context);
+    _exposureAccount = _services!.feedAccountMid;
+    _exposureSession = _services!.environment.sessionGeneration;
     if (_live) {
       widget.host!.register(this);
       unawaited(_loadMetadata());
@@ -211,6 +216,30 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
       startAt: () => host.positions[bvid] ?? 0,
       released: (seconds) => host.positions[bvid] = seconds,
     )..addListener(_inlineChanged);
+  }
+
+  Widget _exposure(Widget child) {
+    final host = widget.host;
+    final services = _services;
+    if (host == null || services == null) return child;
+    final card = widget.card;
+    bool current() => _live && services.environment.sessionGeneration == _exposureSession &&
+        services.feedAccountMid == _exposureAccount && !services.environment.accountTransitioning;
+    return FeedExposure(
+      key: ValueKey('feed-exposure-$_exposureSession-$_exposureAccount-${card.bvid}'),
+      viewport: host.viewport,
+      visibilityChanges: host,
+      isActive: () => current() && host.allowsExposure,
+      onSeen: () {
+        if (!current()) return;
+        services.feedPreferences.recordSeen(
+          accountMid: _exposureAccount,
+          bvid: card.bvid,
+          ownerMid: card.ownerMid,
+        );
+      },
+      child: child,
+    );
   }
 
   Future<void> _open() async {
@@ -337,7 +366,7 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ClipRRect(
+            _exposure(ClipRRect(
               borderRadius: BorderRadius.circular(FeedBigCardTheme.radius),
               child: AspectRatio(
                 key: _videoKey,
@@ -370,7 +399,7 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
                   ],
                 ),
               ),
-            ),
+            )),
             Stack(
               children: [
                 _opens(

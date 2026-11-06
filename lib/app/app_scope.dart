@@ -182,7 +182,7 @@ class AppPlayback with WidgetsBindingObserver {
 /// rotation and levels, the font, the page body's, 搜索's, UP主空间's, 我的收藏's, 稍后再看's and 我的's calls, 我的's last
 /// account, 关注 changes, 搜索历史, the login page, the watch reports waiting for the network, the log kept on the phone,
 /// and the log forwarder in dev builds (null otherwise).
-class AppServices {
+class AppServices with WidgetsBindingObserver {
   AppServices({
     required this.environment,
     required this.playback,
@@ -240,6 +240,7 @@ class AppServices {
     _authorized = this.appAuth.authorized;
     this.appAuth.addListener(_authChanged);
     _historyFlusher = HistoryOutboxFlusher(outbox: this.historyOutbox, environment: environment, network: network);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   late final HistoryOutboxFlusher _historyFlusher;
@@ -273,6 +274,7 @@ class AppServices {
     _dynamicLikes?.clear();
     blockRules.resetAccount();
     if (meProfile.kept?.mid != environment.activeAccountMid) meProfile.delete();
+    unawaited(feedPreferences.flush());
   }
 
   /// Every login fetches the account's 屏蔽词 at once (Swift's didLogin); the launch's check is left to the first
@@ -299,6 +301,7 @@ class AppServices {
   }
 
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     appAuth.removeListener(_authChanged);
     appAuth.dispose();
     environment.removeListener(_accountChanged);
@@ -310,10 +313,28 @@ class AppServices {
     feedPreferences.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) unawaited(feedPreferences.flush());
+  }
+
   final AppEnvironment environment;
   final AppPlayback playback;
   final RecentStore recents;
   final FeedPreferences feedPreferences;
+
+  /// The saved identity is available before the launch's nav response. Legacy
+  /// logins can provide it through the app token or the web login's uid cookie.
+  int? get feedAccountMid {
+    final active = environment.activeAccountMid;
+    if (active != null && active > 0) return active;
+    if (environment.account is LoggedOut || environment.account is LoginExpired) return null;
+    final tokenMid = environment.client.appToken?.mid;
+    if (tokenMid != null && tokenMid > 0) return tokenMid;
+    final cookieMid = int.tryParse(environment.cookies.all['DedeUserID'] ?? '');
+    return cookieMid != null && cookieMid > 0 ? cookieMid : null;
+  }
+
   final PlayerDevice device;
   final FontStore fonts;
   final AppearanceStore appearance;

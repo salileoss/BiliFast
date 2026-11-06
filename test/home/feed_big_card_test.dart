@@ -12,6 +12,7 @@ import 'package:bilifast/home/feed_big_card.dart';
 import 'package:bilifast/home/feed_inline_gestures.dart';
 import 'package:bilifast/home/feed_inline_player.dart';
 import 'package:bilifast/home/feed_model.dart';
+import 'package:bilifast/home/feed_preferences.dart';
 import 'package:bilifast/home/home_page.dart';
 import 'package:bilifast/home/home_tab_bar.dart';
 import 'package:bilifast/home/main_shell.dart';
@@ -38,6 +39,17 @@ const _bv = 'BV1GJ411x7h7';
 const _heartbeat = '/x/click-interface/web/heartbeat';
 const _loggedOutCookies = {'buvid3': 'b3', 'buvid4': 'b4'};
 
+class _FeedSignals extends FeedPreferences {
+  _FeedSignals() : super.memory();
+  double watched = 0;
+
+  @override
+  void recordWatch({required int? accountMid, required String bvid, required int ownerMid,
+      required double seconds, bool completed = false}) {
+    watched += seconds;
+  }
+}
+
 void main() {
   late FeedHttp http;
   late AppEnvironment environment;
@@ -48,6 +60,7 @@ void main() {
   late List<PlaybackController> controllers;
   late List<FakeEngine> engines;
   late Map<int, List<FeedCard>> pages;
+  late List<int> feedRequests;
 
   /// While set, a player asked for comes only once it completes; [createError] fails it instead.
   Completer<void>? createGate;
@@ -63,13 +76,17 @@ void main() {
     pages = {
       1: [bigCard(_bv), ...smalls('a', 12)],
     };
+    feedRequests = [];
     createGate = null;
     createError = null;
     FeedInlineChoices.reset();
     HomePage.feedMinimumRefresh = Duration.zero;
     HomePage.precacheCover = (context, url, size) async => true;
     HomePage.precacheBigCover = (context, url, size) async => true;
-    HomePage.feedPages = (index) async => pages[index] ?? const [];
+    HomePage.feedPages = (index) async {
+      feedRequests.add(index);
+      return pages[index] ?? const [];
+    };
     addTearDown(() {
       HomePage.feedMinimumRefresh = FeedModel.minimumRefresh;
       HomePage.precacheCover = (context, url, size) async => false;
@@ -79,7 +96,8 @@ void main() {
     });
   });
 
-  Future<void> show(WidgetTester tester, {Map<String, String> cookies = Canned.cookies, bool muted = false}) async {
+  Future<void> show(WidgetTester tester, {Map<String, String> cookies = Canned.cookies, bool muted = false,
+      FeedPreferences? feedPreferences}) async {
     tester.view.physicalSize = const Size(440, 956);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -112,6 +130,7 @@ void main() {
       environment: environment,
       playback: playback,
       recents: recents,
+      feedPreferences: feedPreferences,
       loginGate: gate,
       pageApi: pageApi,
     );
@@ -572,10 +591,14 @@ void main() {
     expect(playingNow(player()), isFalse);
     expect(inCard(_bv, const ValueKey('big-card-play')), findsOneWidget);
     final paused = player().calls.length;
+    final asks = feedRequests.length;
 
-    await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, 600));
+    final position = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    await tester.drag(find.byKey(const ValueKey('feed')), Offset(0, position.pixels));
+    position.jumpTo(0);
     await frames(tester, 30);
     expect(playingNow(player()), isTrue);
+    expect(feedRequests, hasLength(asks), reason: 'returning to the tile does not pull a refresh');
     expect(players, hasLength(2), reason: 'the next tile autoplayed; the first resumes its player');
     expect(player().calls.skip(paused).where((call) => call.startsWith('load')), isEmpty);
     expect(controllers.first.currentSeconds, 37);
@@ -696,11 +719,15 @@ void main() {
     await tester.pump(FeedBigCardTheme.releaseAfter);
     await frames(tester, 2);
     expect(services.playback.live, 1, reason: 'offscreen player released, focused tile still playing');
-    await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, 600));
+    final asks = feedRequests.length;
+    final position = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    await tester.drag(find.byKey(const ValueKey('feed')), Offset(0, position.pixels));
+    position.jumpTo(0);
     await frames(tester, 30);
     expect(services.playback.live, 2);
     expect(players, hasLength(3));
     expect(player(2).loaded?.startSeconds, 37, reason: 'release preserves progress until the feed is refreshed');
+    expect(feedRequests, hasLength(asks), reason: 'returning to the tile does not pull a refresh');
   });
 
   testWidgets('scrolling far enough to dispose a tile preserves its progress when rebuilt', (tester) async {
@@ -841,6 +868,34 @@ void main() {
   });
 
   group('review fixes', () {
+    testWidgets('returning before a pending inline player starts restores local viewing signals', (tester) async {
+      createGate = Completer<void>();
+      final signals = _FeedSignals();
+      await show(tester, feedPreferences: signals);
+      await frames(tester, 10);
+      final pending = FeedInlinePlayback(
+        services: services,
+        video: const InlineVideo(bvid: _bv, duration: 600),
+        startAt: () => 0,
+        released: (_) {},
+      );
+      pending
+        ..play()
+        ..pause()
+        ..play();
+      createGate!.complete();
+      await frames(tester, 20);
+      final native = players.last;
+      native.emit(const StatusChanged(PlayerStatus.playing));
+      for (var second = 0; second <= 35; second++) {
+        native.emit(PositionChanged(seconds: second.toDouble(), hostMs: 10000 + second * 1000.0, rate: 1));
+      }
+      pending.pause();
+      expect(signals.watched, 35);
+      pending.dispose();
+      await frames(tester, 2);
+    });
+
     NavigatorState navigator(WidgetTester tester) => tester.state<NavigatorState>(find.byType(Navigator).first);
     FeedInlineHost host(WidgetTester tester) =>
         tester.widget<FeedBigCardView>(find.byType(FeedBigCardView, skipOffstage: false).first).host!;

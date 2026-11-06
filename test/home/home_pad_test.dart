@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bili_core/api.dart';
 import 'package:bili_core/devlog.dart';
 import 'package:bilifast/account/keychain_store.dart';
@@ -78,6 +80,44 @@ void main() {
     await show(tester, pad: false);
     expect(left(tester, 'BV1p2'), left(tester, 'BV1p0'), reason: 'the third card starts the second row');
     expect(find.byKey(const ValueKey('feed-card-face')), findsNothing, reason: "the phone's card is unchanged");
+  });
+
+  testWidgets('the iPad remembers visible cards but not cached cards or a hidden tab', (tester) async {
+    await show(tester, pad: true, landscape: true);
+    final services = AppScope.of(tester.element(find.byType(HomePage)));
+    final owner = services.feedAccountMid;
+    expect(services.feedPreferences.recentlySeen('BV1p0', accountMid: owner), isTrue);
+    expect(services.feedPreferences.recentlySeen('BV1p11', accountMid: owner), isFalse,
+        reason: 'building an offscreen grid row is not an exposure');
+    await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, -900));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('home-tab-mine')));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+    expect(services.feedPreferences.recentlySeen('BV1p11', accountMid: owner), isFalse,
+        reason: 'switching tabs cancels the visibility wait');
+  });
+
+  testWidgets('old iPad cards do not count for a new owner while replacement is delayed', (tester) async {
+    await show(tester, pad: true, landscape: true);
+    final services = AppScope.of(tester.element(find.byType(HomePage)));
+    final previousOwner = services.feedAccountMid;
+    expect(services.feedPreferences.recentlySeen('BV1p0', accountMid: previousOwner), isTrue);
+    http.canned.routes['/x/frontend/finger/spi'] =
+        (200, '{"code":0,"data":{"b_3":"b3","b_4":"b4"}}');
+    http.gates[1] = Completer<void>();
+    await services.environment.logout();
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+    expect(services.feedAccountMid, isNull);
+    expect(services.feedPreferences.recentlySeen('BV1p0', accountMid: null), isFalse,
+        reason: 'the previous account cards are still drawn but no longer belong to the active identity');
+    http.gates[1]!.complete();
+    for (var i = 0; i < 50; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(services.feedPreferences.recentlySeen('BV1p0', accountMid: null), isTrue,
+        reason: 'the same video can count after its new-owner response is accepted');
   });
 
   testWidgets("the iPad's bar: 首页 分区 动态 我的; 动态 is the 关注 place and 分区 says 暂未开放", (tester) async {

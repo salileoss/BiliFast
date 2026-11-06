@@ -139,6 +139,7 @@ void main() {
     SearchApi? search,
     String? initialLink,
     SkinModel Function(AppEnvironment environment)? skin,
+    bool checkAccount = true,
   }) async {
     tester.view.physicalSize = const Size(440, 900);
     tester.view.devicePixelRatio = 1;
@@ -155,7 +156,7 @@ void main() {
     }
     final logger = Logger(session: 'test');
     environment = await AppEnvironment.load(keychain: FakeKeychain(StoredCookies(cookies)), http: http, logger: logger);
-    await environment.refreshAccount();
+    if (checkAccount) await environment.refreshAccount();
     final now = DateTime.fromMillisecondsSinceEpoch((Canned.deadline - 1000) * 1000);
     // Each video page gets a controller and player of its own; [controller] is the newest.
     final playback = AppPlayback(() async {
@@ -231,6 +232,41 @@ void main() {
     final second = tester.getTopLeft(card('BV1bbb'));
     expect(second.dy, greaterThan(first.dy), reason: 'single column');
     expect(http.asked.first, 1);
+  });
+
+  testWidgets('resolving an account without an initial uid restarts its in-flight feed', (tester) async {
+    http.gates[1] = Completer<void>();
+    await show(tester, checkAccount: false);
+    await settle(tester, 2);
+    expect(environment.account, isA<AccountUnknown>());
+    expect(http.asked, [1]);
+    await environment.refreshAccount();
+    await settle(tester, 2);
+    expect(environment.account, isA<LoggedIn>());
+    expect(http.asked, [1, 1], reason: 'the first request had no resolved account owner');
+    http.gates[1]!.complete();
+    await settle(tester);
+    expect(card('BV1aaa'), findsOneWidget);
+    expect(card('BV1bbb'), findsOneWidget);
+    expect(find.byKey(const ValueKey('feed-error')), findsNothing);
+  });
+
+  testWidgets('a phone tile reused across owners waits for that owners accepted response', (tester) async {
+    await show(tester);
+    await settle(tester, 30);
+    final services = AppScope.of(tester.element(find.byType(HomePage)));
+    expect(services.feedPreferences.recentlySeen('BV1aaa', accountMid: services.feedAccountMid), isTrue);
+    http.gates[1] = Completer<void>();
+    environment.cookies.remove('SESSDATA');
+    http.canned.routes[Canned.navPath] = (200, Canned.navLoggedOut);
+    await environment.refreshAccount();
+    await settle(tester, 40);
+    expect(services.feedAccountMid, isNull);
+    expect(services.feedPreferences.recentlySeen('BV1aaa', accountMid: null), isFalse);
+    http.gates[1]!.complete();
+    await settle(tester, 40);
+    expect(services.feedPreferences.recentlySeen('BV1aaa', accountMid: null), isTrue,
+        reason: 'a reused video gets exposure for its new owner once that response is accepted');
   });
 
   group('under the system font a line mixing Latin and Chinese sits on the Chinese line', () {

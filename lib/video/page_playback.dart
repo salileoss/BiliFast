@@ -14,6 +14,7 @@ import 'pip_keeper.dart';
 import 'player_session.dart';
 import 'video_route.dart';
 import 'watch_reporter.dart';
+import 'local_watch_reporter.dart';
 
 typedef PageSessionFactory = PlayerSession Function({
   required PlaybackController controller,
@@ -48,7 +49,7 @@ PlayerSession pageSession({
 /// (推荐's big card) plays muted with its session's rules, watch reports and auto picture in picture off, until a page
 /// attaches and takes it over as it stands. An [offline] one plays 离线缓存 parts from the phone: no 最近打开, its
 /// position kept in the library as well as reported, and Bilibili asked for nothing else but where the part was left.
-class PagePlayback extends ChangeNotifier implements KeptPlayback {
+class PagePlayback extends ChangeNotifier with WidgetsBindingObserver implements KeptPlayback {
   PagePlayback({
     required this._services,
     required VideoRoute route,
@@ -61,7 +62,13 @@ class PagePlayback extends ChangeNotifier implements KeptPlayback {
        _view = route.view,
        _detail = route.detail,
        _title = route.title,
-       offline = route.offline;
+       offline = route.offline,
+       _localAccount = _services.feedAccountMid,
+       _localSession = _services.environment.sessionGeneration {
+    WidgetsBinding.instance.addObserver(this);
+    final state = WidgetsBinding.instance.lifecycleState;
+    _foreground = state == null || state == AppLifecycleState.resumed;
+  }
 
   final AppServices _services;
   final PageSessionFactory _createSession;
@@ -70,6 +77,32 @@ class PagePlayback extends ChangeNotifier implements KeptPlayback {
   final Widget Function(VideoRoute route) restorePage;
 
   bool _inline;
+  final int? _localAccount;
+  final int _localSession;
+  bool _foreground = true;
+  bool _localVisible = true;
+  LocalWatchReporter? _localWatch;
+
+  /// The inline host changes this synchronously before the platform pause lands.
+  set localVisible(bool value) {
+    if (_localVisible == value) return;
+    _localVisible = value;
+    _localWatch?.suspend();
+  }
+
+  bool get _localCurrent => _services.environment.sessionGeneration == _localSession &&
+      _services.feedAccountMid == _localAccount && !_services.environment.accountTransitioning;
+
+  bool get _localActive => !_closed && !_covered && _foreground && _localCurrent &&
+      (_inline ? _localVisible : _page != null) && !(_controller?.pictureInPicture ?? false) &&
+      _session?.scrubbing.value == null;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _foreground = state == AppLifecycleState.resumed;
+    _localWatch?.suspend();
+    if (!_foreground) unawaited(_services.feedPreferences.flush());
+  }
 
   /// What it plays: the route's video at first, then whatever the session opens on the page. Only the route's own
   /// open starts at its position; another part of the same video reuses the view and detail it has.
@@ -170,6 +203,13 @@ class PagePlayback extends ChangeNotifier implements KeptPlayback {
       return;
     }
     _controller = controller;
+    _localWatch = LocalWatchReporter(
+      controller: controller,
+      preferences: _services.feedPreferences,
+      accountMid: _localAccount,
+      isCurrent: () => _localCurrent,
+      canCount: () => _localActive,
+    );
     controller.addListener(_controllerChanged);
     _restores = controller.restoreRequests.listen((_) => _restore());
     if (_covered) controller.holdAutoplay(true);
@@ -183,12 +223,14 @@ class PagePlayback extends ChangeNotifier implements KeptPlayback {
       services: _services,
       open: openOnPage,
       onSeeked: (seconds) {
+        _localWatch?.suspend();
         _reporter?.seeked(seconds);
         _progress?.seeked(seconds);
       },
       requestLogin: () => _requestLogin?.call(),
       willPlay: willPlay,
     );
+    session.scrubbing.addListener(_localScrubChanged);
     if (_covered) {
       session.active = false;
       _hold();
@@ -344,6 +386,7 @@ class PagePlayback extends ChangeNotifier implements KeptPlayback {
   void cover() {
     if (_covered || _closed) return;
     _covered = true;
+    _localWatch?.suspend();
     final controller = _controller;
     final session = _session;
     session?.active = false;
@@ -393,12 +436,15 @@ class PagePlayback extends ChangeNotifier implements KeptPlayback {
 
   void _setAutoPictureInPicture(bool on) => _controller?.setAutoPictureInPicture(on);
 
+  void _localScrubChanged() => _localWatch?.suspend();
+
   void _controllerChanged() {
     final controller = _controller;
     if (controller == null || _closed) return;
     final active = controller.pictureInPicture;
     if (active == _pictureInPicture) return;
     _pictureInPicture = active;
+    _localWatch?.suspend();
     final keeper = _services.pipKeeper;
     if (active) {
       keeper.pipStarted(this);
@@ -436,6 +482,10 @@ class PagePlayback extends ChangeNotifier implements KeptPlayback {
   @override
   void close() {
     if (_closed) return;
+    _localWatch?.dispose();
+    _localWatch = null;
+    unawaited(_services.feedPreferences.flush());
+    WidgetsBinding.instance.removeObserver(this);
     _closed = true;
     _covered = false;
     _resumeOnShow = false;
@@ -443,6 +493,7 @@ class PagePlayback extends ChangeNotifier implements KeptPlayback {
     _requestLogin = null;
     final controller = _controller;
     final session = _session;
+    session?.scrubbing.removeListener(_localScrubChanged);
     session?.readout.status.removeListener(_stillCovered);
     session?.active = false;
     unawaited(_reporter?.leave());
