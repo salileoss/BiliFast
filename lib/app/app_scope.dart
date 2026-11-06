@@ -17,6 +17,7 @@ import '../dynamic/dynamic_api.dart';
 import '../dynamic/dynamic_like_book.dart';
 import '../favourites/favourites_api.dart';
 import '../home/recent_store.dart';
+import '../home/feed_preferences.dart';
 import '../me/me_api.dart';
 import '../me/me_profile_store.dart';
 import '../offline/fake_offline_library.dart';
@@ -186,6 +187,7 @@ class AppServices {
     required this.environment,
     required this.playback,
     required this.recents,
+    FeedPreferences? feedPreferences,
     PlayerDevice? device,
     FontStore? fonts,
     AppearanceStore? appearance,
@@ -213,7 +215,8 @@ class AppServices {
     NetworkMonitor? network,
     this.logFiles = const NoLogFiles(),
     this.logs,
-  }) : appAuth = appAuth ?? NoAppAuth(),
+  }) : feedPreferences = feedPreferences ?? FeedPreferences.memory(),
+       appAuth = appAuth ?? NoAppAuth(),
        historyOutbox = historyOutbox ?? HistoryOutbox.memory(),
        navigator = navigator ?? GlobalKey<NavigatorState>(),
        device = device ?? PlayerDevice.inWindow(),
@@ -304,11 +307,13 @@ class AppServices {
     environment.beforeAccountChange = null;
     environment.accountChangeAborted = null;
     _historyFlusher.dispose();
+    feedPreferences.dispose();
   }
 
   final AppEnvironment environment;
   final AppPlayback playback;
   final RecentStore recents;
+  final FeedPreferences feedPreferences;
   final PlayerDevice device;
   final FontStore fonts;
   final AppearanceStore appearance;
