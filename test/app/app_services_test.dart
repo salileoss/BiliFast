@@ -61,6 +61,23 @@ void main() {
   int fetches() =>
       api.calls.where((call) => call == 'danmakuBlockRules').length;
 
+  test('legacy uid keeps feed preference ownership stable while launch nav resolves', () async {
+    final (environment, services) = await build(
+      stored: const StoredCookies({..._login, 'DedeUserID': '12345'}),
+    );
+    addTearDown(services.dispose);
+    expect(environment.account, isA<AccountUnknown>());
+    expect(environment.activeAccountMid, isNull);
+    expect(services.feedAccountMid, 12345);
+    services.feedPreferences.recordSeen(
+      accountMid: services.feedAccountMid, bvid: 'BVlaunch', ownerMid: 7,
+    );
+    await environment.refreshAccount();
+    expect(services.feedAccountMid, 12345);
+    expect(services.feedPreferences.recentlySeen('BVlaunch', accountMid: services.feedAccountMid), isTrue);
+    expect(services.feedPreferences.recentlySeen('BVlaunch', accountMid: null), isFalse);
+  });
+
   test('the launch\'s check leaves the 屏蔽词 to the page', () async {
     final (environment, _) = await build(stored: const StoredCookies(_login));
     await environment.refreshAccount();

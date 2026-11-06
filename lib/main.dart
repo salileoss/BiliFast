@@ -29,6 +29,7 @@ import 'dynamic/fake_dynamic_api.dart';
 import 'favourites/fake_favourites_api.dart';
 import 'home/main_shell.dart';
 import 'home/recent_store.dart';
+import 'home/feed_preferences.dart';
 import 'me/fake_me_api.dart';
 import 'me/me_profile_store.dart';
 import 'offline/fake_offline_library.dart';
@@ -74,6 +75,7 @@ Future<void> main(List<String> args) async {
   }
   final AppEnvironment environment;
   final RecentStore recents;
+  final FeedPreferences feedPreferences;
   final FontStore fonts;
   final AppearanceStore appearance;
   final SearchHistoryStore searchHistory;
@@ -90,6 +92,9 @@ Future<void> main(List<String> args) async {
             realAccount: args.contains('--real-account') && !args.contains('--fake-account'))
         : AppEnvironment.load(legacyAuthDeclined: await readLegacyAuthDeclined(appDevicePath())));
     recents = await RecentStore.load(supportFilePath('recents.json'));
+    feedPreferences = await FeedPreferences.load(
+      args.contains('--fake-account') ? null : supportFilePath('feed_preferences.json'),
+    );
     PlayerPrefs.shared = await PlayerPrefs.load(supportFilePath('player_prefs.json'));
     fonts = await FontStore.load(supportFilePath('font.json'));
     searchHistory = await SearchHistoryStore.load(supportFilePath('search_history.json'));
@@ -156,6 +161,7 @@ Future<void> main(List<String> args) async {
     environment: environment,
     playback: playback,
     recents: recents,
+    feedPreferences: feedPreferences,
     device: device,
     fonts: fonts,
     appearance: appearance,

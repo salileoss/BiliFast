@@ -31,6 +31,7 @@ import 'avatar_page.dart';
 import 'feed_big_card.dart';
 import 'feed_card.dart';
 import 'feed_divider.dart';
+import 'feed_exposure.dart';
 import 'feed_inline_player.dart';
 import 'feed_model.dart';
 import 'home_header.dart';
@@ -91,6 +92,7 @@ class _HomePageState extends State<HomePage> {
 
   /// Whether the feed on screen was fetched logged in; null until the first account check has answered.
   bool? _feedSignedIn;
+  int? _feedOwner;
 
   /// Whether the app token was held when last heard, so a new one can bring the official 推荐 and a lost one take it
   /// away.
@@ -126,8 +128,11 @@ class _HomePageState extends State<HomePage> {
     if (_feed != null) return;
     _services = AppScope.of(context);
     _opener.busy.addListener(_busyChanged);
+    _feedOwner = _services.feedAccountMid;
     _feed = FeedModel(
       client: _environment.client,
+      preferences: _services.feedPreferences,
+      accountMid: () => _services.feedAccountMid,
       minimumRefresh: HomePage.feedMinimumRefresh,
       webPage: HomePage.feedPages,
     );
@@ -170,7 +175,8 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  /// Logging in or out changes what 推荐 recommends; the first check at launch does not.
+  /// Logging in or out changes 推荐. A first check with an already known uid leaves its initial request alone;
+  /// resolving an unknown uid restarts it so the old owner's response cannot leave the feed blank.
   void _accountChanged() {
     final bool signedIn;
     switch (_environment.account) {
@@ -182,8 +188,12 @@ class _HomePageState extends State<HomePage> {
         signedIn = false;
     }
     final previous = _feedSignedIn;
+    final identityChanged = _feedOwner != _services.feedAccountMid;
+    _feedOwner = _services.feedAccountMid;
     _feedSignedIn = signedIn;
-    if (previous != null && previous != signedIn) unawaited(_refreshFeed(restart: true));
+    if (identityChanged || previous != null && previous != signedIn) {
+      unawaited(_refreshFeed(restart: true));
+    }
   }
 
   /// A token that arrives after 推荐 came from the website (at launch the stored one may land after the first load,
@@ -591,6 +601,7 @@ class _FeedGridState extends State<_FeedGrid> with SingleTickerProviderStateMixi
   bool _ticking = true;
 
   late final _inline = FeedInlineHost(viewport: _feedArea, pip: AppScope.of(context).pipKeeper);
+  late final _exposures = Listenable.merge([_scroll, _inline]);
 
   @override
   void initState() {
@@ -800,6 +811,10 @@ class _FeedGridState extends State<_FeedGrid> with SingleTickerProviderStateMixi
         (context, index) {
           final slot = from + index;
           final card = cards[slot];
+          final services = AppScope.of(context);
+          final environment = services.environment;
+          final owner = services.feedAccountMid;
+          final session = environment.sessionGeneration;
           final enter = !still && _entered.add(card.bvid);
           final gone = going != null && slot < going.length ? going[slot] : null;
           return _Entrance(
@@ -817,14 +832,28 @@ class _FeedGridState extends State<_FeedGrid> with SingleTickerProviderStateMixi
                       onWatchLater: () {},
                       dislike: gone.dislike,
                     ),
-              child: FeedCardView(
-                card: card,
-                onOpen: (source) => widget.onOpen(card, source),
-                onWatchLater: () => widget.onWatchLater(card),
-                dislike: feed.dislikeOf(card),
-                onDislike: (reason) => widget.onDislike(card, reason),
-                onUndo: () => widget.onUndo(card),
-                onReason: (reason) => widget.onReason(card, reason),
+              child: FeedExposure(
+                viewport: _feedArea,
+                visibilityChanges: _exposures,
+                isActive: () => _inline.allowsExposure && !environment.accountTransitioning &&
+                    session == environment.sessionGeneration && owner == services.feedAccountMid &&
+                    feed.dislikeOf(card) == null,
+                onSeen: () {
+                  if (session != environment.sessionGeneration || owner != services.feedAccountMid ||
+                      environment.accountTransitioning) {
+                    return;
+                  }
+                  services.feedPreferences.recordSeen(accountMid: owner, bvid: card.bvid, ownerMid: card.ownerMid);
+                },
+                child: FeedCardView(
+                  card: card,
+                  onOpen: (source) => widget.onOpen(card, source),
+                  onWatchLater: () => widget.onWatchLater(card),
+                  dislike: feed.dislikeOf(card),
+                  onDislike: (reason) => widget.onDislike(card, reason),
+                  onUndo: () => widget.onUndo(card),
+                  onReason: (reason) => widget.onReason(card, reason),
+                ),
               ),
             ),
           );
@@ -863,6 +892,8 @@ class _FeedGridState extends State<_FeedGrid> with SingleTickerProviderStateMixi
                 dislike: gone.dislike,
               ),
         child: FeedBigCardView(
+          key: ValueKey((AppScope.of(context).feedAccountMid,
+              AppScope.of(context).environment.sessionGeneration, card.bvid)),
           card: card,
           host: _inline,
           onOpen: (playback, start) => widget.onOpenBig(card, playback, start),
@@ -961,7 +992,7 @@ class _FeedGridState extends State<_FeedGrid> with SingleTickerProviderStateMixi
     final still = _still = MediaQuery.disableAnimationsOf(context);
     _ticking = TickerMode.valuesOf(context).enabled;
     // A route over 首页 (a page, a sheet, ⋮'s menu) or 我的 shown pauses the big card; the app leaving, its host.
-    _inline.shown = _ticking && (ModalRoute.isCurrentOf(context) ?? true);
+    _inline.shown = _ticking && (ModalRoute.isCurrentOf(context) ?? true) && feed.belongsToCurrentAccount;
     // Under a dressed bar the feed runs to the screen's bottom; its end stays above the bar's row.
     final inset = _inset = MediaQuery.paddingOf(context).bottom;
     final pad = _pad = FormFactor.of(context).isPad;

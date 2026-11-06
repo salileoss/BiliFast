@@ -65,7 +65,7 @@ abstract interface class FeedInlineCard {
 /// A new focus needs [FeedBigCardTheme.visibleToPlay] of its video on screen; the current focus can continue until
 /// only [FeedBigCardTheme.visibleToKeepPlaying] remains. During scrolling only the existing player may continue;
 /// new playback waits until the list has rested for [FeedBigCardTheme.autoplayAfterScroll].
-class FeedInlineHost with WidgetsBindingObserver {
+class FeedInlineHost extends ChangeNotifier with WidgetsBindingObserver {
   FeedInlineHost({required this.viewport, required this._pip}) {
     _pip.addListener(settleSoon);
     WidgetsBinding.instance.addObserver(this);
@@ -96,6 +96,9 @@ class FeedInlineHost with WidgetsBindingObserver {
 
   @visibleForTesting
   FeedInlineCard? get playing => _playing;
+
+  /// Exposure waits until scrolling rests; covered/background tiles never count.
+  bool get allowsExposure => _shown && _foreground && !_pip.showing && !_scrolling && _autoplayWait == null;
 
   /// 首页 is the tab shown and no route is over it (a page, a sheet, ⋮'s menu).
   set shown(bool value) {
@@ -178,6 +181,7 @@ class FeedInlineHost with WidgetsBindingObserver {
     }
     _playing = best;
     best?.inlinePlay();
+    notifyListeners();
   }
 
   @override
@@ -192,11 +196,13 @@ class FeedInlineHost with WidgetsBindingObserver {
     }
   }
 
+  @override
   void dispose() {
     _disposed = true;
     _autoplayWait?.cancel();
     _pip.removeListener(settleSoon);
     WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 }
 
@@ -356,9 +362,12 @@ class FeedInlinePlayback extends ChangeNotifier {
     final playback = _playback;
     if (playback == null) {
       _start();
-    } else if (_controller case final controller?) {
-      controller.holdAutoplay(false, play: true);
-      _quietly(controller.player.play, 'play');
+    } else {
+      playback.localVisible = true;
+      if (_controller case final controller?) {
+        controller.holdAutoplay(false, play: true);
+        _quietly(controller.player.play, 'play');
+      }
     }
     notifyListeners();
   }
@@ -366,6 +375,7 @@ class FeedInlinePlayback extends ChangeNotifier {
   void pause() {
     if (!_wanted || _disposed) return;
     _wanted = false;
+    _playback?.localVisible = false;
     cancelGesture();
     if (_controller case final controller?) {
       controller.holdAutoplay(true);

@@ -16,7 +16,7 @@ concurrency:
 env:
   FLUTTER_VERSION: 3.47.7
   BUILD_NAME: 1.3.0
-  BUILD_NUMBER: "12"
+  BUILD_NUMBER: "13"
   XCODE_VERSION: "26.6"
   XCODE_BUILD: 17F113
 
@@ -67,7 +67,7 @@ jobs:
           test ! -e "$app/embedded.mobileprovision"
           mkdir -p "$RUNNER_TEMP/sideload/Payload" "$RUNNER_TEMP/output"
           cp -R "$app" "$RUNNER_TEMP/sideload/Payload/"
-          ipa="$RUNNER_TEMP/output/BiliFast-${BUILD_NAME}-${BUILD_NUMBER}-feed-gestures.ipa"
+          ipa="$RUNNER_TEMP/output/BiliFast-${BUILD_NAME}-${BUILD_NUMBER}-feed-variety.ipa"
           (cd "$RUNNER_TEMP/sideload" && zip -qry "$ipa" Payload)
           IPA_PATH="$ipa" python3 - <<'PY'
           import hashlib, json, os, plistlib, struct, zipfile

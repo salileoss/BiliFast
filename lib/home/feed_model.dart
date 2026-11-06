@@ -13,6 +13,7 @@ import '../shared/cover_format.dart';
 import '../shared/image_disk_cache.dart';
 import '../shared/remote_image.dart' show secureImageUrl;
 import '../video/player_prefs.dart';
+import 'feed_preferences.dart';
 
 /// The words for a failed request: the BiliError's or PlaybackFailure's message (a 番剧 link), a network message
 /// when the connection failed or timed out, otherwise [fallback].
@@ -61,7 +62,15 @@ Map<String, Object> feedLogFields(Object error) => {
   if (error case BiliHTTPError(:final status)) 'status': status,
 };
 
-typedef _Page = ({List<FeedCard> cards, FeedSource source, int index});
+typedef _Page = ({List<FeedCard> cards, List<FeedCard> remaining, FeedSource source, int index, int received});
+
+/// A fetch belongs to one account session, including an armed pull later joined by its release.
+class _FeedRequest {
+  const _FeedRequest(this.session, this.owner);
+
+  final int session;
+  final int? owner;
+}
 
 /// Page 1 asked for while a pull is held past its trigger, kept out of sight until the pull lets go there.
 class _EarlyPage {
@@ -72,6 +81,7 @@ class _EarlyPage {
     required this.started,
     required this.warm,
     required this.page,
+    required this.request,
   });
 
   /// What it was asked under: a refresh since, another source or another token make it stale.
@@ -84,6 +94,7 @@ class _EarlyPage {
   /// The warm sent as the pull armed; the release that takes this page sends none.
   final _Warm warm;
   final Future<_Page> page;
+  final _FeedRequest request;
 
   /// When it answered or failed; null while still out.
   DateTime? landed;
@@ -213,9 +224,12 @@ class FeedModel extends ChangeNotifier {
     DateTime Function()? now,
     PictureSession? Function()? pictures,
     String Function()? coverFormat,
+    this._preferences,
+    int? Function()? accountMid,
     this._minimumRefresh = FeedModel.minimumRefresh,
     this._webPage,
-  }) : _logger = logger ?? Logger.shared,
+  }) : _accountMid = accountMid ?? (() => null),
+       _logger = logger ?? Logger.shared,
        _officialWanted = officialWanted ?? (() => PlayerPrefs.shared.officialFeed),
        _pad = pad ?? (() => FormFactor.device.isPad),
        _now = now ?? DateTime.now,
@@ -233,6 +247,9 @@ class FeedModel extends ChangeNotifier {
   /// account's change) to the swap, so its TV stays up that long; the covers asked for as the answer lands load
   /// meanwhile. A later answer swaps at once; the first load, with no cards to replace, is never held.
   static const minimumRefresh = Duration(milliseconds: 1500);
+
+  /// An optional variety page must not hold a successful first response indefinitely.
+  static const extraPageTimeout = Duration(seconds: 2);
 
   /// A shown page logs `feed covers done` this long after asking for its covers, if some are still out.
   static const coversDoneAfter = Duration(seconds: 10);
@@ -257,6 +274,12 @@ class FeedModel extends ChangeNotifier {
   final PictureSession? Function() _pictures;
   final String Function() _coverFormat;
   final Duration _minimumRefresh;
+  final FeedPreferences? _preferences;
+  final int? Function() _accountMid;
+  _FeedRequest? _request;
+  List<FeedCard> _pending = const [];
+  int _pendingSession = -1;
+  int? _pendingOwner;
 
   /// Answers the website's pages in place of the client: tests whose cards the web feed can't send (the big card).
   final Future<List<FeedCard>> Function(int index)? _webPage;
@@ -306,6 +329,11 @@ class FeedModel extends ChangeNotifier {
   /// Where the last page shown came from; null before the first.
   FeedSource? get source => _source;
 
+  /// Old cards may remain drawn while an account's replacement is fetched. They must not play or count as the
+  /// new account's exposure until a response for that identity has been accepted.
+  bool get belongsToCurrentAccount => _source != null &&
+      _pendingSession == _client.sessionGeneration && _pendingOwner == _accountMid();
+
   /// Why the cards are missing (nothing on screen) or the next page is (under the cards); endless scroll waits for
   /// [retry] instead of asking again by itself.
   String? get error => _error;
@@ -336,6 +364,7 @@ class FeedModel extends ChangeNotifier {
   Future<String?> refresh({bool pulled = false, bool replace = false}) async {
     final early = pulled ? _joinable() : null;
     _early = null;
+    final request = early?.request ?? _beginRequest();
     final hold = _cards.isEmpty ? null : _hold(since: early?.started);
     final mine = ++_generation;
     _loading = true;
@@ -345,11 +374,12 @@ class FeedModel extends ChangeNotifier {
     final heldMs = early == null ? null : _now().difference(early.started).inMilliseconds;
     String? failure;
     try {
-      final page = await (early?.page ?? _fetch(refresh: true));
-      if (_disposed || mine != _generation) return null;
+      final page = await (early?.page ?? _fetch(refresh: true, request: request));
+      if (mine != _generation || !_currentRequest(request)) return null;
       if (early != null && early.official && page.source == FeedSource.web) _officialRefused = true;
       final fresh = _appending(page.cards, const []);
-      _logPage(page, fresh.length);
+      final shownIds = {for (final card in _cards) card.bvid};
+      _logPage(page, fresh.where((card) => !shownIds.contains(card.bvid)).length);
       if (fresh.isEmpty) {
         failure = emptyMessage;
       } else {
@@ -358,7 +388,7 @@ class FeedModel extends ChangeNotifier {
         final shown = early?.covers ?? asked;
         if (hold != null) {
           await hold;
-          if (_disposed || mine != _generation) return null;
+          if (mine != _generation || !_currentRequest(request)) return null;
         }
         _logCovers(shown, heldMs: heldMs);
         if (shown != null) _whenCoversDone(shown, early: heldMs != null, warm: warm);
@@ -368,20 +398,25 @@ class FeedModel extends ChangeNotifier {
         _dividerAt = kept.isEmpty ? null : fresh.length;
         _advance(page);
         _source = page.source;
+        _pending = page.remaining;
+        _pendingSession = request.session;
+        _pendingOwner = request.owner;
         _dislikes.clear();
         _error = null;
         _exhausted = false;
       }
     } catch (error) {
-      if (_disposed || mine != _generation) return null;
+      if (mine != _generation || !_currentRequest(request)) return null;
       _logger.warn(LogCategory.ui, 'feed refresh failed', feedLogFields(error));
       failure = requestFailureMessage(error);
+    } finally {
+      if (!_disposed && mine == _generation) {
+        _loading = false;
+        if (failure != null && _cards.isEmpty) _error = failure;
+        _notify();
+      }
     }
-    _loading = false;
-    final kept = _cards.isNotEmpty;
-    if (failure != null && !kept) _error = failure;
-    _notify();
-    return kept ? failure : null;
+    return _cards.isNotEmpty ? failure : null;
   }
 
   Future<void> loadMore() async {
@@ -391,6 +426,7 @@ class FeedModel extends ChangeNotifier {
       return;
     }
     final mine = _generation;
+    final request = _beginRequest();
     _loading = true;
     _error = null;
     _exhausted = false;
@@ -399,9 +435,26 @@ class FeedModel extends ChangeNotifier {
       // A page of cards already shown (or only ads) adds nothing, and then no card appears to ask for the next one;
       // ask on, a few times.
       var added = 0;
+      if (_pendingSession != request.session || _pendingOwner != request.owner) _pending = const [];
+      if (_pending.isNotEmpty) {
+        final pending = _pending;
+        _pending = const [];
+        final selected = _preferences?.select(pending, accountMid: request.owner, limit: pending.length) ?? pending;
+        final before = _cards.length;
+        _cards = _appending(selected, _cards);
+        added = _cards.length - before;
+        final source = _source!;
+        _logPage((
+          cards: selected,
+          remaining: const <FeedCard>[],
+          source: source,
+          index: (source == FeedSource.official ? _nextOfficialIndex : _nextWebIndex) - 1,
+          received: pending.length,
+        ), added);
+      }
       for (var attempt = 0; attempt < _emptyPagesAllowed && added == 0; attempt++) {
-        final page = await _fetch(refresh: false);
-        if (_disposed || mine != _generation) return;
+        final page = await _fetch(refresh: false, request: request);
+        if (mine != _generation || !_currentRequest(request)) return;
         final before = _cards.length;
         _cards = _appending(page.cards, _cards);
         _advance(page);
@@ -411,7 +464,7 @@ class FeedModel extends ChangeNotifier {
       }
       _exhausted = added == 0;
     } catch (error) {
-      if (_disposed || mine != _generation) return;
+      if (mine != _generation || !_currentRequest(request)) return;
       _logger.warn(LogCategory.ui, 'feed load more failed', feedLogFields(error));
       _error = requestFailureMessage(error);
     } finally {
@@ -437,13 +490,15 @@ class FeedModel extends ChangeNotifier {
       return;
     }
     final warm = _openPictures();
+    final request = _beginRequest();
     final early = _EarlyPage(
       generation: _generation,
       official: _officialPossible,
       token: _client.appToken,
       started: _now(),
       warm: warm,
-      page: _fetch(refresh: true, early: true),
+      page: _fetch(refresh: true, early: true, request: request),
+      request: request,
     );
     _early = early;
     unawaited(
@@ -481,6 +536,7 @@ class FeedModel extends ChangeNotifier {
   bool _current(_EarlyPage early) =>
       early.generation == _generation &&
       early.official == _officialPossible &&
+      _currentRequest(early.request) &&
       identical(early.token, _client.appToken);
 
   bool _expired(_EarlyPage early) {
@@ -596,14 +652,61 @@ class FeedModel extends ChangeNotifier {
     unawaited(count.done.then((_) => finish()));
   }
 
-  /// One page from the source this load should read, with the index it asked for. The indexes only move once the
-  /// caller knows the page still counts. An [early] page leaves the refused token for its refresh to note.
-  Future<_Page> _fetch({required bool refresh, bool early = false}) async {
+  _FeedRequest _beginRequest() => _request = _FeedRequest(_client.sessionGeneration, _accountMid());
+
+  bool _currentRequest(_FeedRequest request) =>
+      !_disposed && identical(_request, request) &&
+      request.session == _client.sessionGeneration && request.owner == _accountMid();
+
+  void _checkRequest(_FeedRequest request) {
+    if (!_currentRequest(request)) throw const BiliSessionChangedError();
+  }
+
+  /// Keeps the server's personalized candidates. A mostly repeated refresh can ask one more page, then the local
+  /// memory chooses a batch of the original size. Fetching never records a video as seen.
+  Future<_Page> _fetch({required bool refresh, required _FeedRequest request, bool early = false}) async {
+    var page = await _fetchPage(refresh: refresh, early: early, request: request);
+    _checkRequest(request);
+    final preferences = _preferences;
+    if (preferences == null) return page;
+    final first = _appending(page.cards, const []);
+    var candidates = first;
+    if (refresh && first.isNotEmpty && preferences.unseenCount(first, accountMid: request.owner) * 2 < first.length) {
+      try {
+        _checkRequest(request);
+        final extraIndex = page.index + 1;
+        // Stay on the first answer's source. A refused optional page must not start another fallback request.
+        final extraFuture = page.source == FeedSource.official
+            ? _client.officialFeed(index: extraIndex, pad: _pad())
+            : (_webPage?.call(extraIndex) ?? _client.recommendFeed(index: extraIndex));
+        final extra = await extraFuture.timeout(extraPageTimeout);
+        _checkRequest(request);
+        candidates = _appending(extra, first);
+        page = (cards: candidates, remaining: const <FeedCard>[], source: page.source, index: extraIndex,
+          received: page.received + extra.length);
+      } catch (error) {
+        _checkRequest(request);
+        _logger.warn(LogCategory.ui, 'feed extra page unavailable', feedLogFields(error));
+      }
+    }
+    final selected = preferences.select(candidates, accountMid: request.owner, limit: first.length);
+    final selectedIds = {for (final card in selected) card.bvid};
+    return (cards: selected,
+      remaining: refresh ? candidates.where((card) => !selectedIds.contains(card.bvid)).take(keptCards).toList() : const <FeedCard>[],
+      source: page.source, index: page.index, received: page.received);
+  }
+
+  /// One page from the source this load should read. The indexes only move when its caller accepts the answer.
+  /// An [early] page leaves the refused token for its refresh to note.
+  Future<_Page> _fetchPage({required bool refresh, required _FeedRequest request, bool early = false}) async {
+    _checkRequest(request);
     if (early ? _officialPossible : wantsOfficial) {
       final index = refresh ? 0 : _nextOfficialIndex;
       try {
-        return (cards: await _client.officialFeed(index: index, pad: _pad()), source: FeedSource.official, index: index);
+        final cards = await _client.officialFeed(index: index, pad: _pad());
+        return (cards: cards, remaining: const <FeedCard>[], source: FeedSource.official, index: index, received: cards.length);
       } catch (error) {
+        _checkRequest(request);
         if (!_refused(error)) rethrow;
         _logger.warn(LogCategory.ui, 'official feed refused, web feed instead', feedLogFields(error));
         if (!early) _officialRefused = true;
@@ -611,9 +714,10 @@ class FeedModel extends ChangeNotifier {
     }
     // The first launch reaches here before the account check has fetched the fingerprint cookies.
     if (refresh) await _client.ensureRiskCookies();
+    _checkRequest(request);
     final index = refresh ? 1 : _nextWebIndex;
     final cards = await (_webPage?.call(index) ?? _client.recommendFeed(index: index));
-    return (cards: cards, source: FeedSource.web, index: index);
+    return (cards: cards, remaining: const <FeedCard>[], source: FeedSource.web, index: index, received: cards.length);
   }
 
   static bool _refused(Object error) =>
@@ -710,8 +814,11 @@ class FeedModel extends ChangeNotifier {
   void _logPage(_Page page, int added) => _logger.info(LogCategory.ui, 'feed page', {
     'source': page.source.name,
     'index': page.index,
-    'got': page.cards.length,
+    'got': page.received,
     'new': added,
+    'overlap': page.cards.length - added,
+    'recentlySeen': page.cards.length - (_preferences?.unseenCount(page.cards, accountMid: _accountMid()) ?? page.cards.length),
+    'uploaders': {for (final card in page.cards) if (card.ownerMid > 0) card.ownerMid}.length,
   });
 
   /// The cards on screen that stay under a refresh's [fresh] page: not one it brings again, nor one turned over by
