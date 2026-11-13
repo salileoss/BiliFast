@@ -224,7 +224,8 @@ void main() {
 
     await tapTab(tester, HomeTab.home);
     await settle(tester, 20);
-    expect(http.asked, [...asked, 1]);
+    expect(http.asked, [...asked, 1, 2],
+        reason: 'one refresh plus lookahead because page 1 repeats visible videos');
     await settle(tester, 40);
   });
 

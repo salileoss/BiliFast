@@ -251,6 +251,9 @@ class FeedModel extends ChangeNotifier {
   /// An optional variety page must not hold a successful first response indefinitely.
   static const extraPageTimeout = Duration(seconds: 2);
 
+  /// Bounded lookahead within that shared time budget, only when fresh candidates are missing.
+  static const extraPagesAllowed = 3;
+
   /// A shown page logs `feed covers done` this long after asking for its covers, if some are still out.
   static const coversDoneAfter = Duration(seconds: 10);
 
@@ -280,6 +283,10 @@ class FeedModel extends ChangeNotifier {
   List<FeedCard> _pending = const [];
   int _pendingSession = -1;
   int? _pendingOwner;
+  int _searchSession = -1;
+  int? _searchOwner;
+  FeedSource? _searchSource;
+  int _searchNextIndex = 0;
 
   /// Answers the website's pages in place of the client: tests whose cards the web feed can't send (the big card).
   final Future<List<FeedCard>> Function(int index)? _webPage;
@@ -377,18 +384,35 @@ class FeedModel extends ChangeNotifier {
       final page = await (early?.page ?? _fetch(refresh: true, request: request));
       if (mine != _generation || !_currentRequest(request)) return null;
       if (early != null && early.official && page.source == FeedSource.web) _officialRefused = true;
-      final fresh = _appending(page.cards, const []);
+      var fresh = _appending(page.cards, const []);
       final shownIds = {for (final card in _cards) card.bvid};
       _logPage(page, fresh.where((card) => !shownIds.contains(card.bvid)).length);
       if (fresh.isEmpty) {
+        _rememberSearch(page, request);
         failure = emptyMessage;
       } else {
         final asked = _askCovers(fresh);
         // A held pull's covers were asked for when its page came in; those are the ones that can be ready by now.
-        final shown = early?.covers ?? asked;
+        var shown = early?.covers ?? asked;
         if (hold != null) {
           await hold;
           if (mine != _generation || !_currentRequest(request)) return null;
+        }
+        // A held pull can outlive new exposure or meaningful viewing of the current tile.
+        final preferences = _preferences;
+        if (preferences != null) {
+          final eligible = [...page.cards, ...page.remaining].where(
+            (card) => !preferences.recentlySeen(card.bvid, accountMid: request.owner),
+          ).take(fresh.length).toList();
+          if (!listEquals(fresh, eligible)) {
+            fresh = eligible;
+            if (fresh.isNotEmpty) shown = _askCovers(fresh);
+          }
+        }
+        _rememberSearch(page, request);
+        if (fresh.isEmpty) {
+          failure = emptyMessage;
+          return _cards.isNotEmpty ? failure : null;
         }
         _logCovers(shown, heldMs: heldMs);
         if (shown != null) _whenCoversDone(shown, early: heldMs != null, warm: warm);
@@ -398,7 +422,8 @@ class FeedModel extends ChangeNotifier {
         _dividerAt = kept.isEmpty ? null : fresh.length;
         _advance(page);
         _source = page.source;
-        _pending = page.remaining;
+        final freshIds = {for (final card in fresh) card.bvid};
+        _pending = [...page.cards, ...page.remaining].where((card) => !freshIds.contains(card.bvid)).toList();
         _pendingSession = request.session;
         _pendingOwner = request.owner;
         _dislikes.clear();
@@ -439,7 +464,8 @@ class FeedModel extends ChangeNotifier {
       if (_pending.isNotEmpty) {
         final pending = _pending;
         _pending = const [];
-        final selected = _preferences?.select(pending, accountMid: request.owner, limit: pending.length) ?? pending;
+        final selected = _preferences?.select(pending, accountMid: request.owner,
+          limit: pending.length, freshOnly: true) ?? pending;
         final before = _cards.length;
         _cards = _appending(selected, _cards);
         added = _cards.length - before;
@@ -458,6 +484,7 @@ class FeedModel extends ChangeNotifier {
         final before = _cards.length;
         _cards = _appending(page.cards, _cards);
         _advance(page);
+        _rememberSearch(page, request);
         _source = page.source;
         added = _cards.length - before;
         _logPage(page, added);
@@ -662,8 +689,8 @@ class FeedModel extends ChangeNotifier {
     if (!_currentRequest(request)) throw const BiliSessionChangedError();
   }
 
-  /// Keeps the server's personalized candidates. A mostly repeated refresh can ask one more page, then the local
-  /// memory chooses a batch of the original size. Fetching never records a video as seen.
+  /// Keeps the server's personalized candidates, searching further when repeats leave a short batch.
+  /// Fetching never records a video as seen, and recently seen videos never pad a new batch.
   Future<_Page> _fetch({required bool refresh, required _FeedRequest request, bool early = false}) async {
     var page = await _fetchPage(refresh: refresh, early: early, request: request);
     _checkRequest(request);
@@ -671,25 +698,34 @@ class FeedModel extends ChangeNotifier {
     if (preferences == null) return page;
     final first = _appending(page.cards, const []);
     var candidates = first;
-    if (refresh && first.isNotEmpty && preferences.unseenCount(first, accountMid: request.owner) * 2 < first.length) {
+    final budget = Stopwatch()..start();
+    for (var attempt = 0; refresh && first.isNotEmpty && attempt < extraPagesAllowed &&
+        preferences.unseenCount(candidates, accountMid: request.owner) < first.length; attempt++) {
+      final left = extraPageTimeout - budget.elapsed;
+      if (left <= Duration.zero) break;
       try {
         _checkRequest(request);
-        final extraIndex = page.index + 1;
+        // Repeated refreshes must not search the same small prefix forever. The initial pull still asks page 0/1.
+        final continuing = _searchSession == request.session && _searchOwner == request.owner &&
+            _searchSource == page.source;
+        final extraIndex = math.max(page.index + 1, continuing ? _searchNextIndex : 0);
         // Stay on the first answer's source. A refused optional page must not start another fallback request.
         final extraFuture = page.source == FeedSource.official
             ? _client.officialFeed(index: extraIndex, pad: _pad())
             : (_webPage?.call(extraIndex) ?? _client.recommendFeed(index: extraIndex));
-        final extra = await extraFuture.timeout(extraPageTimeout);
+        final extra = await extraFuture.timeout(left);
         _checkRequest(request);
-        candidates = _appending(extra, first);
+        candidates = _appending(extra, candidates);
         page = (cards: candidates, remaining: const <FeedCard>[], source: page.source, index: extraIndex,
           received: page.received + extra.length);
+        if (extra.isEmpty) break;
       } catch (error) {
         _checkRequest(request);
         _logger.warn(LogCategory.ui, 'feed extra page unavailable', feedLogFields(error));
+        break;
       }
     }
-    final selected = preferences.select(candidates, accountMid: request.owner, limit: first.length);
+    final selected = preferences.select(candidates, accountMid: request.owner, limit: first.length, freshOnly: true);
     final selectedIds = {for (final card in selected) card.bvid};
     return (cards: selected,
       remaining: refresh ? candidates.where((card) => !selectedIds.contains(card.bvid)).take(keptCards).toList() : const <FeedCard>[],
@@ -730,6 +766,14 @@ class FeedModel extends ChangeNotifier {
       case FeedSource.web:
         _nextWebIndex = page.index + 1;
     }
+  }
+
+  void _rememberSearch(_Page page, _FeedRequest request) {
+    final continuing = _searchSession == request.session && _searchOwner == request.owner && _searchSource == page.source;
+    _searchNextIndex = continuing ? math.max(_searchNextIndex, page.index + 1) : page.index + 1;
+    _searchSession = request.session;
+    _searchOwner = request.owner;
+    _searchSource = page.source;
   }
 
   /// 不感兴趣 with [reason] (one of the card's [FeedDislike.reasons]): the card turns over at once and turns back if
@@ -827,7 +871,8 @@ class FeedModel extends ChangeNotifier {
     final shown = {for (final card in fresh) card.bvid};
     return [
       for (final card in _cards)
-        if (!shown.contains(card.bvid) && !_dislikes.containsKey(card.bvid)) card,
+        if (!shown.contains(card.bvid) && !_dislikes.containsKey(card.bvid) &&
+            !(_preferences?.isWatched(card.bvid, accountMid: _accountMid()) ?? false)) card,
     ].take(math.max(keptCards - fresh.length, 0)).toList();
   }
 

@@ -136,7 +136,8 @@ void main() {
     var finger = await pullAndHold(tester, feed);
     await finger.up();
     await settle(tester, 30);
-    expect(http.asked, [...asked, 1], reason: '首页 refreshed');
+    expect(http.asked, [...asked, 1, 2],
+        reason: '首页 refreshed once, with lookahead for repeated visible videos');
     expect(me.calls, hasLength(2), reason: 'hidden 我的 not refreshed by 首页 pull');
 
     await tapTab(tester, HomeTab.mine);

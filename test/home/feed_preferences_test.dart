@@ -39,11 +39,11 @@ void main() {
     expect(store.recentlySeen('fresh', accountMid: 1), isFalse);
   });
 
-  test('recently completed videos follow seen videos and expire after fourteen days', () {
+  test('completed videos are excluded until thirty days while visible tiles expire after seven days', () {
     store.recordSeen(accountMid: 1, bvid: 'seen', ownerMid: 1);
     store.recordWatch(accountMid: 1, bvid: 'complete', ownerMid: 2, seconds: 8, completed: true);
     final cards = [card('complete', 2), card('seen', 1), card('fresh', 3)];
-    expect(selected(store, cards), ['fresh', 'seen', 'complete']);
+    expect(selected(store, cards), ['fresh', 'seen']);
     now = now.add(FeedPreferences.seenFor);
     expect(store.recentlySeen('seen', accountMid: 1), isFalse);
     expect(store.recentlySeen('complete', accountMid: 1), isTrue);
@@ -51,6 +51,48 @@ void main() {
     now = now.add(FeedPreferences.completedFor - FeedPreferences.seenFor);
     expect(store.recentlySeen('complete', accountMid: 1), isFalse);
     expect(store.unseenCount(cards, accountMid: 1), 3);
+    expect(selected(store, cards), ['complete', 'seen', 'fresh']);
+  });
+
+  test('meaningful viewing across sessions excludes an unfinished video for thirty days', () {
+    store.recordWatch(accountMid: 1, bvid: 'watched', ownerMid: 7, seconds: 15);
+    expect(store.isWatched('watched', accountMid: 1), isFalse);
+    now = now.add(const Duration(days: 1));
+    store.recordWatch(accountMid: 1, bvid: 'watched', ownerMid: 7, seconds: 15);
+    expect(store.isWatched('watched', accountMid: 1), isTrue);
+    now = now.add(const Duration(days: 5));
+    expect(selected(store, [card('watched', 7), card('fresh', 8)]), ['fresh']);
+    expect(selected(store, [card('watched', 7)]), isEmpty,
+        reason: 'an all-watched candidate pool must not resurrect watched videos');
+    expect(store.unseenCount([card('watched', 7)], accountMid: 1), 0);
+    expect(store.isWatched('watched', accountMid: 2), isFalse);
+    expect(store.isWatched('watched', accountMid: null), isFalse);
+    now = now.add(const Duration(days: 25) - const Duration(milliseconds: 1));
+    expect(store.isWatched('watched', accountMid: 1), isTrue);
+    now = now.add(const Duration(milliseconds: 1));
+    expect(store.isWatched('watched', accountMid: 1), isFalse);
+    expect(selected(store, [card('watched', 7)]), ['watched']);
+  });
+
+  test('brief viewing retains seven-day exposure memory without classifying the video as watched', () {
+    store.recordWatch(accountMid: 1, bvid: 'brief', ownerMid: 7, seconds: 29);
+    now = now.add(FeedPreferences.seenFor - const Duration(milliseconds: 1));
+    expect(store.recentlySeen('brief', accountMid: 1), isTrue);
+    expect(store.isWatched('brief', accountMid: 1), isFalse);
+    now = now.add(const Duration(milliseconds: 1));
+    expect(store.recentlySeen('brief', accountMid: 1), isFalse);
+  });
+
+  test('fresh-only selection omits visible and watched videos without recording new exposures', () {
+    store.recordSeen(accountMid: 1, bvid: 'seen', ownerMid: 1);
+    store.recordWatch(accountMid: 1, bvid: 'watched', ownerMid: 2, seconds: 30);
+    final cards = [card('seen', 1), card('watched', 2), card('fresh', 3)];
+    expect(store.select(cards, accountMid: 1, limit: 3, freshOnly: true).map((card) => card.bvid), ['fresh']);
+    expect(selected(store, cards), ['fresh', 'seen']);
+    expect(store.recentlySeen('fresh', accountMid: 1), isFalse);
+    expect(store.select(cards.take(2).toList(), accountMid: 1, limit: 3, freshOnly: true), isEmpty);
+    expect(store.select(cards, accountMid: 2, limit: 3, freshOnly: true).map((card) => card.bvid),
+        ['seen', 'watched', 'fresh']);
   });
 
   test('deduplicates candidates and unseen count, retains useful narrow pools', () {
@@ -150,10 +192,47 @@ void main() {
       expect(reloaded.recentlySeen('one', accountMid: 2), isFalse);
       expect(reloaded.recentlySeen('two', accountMid: 2), isTrue);
       now = now.add(const Duration(days: 3));
-      expect(reloaded.recentlySeen('one', accountMid: 1), isFalse);
+      expect(reloaded.recentlySeen('one', accountMid: 1), isTrue);
       expect(reloaded.recentlySeen('two', accountMid: 2), isTrue);
       reloaded.dispose();
       expect(await File('$path.tmp').exists(), isFalse);
+    });
+
+    test('unfinished meaningful viewing stays excluded after reload and several days', () async {
+      final disk = await FeedPreferences.load(path, now: () => now);
+      disk.recordWatch(accountMid: 1, bvid: 'unfinished', ownerMid: 7, seconds: 15);
+      disk.recordWatch(accountMid: 1, bvid: 'unfinished', ownerMid: 7, seconds: 15);
+      await disk.flush();
+      disk.dispose();
+      now = now.add(const Duration(days: 8));
+      final reloaded = await FeedPreferences.load(path, now: () => now);
+      expect(reloaded.isWatched('unfinished', accountMid: 1), isTrue);
+      expect(reloaded.isWatched('unfinished', accountMid: 2), isFalse);
+      expect(selected(reloaded, [card('unfinished', 7)]), isEmpty);
+      reloaded.dispose();
+    });
+
+    test('existing version-one watch totals and completion qualify without migration', () async {
+      final timestamp = now.subtract(const Duration(days: 12)).millisecondsSinceEpoch;
+      await File(path).writeAsString(jsonEncode({
+        'version': 1,
+        'accounts': {
+          '1': [
+            {'bvid': 'unfinished', 'owner': 7, 'updated': timestamp, 'seen': timestamp,
+              'watched': 45, 'watchedAt': timestamp},
+            {'bvid': 'short-complete', 'owner': 8, 'updated': timestamp, 'seen': timestamp,
+              'watched': 5, 'watchedAt': timestamp, 'completed': timestamp},
+            {'bvid': 'brief', 'owner': 9, 'updated': timestamp, 'seen': timestamp,
+              'watched': 5, 'watchedAt': timestamp},
+          ],
+        },
+      }));
+      final disk = await FeedPreferences.load(path, now: () => now);
+      expect(disk.isWatched('unfinished', accountMid: 1), isTrue);
+      expect(disk.isWatched('short-complete', accountMid: 1), isTrue);
+      expect(disk.isWatched('brief', accountMid: 1), isFalse);
+      expect(selected(disk, [card('unfinished', 7), card('short-complete', 8), card('brief', 9)]), ['brief']);
+      disk.dispose();
     });
 
     test('corrupt files recover and invalid rows do not discard valid ones', () async {
