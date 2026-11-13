@@ -319,9 +319,11 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('home-tab-home')));
     await settle(tester);
     expect(find.byType(HomePage), findsOneWidget);
+    expect(http.asked, asked, reason: 'returning to 首页 only shows it again');
     await tester.tap(find.byKey(const ValueKey('home-tab-home')));
     await settle(tester, 40);
-    expect(http.asked, [...asked, 1], reason: '首页 on 首页 still refreshes 推荐');
+    expect(http.asked, [...asked, 1, 2],
+        reason: '首页 on 首页 refreshes once, with lookahead for repeated visible videos');
   });
 
   for (final (name, failing) in [('failure', true), ('empty page', false)]) {

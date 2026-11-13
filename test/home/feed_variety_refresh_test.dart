@@ -25,14 +25,14 @@ void main() {
     owner = 7;
   });
 
-  FeedModel make({bool official = false}) {
+  FeedModel make({bool official = false, Duration minimumRefresh = Duration.zero}) {
     if (official) client.appToken = fakeAppToken;
     final feed = FeedModel(
       client: client,
       preferences: preferences,
       accountMid: () => owner,
       officialWanted: () => official,
-      minimumRefresh: Duration.zero,
+      minimumRefresh: minimumRefresh,
       logger: Logger(session: 'test')..add(logs),
     );
     addTearDown(feed.dispose);
@@ -47,6 +47,99 @@ void main() {
 
   List<String> ids(FeedModel feed) => [for (final card in feed.cards) card.bvid];
 
+  test('publishing a refresh does not apply uploader affinity twice', () async {
+    for (var index = 0; index < 2; index++) {
+      preferences.recordWatch(accountMid: owner, bvid: 'seed$index', ownerMid: 99, seconds: 35);
+    }
+    http.pages[1] = [
+      for (var index = 0; index < 4; index++) {...feedItem('BV$index'), 'owner': {'mid': 10 + index, 'name': 'Uploader'}},
+      {...feedItem('BVpreferred'), 'owner': {'mid': 99, 'name': 'Uploader'}},
+    ];
+    final feed = make();
+    await feed.refresh();
+    expect(ids(feed).indexOf('BVpreferred'), 2);
+    expect(http.asked, [1]);
+  });
+
+  test('watched candidates never fill a batch and lookahead has a fixed request cap', () async {
+    for (var index = 1; index <= 5; index++) {
+      http.pages[index] = [feedItem('BV$index')];
+      preferences.recordWatch(accountMid: owner, bvid: 'BV$index', ownerMid: 7, seconds: 35);
+    }
+    final feed = make();
+    await feed.refresh();
+    expect(ids(feed), isEmpty);
+    expect(feed.error, FeedModel.emptyMessage);
+    expect(http.asked, [1, 2, 3, 4]);
+  });
+
+  test('successive refreshes search beyond the same prefix even when no fresh page was found', () async {
+    for (var index = 1; index <= 4; index++) {
+      http.pages[index] = [feedItem('BVold')];
+    }
+    http.pages[5] = [feedItem('BVnew')];
+    seen(['BVold']);
+    final feed = make();
+    await feed.refresh();
+    expect(ids(feed), isEmpty);
+    await feed.refresh();
+    expect(ids(feed), ['BVnew']);
+    expect(http.asked, [1, 2, 3, 4, 1, 5]);
+  });
+
+  test('search continuation is isolated across account sessions', () async {
+    http.pages[1] = [feedItem('BVold')];
+    http.pages[2] = [feedItem('BVnew')];
+    seen(['BVold']);
+    final feed = make();
+    await feed.refresh();
+    owner = 8;
+    seen(['BVold']);
+    await feed.refresh(replace: true);
+    expect(ids(feed), ['BVnew']);
+    expect(http.asked, [1, 2, 1, 2]);
+    client.invalidateSession();
+    await feed.refresh(replace: true);
+    expect(http.asked, [1, 2, 1, 2, 1, 2]);
+  });
+
+  test('load more rechecks surplus candidates watched since the refresh', () async {
+    http.pages[1] = [feedItem('BVold')];
+    http.pages[2] = [feedItem('BVnew'), feedItem('BVlater')];
+    http.pages[3] = [feedItem('BVnext')];
+    seen(['BVold']);
+    final feed = make();
+    await feed.refresh();
+    preferences.recordWatch(accountMid: owner, bvid: 'BVlater', ownerMid: 7, seconds: 35);
+    await feed.loadMore();
+    expect(ids(feed), ['BVnew', 'BVnext']);
+    expect(http.asked, [1, 2, 3]);
+  });
+
+  test('refresh removes watched cards from the retained previous batch', () async {
+    http.pages[1] = [feedItem('BVwatched'), feedItem('BVkeep')];
+    final feed = make();
+    await feed.refresh();
+    preferences.recordWatch(accountMid: owner, bvid: 'BVwatched', ownerMid: 7, seconds: 35);
+    http.pages[1] = [feedItem('BVnew')];
+    await feed.refresh();
+    expect(ids(feed), ['BVnew', 'BVkeep']);
+    expect(feed.newest.map((card) => card.bvid), ['BVnew']);
+    expect(feed.dividerAt, 1);
+  });
+
+  test('an armed result rechecks exposure before publishing', () async {
+    http.pages[1] = [feedItem('BV1')];
+    final feed = make();
+    feed.pullArmed();
+    await pumpEventQueue();
+    seen(['BV1']);
+    await feed.refresh(pulled: true);
+    expect(ids(feed), isEmpty);
+    expect(feed.error, FeedModel.emptyMessage);
+    expect(http.asked, [1]);
+  });
+
   test('a mostly repeated refresh selects unseen candidates and retains the rest for load more', () async {
     http.pages[1] = [feedItem('BV1'), feedItem('BV2')];
     http.pages[2] = [feedItem('BV3'), feedItem('BV4'), feedItem('BV5')];
@@ -57,53 +150,53 @@ void main() {
     expect(ids(feed), ['BV3', 'BV4']);
     expect(http.asked, [1, 2]);
     await feed.loadMore();
-    expect(ids(feed).toSet(), {'BV1', 'BV2', 'BV3', 'BV4', 'BV5'});
+    expect(ids(feed).toSet(), {'BV3', 'BV4', 'BV5'});
     expect(http.asked, [1, 2], reason: 'unselected candidates are used before another request');
     await feed.loadMore();
     expect(http.asked, [1, 2, 3]);
     expect(ids(feed).last, 'BV6');
   });
 
-  test('a half-unseen refresh needs no extra page and fetching records no exposures', () async {
+  test('a half-unseen refresh searches for a full batch without padding repeats or recording exposure', () async {
     http.pages[1] = [feedItem('BV1'), feedItem('BV2')];
     seen(['BV1']);
     final feed = make();
     await feed.refresh();
-    expect(ids(feed), ['BV2', 'BV1']);
-    expect(http.asked, [1]);
+    expect(ids(feed), ['BV2']);
+    expect(http.asked, [1, 2]);
     expect(preferences.recentlySeen('BV2', accountMid: owner), isFalse);
   });
 
-  test('all repeats still give useful cards and at most one extra request', () async {
+  test('repeats on two pages do not hide fresh videos further down', () async {
     http.pages[1] = [feedItem('BV1'), feedItem('BV2')];
     http.pages[2] = [feedItem('BV2'), feedItem('BV1')];
     http.pages[3] = [feedItem('BV3')];
     seen(['BV1', 'BV2']);
     final feed = make();
     await feed.refresh();
-    expect(ids(feed).toSet(), {'BV1', 'BV2'});
-    expect(http.asked, [1, 2]);
+    expect(ids(feed), ['BV3']);
+    expect(http.asked, [1, 2, 3, 4]);
     expect(feed.error, isNull);
   });
 
   test('an unavailable extra page preserves the first batch and its next-page retry', () async {
-    http.pages[1] = [feedItem('BV1')];
+    http.pages[1] = [feedItem('BV1'), feedItem('BVfresh')];
     http.failing.add(2);
     seen(['BV1']);
     final feed = make();
     expect(await feed.refresh(), isNull);
-    expect(ids(feed), ['BV1']);
+    expect(ids(feed), ['BVfresh']);
     expect(feed.error, isNull);
     http.failing.clear();
     http.pages[2] = [feedItem('BV2')];
     await feed.loadMore();
     expect(http.asked, [1, 2, 2]);
-    expect(ids(feed), ['BV1', 'BV2']);
+    expect(ids(feed), ['BVfresh', 'BV2']);
   });
 
   test('a slow optional page times out without losing the successful first batch', () {
     fakeAsync((async) {
-      http.pages[1] = [feedItem('BV1')];
+      http.pages[1] = [feedItem('BV1'), feedItem('BVfresh')];
       http.pages[2] = [feedItem('BV2')];
       http.gates[2] = Completer<void>();
       seen(['BV1']);
@@ -116,10 +209,10 @@ void main() {
       async.elapse(FeedModel.extraPageTimeout);
       async.flushMicrotasks();
       expect(finished, isTrue);
-      expect(ids(feed), ['BV1']);
+      expect(ids(feed), ['BVfresh']);
       http.gates[2]!.complete();
       async.flushMicrotasks();
-      expect(ids(feed), ['BV1'], reason: 'the late optional response cannot alter the accepted batch');
+      expect(ids(feed), ['BVfresh'], reason: 'the late optional response cannot alter the accepted batch');
     });
   });
 
@@ -134,13 +227,12 @@ void main() {
     expect(http.officialAsked, [0, 1]);
     expect(http.asked, isEmpty);
     await feed.loadMore();
-    await feed.loadMore();
     expect(http.officialAsked, [0, 1, 2]);
-    expect(ids(feed), ['BV2', 'BV1', 'BV3']);
+    expect(ids(feed), ['BV2', 'BV3']);
   });
 
   test('a refused optional official page never starts a web fallback', () async {
-    http.officialPages[0] = [officialItem('BV1')];
+    http.officialPages[0] = [officialItem('BV1'), officialItem('BVfresh')];
     http.officialGates[1] = Completer<void>();
     seen(['BV1']);
     final feed = make(official: true);
@@ -150,7 +242,7 @@ void main() {
     http.officialCode = -101;
     http.officialGates[1]!.complete();
     await refreshing;
-    expect(ids(feed), ['BV1']);
+    expect(ids(feed), ['BVfresh']);
     expect(http.asked, isEmpty);
     expect(feed.error, isNull);
   });

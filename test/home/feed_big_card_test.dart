@@ -730,6 +730,52 @@ void main() {
     expect(feedRequests, hasLength(asks), reason: 'returning to the tile does not pull a refresh');
   });
 
+  testWidgets('inline viewing split across released players stays excluded after days', (tester) async {
+    var now = DateTime(2026, 11, 12);
+    final preferences = FeedPreferences.memory(now: () => now);
+    addTearDown(preferences.dispose);
+    await show(tester, feedPreferences: preferences);
+    await started(tester);
+    final owner = services.feedAccountMid;
+
+    for (var second = 0; second <= 18; second++) {
+      player().emit(PositionChanged(seconds: second.toDouble(), hostMs: 10000 + second * 1000.0, rate: 1));
+    }
+    await tester.drag(find.byKey(const ValueKey('feed')), const Offset(0, -500));
+    await frames(tester, 30);
+    await tester.pump(FeedBigCardTheme.releaseAfter);
+    await frames(tester, 2);
+    expect(player().disposed, isTrue, reason: 'the first inline playback and its coverage were released');
+    expect(preferences.isWatched(_bv, accountMid: owner), isFalse, reason: '18 seconds is below meaningful viewing');
+
+    final position = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    await tester.drag(find.byKey(const ValueKey('feed')), Offset(0, position.pixels));
+    position.jumpTo(0);
+    await frames(tester, 30);
+    final resumed = players.last;
+    expect(resumed, isNot(same(player())));
+    expect(resumed.loaded?.startSeconds, 18);
+    resumed.emit(const StatusChanged(PlayerStatus.playing));
+    for (var second = 18; second <= 35; second++) {
+      resumed.emit(PositionChanged(seconds: second.toDouble(), hostMs: 100000 + second * 1000.0, rate: 1));
+    }
+    resumed.emit(const StatusChanged(PlayerStatus.paused));
+    expect(preferences.isWatched(_bv, accountMid: owner), isTrue,
+        reason: 'actual viewing accumulates across players without requiring 90 percent completion');
+
+    now = now.add(const Duration(days: 3));
+    expect(preferences.isWatched(_bv, accountMid: owner), isTrue);
+    expect(preferences.select([bigCard(_bv), smallCard('BV1fresh')], accountMid: owner, limit: 2, freshOnly: true)
+        .map((card) => card.bvid), ['BV1fresh']);
+    now = now.add(const Duration(days: 5));
+    expect(preferences.isWatched(_bv, accountMid: owner), isTrue);
+    expect(preferences.select([bigCard(_bv)], accountMid: owner, limit: 1), isEmpty,
+        reason: 'meaningful viewing remains excluded after the seven-day exposure window');
+    expect(preferences.isWatched(_bv, accountMid: null), isFalse, reason: 'viewing belongs to the saved account');
+    expect(find.byType(VideoPage), findsNothing);
+    expect(http.canned.requests.where((request) => request.url.path == _heartbeat), isEmpty);
+  });
+
   testWidgets('scrolling far enough to dispose a tile preserves its progress when rebuilt', (tester) async {
     await show(tester);
     await started(tester);

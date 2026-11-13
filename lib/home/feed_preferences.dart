@@ -9,8 +9,9 @@ import 'package:bili_core/devlog.dart';
 class FeedPreferences {
   FeedPreferences.memory({DateTime Function()? now}) : _now = now ?? DateTime.now;
 
-  static const seenFor = Duration(hours: 48);
-  static const completedFor = Duration(days: 14);
+  static const seenFor = Duration(days: 7);
+  static const watchedFor = Duration(days: 30);
+  static const completedFor = watchedFor;
   static const keepFor = Duration(days: 30);
   static const entriesPerAccount = 2000;
   static const accountLimit = 10;
@@ -92,13 +93,24 @@ class FeedPreferences {
 
   bool recentlySeen(String bvid, {required int? accountMid}) => _tier(bvid, accountMid) != 0;
 
+  /// Meaningful viewing counts across playback sessions, without requiring completion in one sitting.
+  bool isWatched(String bvid, {required int? accountMid}) {
+    final entry = _accounts[_key(accountMid)]?[bvid];
+    if (entry == null) return false;
+    final now = _now().millisecondsSinceEpoch;
+    if (entry.completed case final completed? when now - completed < watchedFor.inMilliseconds) return true;
+    return entry.watched >= meaningfulSeconds && entry.watchedAt != null &&
+        now - entry.watchedAt! < watchedFor.inMilliseconds;
+  }
+
   int unseenCount(List<FeedCard> cards, {required int? accountMid}) => {
     for (final card in cards)
       if (!recentlySeen(card.bvid, accountMid: accountMid)) card.bvid,
   }.length;
 
-  /// Prefer unseen videos, then spread creators while retaining the server's relevance order.
-  List<FeedCard> select(List<FeedCard> cards, {required int? accountMid, required int limit}) {
+  /// Exclude watched videos, then spread creators while retaining the server's relevance order.
+  /// [freshOnly] also excludes tiles recently visible without meaningful viewing.
+  List<FeedCard> select(List<FeedCard> cards, {required int? accountMid, required int limit, bool freshOnly = false}) {
     if (limit <= 0) return [];
     _prune();
     final affinity = <int, double>{};
@@ -110,7 +122,9 @@ class FeedPreferences {
     final seen = <String>{};
     final remaining = [
       for (var i = 0; i < cards.length; i++)
-        if (seen.add(cards[i].bvid)) (card: cards[i], index: i, tier: _tier(cards[i].bvid, accountMid)),
+        if (seen.add(cards[i].bvid) && !isWatched(cards[i].bvid, accountMid: accountMid) &&
+            (!freshOnly || !recentlySeen(cards[i].bvid, accountMid: accountMid)))
+          (card: cards[i], index: i, tier: _tier(cards[i].bvid, accountMid)),
     ];
     remaining.sort((a, b) {
       final tier = a.tier.compareTo(b.tier);
@@ -130,7 +144,7 @@ class FeedPreferences {
       var at = remaining.indexWhere(
         (item) => item.tier == tier && (item.card.ownerMid <= 0 || (recentCreators[item.card.ownerMid] ?? 0) < 2),
       );
-      // A narrow candidate pool still fills the feed, in relevance order.
+      // A narrow creator pool keeps its relevance order; watched videos never fill gaps.
       if (at < 0) at = 0;
       chosen.add(remaining.removeAt(at).card);
     }
@@ -154,7 +168,7 @@ class FeedPreferences {
     final entry = _accounts[_key(accountMid)]?[bvid];
     if (entry == null) return 0;
     final now = _now().millisecondsSinceEpoch;
-    if (entry.completed case final completed? when now - completed < completedFor.inMilliseconds) return 2;
+    if (isWatched(bvid, accountMid: accountMid)) return 2;
     if (entry.seen case final seen? when now - seen < seenFor.inMilliseconds) return 1;
     return 0;
   }

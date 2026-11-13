@@ -836,12 +836,13 @@ void main() {
     http.canned.routes[Canned.navPath] = (200, Canned.navLoggedOut);
     await check();
     expect(environment.account, isA<LoginExpired>());
-    expect(http.asked, [1, 1, 1], reason: 'expired');
+    expect(http.asked.where((index) => index == 1), hasLength(3), reason: 'expired: one new refresh');
+    expect(http.asked.where((index) => index != 1), [2], reason: 'guest exposure triggers one freshness lookup');
 
     environment.cookies.remove('SESSDATA');
     await check();
     expect(environment.account, isA<LoggedOut>());
-    expect(http.asked, [1, 1, 1], reason: 'expired to logged out is no flip');
+    expect(http.asked, [1, 1, 1, 2], reason: 'expired to logged out is no flip');
   });
 
   for (final (state, cookies) in [('logged out', _loggedOutCookies), ('expired', Canned.cookies)]) {
@@ -1107,12 +1108,16 @@ void main() {
       expect(find.byType(LoadingTv), findsOneWidget, reason: 'released: no second gap opens');
       http.gates[1]!.complete();
       await settle(tester, 20);
-      expect(http.asked, [1, 1]);
+      expect(http.asked.where((index) => index == 1), hasLength(2), reason: 'no duplicate refresh');
+      expect(http.asked.where((index) => index != 1), [2], reason: 'seen tiles trigger one freshness lookup');
       expect(find.byKey(const ValueKey('feed-reload')), findsNothing);
 
       await tapHome(tester);
       await settle(tester, 20);
-      expect(http.asked, [1, 1, 1], reason: 'once the refresh is done a tap refreshes again');
+      expect(http.asked.where((index) => index == 1), hasLength(3),
+          reason: 'once the refresh is done a tap refreshes again');
+      expect(http.asked.where((index) => index != 1), [2, 3],
+          reason: 'each completed refresh makes only one lookup of the empty next page');
     });
 
     testWidgets('during the refresh after a login, a tap or a pull waits on it instead of asking again', (
@@ -1631,7 +1636,8 @@ void main() {
         expect(card('BV1n0'), findsNothing, reason: 'the unseen answer never shows');
         final again = await armed(tester);
         await settle(tester, 2);
-        expect(http.asked, [1, 1, 1, 1]);
+        expect(http.asked.where((index) => index == 1), hasLength(4), reason: 'the cancelled answer is not reused');
+        expect(http.asked.where((index) => index != 1), [2], reason: 'seen tiles trigger one freshness lookup');
         await again.up();
         await settle(tester, 30);
       });
@@ -1651,7 +1657,8 @@ void main() {
         expect(card('BV1t0'), findsOneWidget);
         final again = await armed(tester);
         await settle(tester, 2);
-        expect(http.asked, [1, 1, 1, 1], reason: "the old account's answer is not taken");
+        expect(http.asked.where((index) => index == 1), hasLength(4), reason: "the old account's answer is not taken");
+        expect(http.asked.where((index) => index != 1), [2], reason: 'seen tiles trigger one freshness lookup');
         await again.up();
         await settle(tester, 30);
       });
