@@ -109,3 +109,21 @@ Validation of the correction:
 
 The correction still depends on Bilibili supplying unseen personalized candidates. Automated tests establish
 filtering and persistence behavior; live freshness remains a phone check.
+
+## Freshness IPA build
+
+Application source: `449145b46c73fff9ad04e456f2c74aabfa95e0e3`.
+Build commit: `1e0da8d226f626feee751996a5952400f82dff2e`, on the same fork-only unsigned build branch.
+All application files match the tested source; only the fork's build workflow differs.
+[macOS build 14](https://github.com/salileoss/BiliFast/actions/runs/43358910295).
+
+IPA 1.3.0 (14) is saved at `build/ipa/BiliFast-1.3.0-14-feed-freshness.ipa` (19,106,471 bytes), with its JSON
+manifest beside it. The macOS build passed. Local verification passed for source commit, version, bundle identity,
+minimum iOS 26.0, size and SHA-256, ZIP integrity and safe entries, device ARM64 executables, required purpose
+strings, and absence of a provisioning profile.
+
+SHA-256: `a2398b6614725f8865c7e553e2c4620e0cecb5e7d6d1cfbc8bd75eb1ad8ed7de`.
+
+This IPA is unsigned and needs signing for sideloading. Preserve app data when updating so the saved viewing
+memory remains available. No Apple signing credentials or TestFlight upload were involved. Build 14 has not yet
+been verified on the phone.
