@@ -691,7 +691,7 @@ void main() {
     }
   });
 
-  testWidgets("⋮ opens 90's sheet whose 添加至稍后再看 adds the video; a web card has no 不感兴趣", (tester) async {
+  testWidgets('⋮ offers 复制链接 and 添加至稍后再看; a web card has no 不感兴趣', (tester) async {
     http.canned.routes[_watchLaterPath] = (200, '{"code":0,"message":"0","ttl":1}');
     await show(tester);
     await settle(tester);
@@ -699,7 +699,8 @@ void main() {
     expect(tester.getSize(more).width, FeedBigCardTheme.moreTarget);
     await tester.tap(more);
     await settle(tester);
-    expect(find.byType(FeedSheetRow), findsOneWidget);
+    expect(find.byType(FeedSheetRow), findsNWidgets(2));
+    expect(find.text('复制链接'), findsOneWidget);
     expect(find.text('添加至稍后再看'), findsOneWidget);
     expect(find.textContaining('不感兴趣'), findsNothing);
     expect(find.descendant(of: find.byType(FeedSheetRow), matching: find.byType(InkWell)), findsNothing);
