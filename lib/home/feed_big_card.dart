@@ -30,6 +30,7 @@ import 'feed_inline_gestures.dart';
 import 'feed_inline_player.dart';
 import 'feed_model.dart' show CardDislike, feedLogFields;
 import 'feed_more_sheet.dart';
+import 'feed_share.dart';
 
 /// The big card's sizes, for the feed's layout and its covers.
 abstract final class FeedBigCardSize {
@@ -268,10 +269,13 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
   Future<void> _more() async {
     final card = widget.card;
     final choice = await showFeedMoreSheet(context, card);
+    if (!mounted) return;
     final dislike = card.dislike;
     switch (choice) {
       case null:
         return;
+      case FeedMoreChoice.copyLink:
+        await copyFeedLink(context, card);
       case FeedMoreChoice.watchLater:
         widget.onWatchLater();
       case FeedMoreChoice.dislikeVideo:

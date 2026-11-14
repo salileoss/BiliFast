@@ -189,9 +189,10 @@ void main() {
     await saveShot(tester, find.byKey(_screen), '$shots/$name');
   }
 
-  testWidgets("an official card's ⋮ offers 稍后再看 and both 不感兴趣; one without reasons only 稍后再看", (tester) async {
+  testWidgets("a card's ⋮ offers 复制链接 and 稍后再看, with 不感兴趣 when reasons are present", (tester) async {
     await show(tester);
     await openMore(tester, 'BV1aaa');
+    expect(find.text('复制链接'), findsOneWidget);
     expect(find.text('添加至稍后再看'), findsOneWidget);
     expect(find.text('不感兴趣：当前视频'), findsOneWidget);
     expect(find.text('不感兴趣：UP'), findsOneWidget);
@@ -201,7 +202,7 @@ void main() {
 
     await tester.scrollUntilVisible(more('BV1ddd'), 100, scrollable: find.byType(Scrollable).first);
     await openMore(tester, 'BV1ddd');
-    expect(find.byType(FeedSheetRow), findsOneWidget);
+    expect(find.byType(FeedSheetRow), findsNWidgets(2));
     expect(find.textContaining('不感兴趣'), findsNothing);
   });
 
@@ -422,7 +423,7 @@ void main() {
     await show(tester, token: false);
     expect(http.officialAsked, isEmpty);
     await openMore(tester, 'BV1web');
-    expect(find.byType(FeedSheetRow), findsOneWidget);
+    expect(find.byType(FeedSheetRow), findsNWidgets(2));
   });
 
   testWidgets('a token that arrives later brings the official 推荐', (tester) async {
@@ -500,9 +501,10 @@ void main() {
   });
 
   group('look-alike under the system font', () {
-    testWidgets("90: the ⋮ sheet's cards, rows and words where the official app has them", (tester) async {
+    testWidgets('the ⋮ sheet adds 复制链接 above the existing action rows', (tester) async {
       await show(tester, systemFont: true);
       await openMore(tester, 'BV1aaa');
+      expect(tester.getRect(find.byKey(const ValueKey('feed-more-copy-link'))), const Rect.fromLTRB(16, 682, 424, 734));
       final watchLater = tester.getRect(find.byKey(const ValueKey('feed-more-watch-later')));
       expect(watchLater, const Rect.fromLTRB(16, 734, 424, 786));
       expect(tester.getRect(find.byKey(const ValueKey('feed-more-dislike-video'))).top, 802);

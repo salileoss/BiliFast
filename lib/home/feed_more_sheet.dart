@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bili_core/api.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart' show Material, MaterialType;
 import 'package:flutter/widgets.dart';
 
@@ -10,9 +11,9 @@ import '../shared/theme.dart';
 import 'feed_dislike_glyphs.dart';
 
 /// What a 推荐 card's ⋮ sheet was closed with.
-enum FeedMoreChoice { watchLater, dislikeVideo, dislikeUploader }
+enum FeedMoreChoice { copyLink, watchLater, dislikeVideo, dislikeUploader }
 
-/// A card's ⋮ (90): the light sheet over the dimmed page, 添加至稍后再看 on its own card, then 不感兴趣：当前视频 and
+/// A card's ⋮: 复制链接 and 添加至稍后再看, then 不感兴趣：当前视频 and
 /// 不感兴趣：UP for a card that carries their reasons (the official feed's; the website's carry none).
 Future<FeedMoreChoice?> showFeedMoreSheet(BuildContext context, FeedCard card) {
   final dislike = card.dislike;
@@ -27,6 +28,16 @@ Future<FeedMoreChoice?> showFeedMoreSheet(BuildContext context, FeedCard card) {
       children: [
         FeedSheetCard(
           children: [
+            FeedSheetRow(
+              key: const ValueKey('feed-more-copy-link'),
+              label: '复制链接',
+              icon: Icon(
+                CupertinoIcons.link,
+                size: FeedDislikeTheme.rowIconBox,
+                color: FeedDislikeTheme.colorsOf(context).ink,
+              ),
+              onTap: () => Navigator.of(context).pop(FeedMoreChoice.copyLink),
+            ),
             FeedSheetRow(
               key: const ValueKey('feed-more-watch-later'),
               label: '添加至稍后再看',

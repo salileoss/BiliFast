@@ -15,6 +15,7 @@ import '../video/video_route.dart';
 import 'feed_dislike.dart';
 import 'feed_model.dart' show CardDislike;
 import 'feed_more_sheet.dart';
+import 'feed_share.dart';
 
 /// Card sizes that depend on the text size, so the grid can give every card the same height.
 abstract final class FeedCardSize {
@@ -114,10 +115,13 @@ class _FeedCardViewState extends State<FeedCardView> {
   Future<void> _more() async {
     final card = widget.card;
     final choice = await showFeedMoreSheet(context, card);
+    if (!mounted) return;
     final dislike = card.dislike;
     switch (choice) {
       case null:
         return;
+      case FeedMoreChoice.copyLink:
+        await copyFeedLink(context, card);
       case FeedMoreChoice.watchLater:
         widget.onWatchLater();
       case FeedMoreChoice.dislikeVideo:
