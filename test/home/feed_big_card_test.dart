@@ -152,6 +152,10 @@ void main() {
   Finder inCard(String bvid, Key key) => find.descendant(of: card(bvid), matching: find.byKey(key));
   FakePlayer player([int index = 0]) => players[index];
 
+  double progress(WidgetTester tester) => tester
+      .widget<FractionallySizedBox>(inCard(_bv, const ValueKey('big-card-progress')))
+      .widthFactor!;
+
   /// The big card's newest player is out and its video loaded; [playing] has it report playing.
   Future<void> started(WidgetTester tester, {bool playing = true}) async {
     await frames(tester, 20);
@@ -183,6 +187,7 @@ void main() {
         player().emit(const PositionChanged(seconds: 0, hostMs: 10000, rate: 1));
         player().emit(const PositionChanged(seconds: 60, hostMs: 10000, rate: 1));
         await tester.pump();
+        expect(progress(tester), closeTo(60 / 600, 0.00001));
         final playback = inline(tester);
         final video = tester.getRect(inCard(_bv, const ValueKey('big-card-open')));
         final scroll = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
@@ -192,6 +197,11 @@ void main() {
         await tester.pump();
         final target = 60 + 22.5 * direction;
         expect(playback.session!.scrubbing.value, closeTo(target, 0.001));
+        expect(progress(tester), closeTo(target / 600, 0.00001));
+        expect(
+          tester.getSize(inCard(_bv, const ValueKey('big-card-progress'))).width,
+          closeTo(video.width * target / 600, 0.001),
+        );
         expect(playback.gestureChrome.hud.value, isA<SeekHud>());
         expect(player().calls.where((call) => call.startsWith('seek ')), isEmpty);
         await tester.pump(SeekBar.restDelay);
@@ -199,6 +209,7 @@ void main() {
         await gesture.up();
         await frames(tester, 8);
         expect(player().calls.where((call) => call.startsWith('seek ')), ['seek $target']);
+        expect(progress(tester), closeTo(target / 600, 0.00001));
         expect(playback.gestureChrome.hud.value, isNull);
         expect(scroll.pixels, before);
         expect(find.byType(VideoPage), findsNothing);
@@ -219,9 +230,11 @@ void main() {
       await gesture.moveBy(Offset(video.width, 0));
       await tester.pump();
       expect(playback.session!.scrubbing.value, duration);
+      expect(progress(tester), 1);
       await gesture.moveBy(Offset(-video.width * 20, 0));
       await tester.pump();
       expect(playback.session!.scrubbing.value, 0);
+      expect(progress(tester), 0);
       await gesture.up();
       await frames(tester, 8);
       expect(player().calls, contains('seek 0.0'));
@@ -232,13 +245,22 @@ void main() {
       await show(tester);
       await started(tester);
       final playback = inline(tester);
+      player().emit(const PositionChanged(seconds: 0, hostMs: 10000, rate: 1));
+      player().emit(const PositionChanged(seconds: 60, hostMs: 10000, rate: 1));
+      await tester.pump();
       final gesture = await tester.startGesture(tester.getCenter(inCard(_bv, const ValueKey('big-card-open'))));
       await gesture.moveBy(const Offset(80, 0));
       await tester.pump(SeekBar.restDelay);
+      final target = playback.session!.scrubbing.value!;
+      expect(progress(tester), closeTo(target / 600, 0.00001));
+      player().emit(const PositionChanged(seconds: 65, hostMs: 10000, rate: 1));
+      await tester.pump();
+      expect(progress(tester), closeTo(target / 600, 0.00001));
       expect(engines.first.hints.last.seconds, isNotNull);
       await gesture.cancel();
       await frames(tester, 8);
       expect(playback.session!.scrubbing.value, isNull);
+      expect(progress(tester), closeTo(65 / 600, 0.00001));
       expect(playback.gestureChrome.hud.value, isNull);
       expect(engines.first.hints.last.seconds, isNull);
       expect(player().calls.where((call) => call.startsWith('seek ')), isEmpty);

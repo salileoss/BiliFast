@@ -586,7 +586,11 @@ class _FeedBigCardViewState extends State<FeedBigCardView> with TickerProviderSt
           ),
           Align(
             alignment: Alignment.bottomLeft,
-            child: _Progress(duration: live.$1.duration, seconds: live.$2.readout.seconds),
+            child: _Progress(
+              duration: live.$1.duration,
+              seconds: live.$2.readout.seconds,
+              scrubbing: live.$2.scrubbing,
+            ),
           ),
         ],
       ],
@@ -727,18 +731,20 @@ class _Button extends StatelessWidget {
 
 /// The played part along the video's bottom edge (124, 126).
 class _Progress extends StatelessWidget {
-  const _Progress({required this.duration, required this.seconds});
+  const _Progress({required this.duration, required this.seconds, required this.scrubbing});
 
   final ValueListenable<double> duration;
   final ValueListenable<double> seconds;
+  final ValueListenable<double?> scrubbing;
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([seconds, duration]),
+      listenable: Listenable.merge([seconds, duration, scrubbing]),
       builder: (context, _) {
         final total = duration.value;
-        final share = total > 0 ? (seconds.value / total).clamp(0.0, 1.0) : 0.0;
+        final position = scrubbing.value ?? seconds.value;
+        final share = total > 0 ? (position / total).clamp(0.0, 1.0) : 0.0;
         return FractionallySizedBox(
           key: const ValueKey('big-card-progress'),
           widthFactor: share,
