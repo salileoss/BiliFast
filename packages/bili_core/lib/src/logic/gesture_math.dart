@@ -19,10 +19,12 @@ abstract final class GestureMath {
     required double dx,
     required double width,
     required double duration,
+    bool limitToDuration = false,
   }) {
     final upper = _max(0, duration);
     if (!(width > 0)) return _min(_max(start, 0), upper);
-    return _min(_max(start + dx / width * seekSecondsPerWidth, 0), upper);
+    final span = limitToDuration ? _min(upper, seekSecondsPerWidth) : seekSecondsPerWidth;
+    return _min(_max(start + dx / width * span, 0), upper);
   }
 
   /// Brightness or volume after a vertical drag; dragging up raises it, a full height drag spans 0 to 1.

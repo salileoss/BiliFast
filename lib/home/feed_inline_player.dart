@@ -278,6 +278,7 @@ class FeedInlinePlayback extends ChangeNotifier {
       dx: dx,
       width: _seekWidth,
       duration: duration,
+      limitToDuration: true,
     );
     session.scrub(target);
     gestureChrome.showHud(SeekHud(target: target, duration: duration));
@@ -295,7 +296,11 @@ class FeedInlinePlayback extends ChangeNotifier {
     _seekStart = null;
     _clearSeekRest();
     gestureChrome.showHud(null);
-    if (_session case final session?) unawaited(session.commitSeek(_seekTarget));
+    if (_session case final session?) {
+      // Keyframe snapping can undo a small adjustment on a short clip.
+      final precise = session.duration.value < GestureMath.seekSecondsPerWidth;
+      unawaited(session.commitSeek(_seekTarget, precise: precise));
+    }
   }
 
   void beginHold() {

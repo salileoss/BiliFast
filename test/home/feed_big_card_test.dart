@@ -157,11 +157,11 @@ void main() {
       .widthFactor!;
 
   /// The big card's newest player is out and its video loaded; [playing] has it report playing.
-  Future<void> started(WidgetTester tester, {bool playing = true}) async {
+  Future<void> started(WidgetTester tester, {bool playing = true, double duration = 600}) async {
     await frames(tester, 20);
     expect(players, isNotEmpty, reason: 'the big card asked for a player');
     if (playing) {
-      players.last.emit(const DurationChanged(600));
+      players.last.emit(DurationChanged(duration));
       players.last.emit(const StatusChanged(PlayerStatus.playing));
       await frames(tester, 2);
     }
@@ -216,6 +216,36 @@ void main() {
         expect(playingNow(player()), isTrue);
       });
     }
+
+    testWidgets('a small drag on a short clip previews and seeks precisely near the start', (tester) async {
+      await show(tester);
+      await started(tester, duration: 20);
+      player().emit(const PositionChanged(seconds: 0, hostMs: 10000, rate: 1));
+      player().emit(const PositionChanged(seconds: 3, hostMs: 10000, rate: 1));
+      await tester.pump();
+
+      final playback = inline(tester);
+      final video = tester.getRect(inCard(_bv, const ValueKey('big-card-open')));
+      final gesture = await tester.startGesture(video.center);
+      await gesture.moveBy(Offset(-video.width * 0.075, 0));
+      await tester.pump();
+      expect(progress(tester), closeTo(1.5 / 20, 0.00001));
+
+      await gesture.moveBy(Offset(video.width * 0.025, 0));
+      await tester.pump();
+      expect(progress(tester), closeTo(2 / 20, 0.00001));
+      expect(playback.gestureChrome.hud.value, isA<SeekHud>().having((hud) => hud.target, 'target', closeTo(2, 0.001)));
+      final seeks = player().calls.where((call) => call.startsWith('seek '));
+      expect(seeks, isEmpty);
+
+      await gesture.up();
+      await tester.pump();
+      final seek = seeks.single.split(' ');
+      expect(double.parse(seek[1]), closeTo(2, 0.001));
+      expect(seek.last, 'precise');
+      expect(progress(tester), closeTo(2 / 20, 0.00001));
+      expect(find.byType(VideoPage), findsNothing);
+    });
 
     testWidgets('a drag can reverse direction and clamps at both video boundaries', (tester) async {
       await show(tester);

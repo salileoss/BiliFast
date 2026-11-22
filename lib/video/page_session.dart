@@ -540,7 +540,7 @@ class PagePlayerSession extends ChangeNotifier with WidgetsBindingObserver imple
   }
 
   @override
-  Future<void> commitSeek(double seconds) async {
+  Future<void> commitSeek(double seconds, {bool precise = false}) async {
     // No duration yet, or it went with the video under the finger: the bar lets go rather than holding a target.
     if (duration.value <= 0) {
       cancelScrub();
@@ -551,8 +551,8 @@ class PagePlayerSession extends ChangeNotifier with WidgetsBindingObserver imple
     scrubbing.value = seconds;
     _setEnded(false);
     try {
-      final seeked = player.seek(seconds, precise: false);
-      _controller.userSeeked(seconds, precise: false);
+      final seeked = player.seek(seconds, precise: precise);
+      _controller.userSeeked(seconds, precise: precise);
       _onSeeked?.call(seconds);
       readout.refresh();
       await seeked;
